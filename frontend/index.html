@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binance Trading Dashboard</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">◈</span>
+    <div>
+      <h1 data-i18n="title">BINANCE TRADING DASHBOARD</h1>
+      <p class="subtitle" data-i18n="subtitle">Automated spot-market opportunity scanner — analysis only, no trading</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="market-status" id="market-status"><span class="dot"></span><span id="market-status-text">—</span></div>
+    <button class="lang-btn" id="lang-btn">العربية</button>
+  </div>
+</header>
+
+<section class="statusbar">
+  <div class="stat"><span data-i18n="last_update">Last Market Update</span><b id="last-update">—</b></div>
+  <div class="stat"><span data-i18n="next_update">Next Update</span><b id="next-update">—</b></div>
+  <div class="stat"><span data-i18n="data_age">Data Age</span><b id="data-age">—</b></div>
+  <div class="stat"><span data-i18n="btc_price">BTC / USDT</span><b id="btc-price">—</b></div>
+  <div class="stat"><span data-i18n="breadth">Breadth (top30 &gt; EMA50)</span><b id="breadth">—</b></div>
+  <div class="stat"><span data-i18n="source">Data Source</span><b id="source">—</b></div>
+</section>
+
+<div id="error-banner" class="error-banner hidden">
+  <div>
+    <b data-i18n="source_error">DATA SOURCE ERROR</b>
+    <span id="error-banner-text"></span>
+  </div>
+  <div class="error-meta" id="error-meta"></div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" data-tab="opportunities"><span data-i18n="tab_opps">Opportunities</span><span class="tab-count" id="opp-count">0</span></button>
+  <button class="tab" data-tab="performance"><span data-i18n="tab_perf">Performance</span></button>
+  <button class="tab" data-tab="about"><span data-i18n="tab_about">About</span></button>
+</div>
+
+<main>
+  <section id="tab-opportunities" class="tab-panel active">
+    <div class="filters" id="filters">
+      <input type="text" id="search" class="search" data-i18n-ph="search_ph" placeholder="Search coin…">
+      <select id="f-direction">
+        <option value="ALL" data-i18n="f_all_dir">ALL</option>
+        <option value="LONG">LONG</option>
+        <option value="SHORT">SHORT</option>
+      </select>
+      <select id="f-status">
+        <option value="ALL" data-i18n="f_all_status">ALL STATUS</option>
+        <option value="READY">READY</option>
+        <option value="WAITING_CONFIRMATION">WAITING</option>
+        <option value="TRIGGERED">TRIGGERED</option>
+        <option value="TP1_HIT">TP1 HIT</option>
+        <option value="TP2_HIT">TP2 HIT</option>
+        <option value="STOPPED">STOPPED</option>
+      </select>
+      <select id="f-sort">
+        <option value="score" data-i18n="sort_score">Sort: Score</option>
+        <option value="rr" data-i18n="sort_rr">Sort: Risk/Reward</option>
+        <option value="profit" data-i18n="sort_profit">Sort: Potential Profit</option>
+        <option value="volume" data-i18n="sort_volume">Sort: Volume</option>
+        <option value="updated" data-i18n="sort_updated">Sort: Updated Time</option>
+      </select>
+      <button class="chip" id="chip-high" data-i18n="chip_high">HIGH SCORE ≥ 85</button>
+      <button class="chip" id="chip-ready">READY</button>
+      <button class="chip" id="chip-long">LONG</button>
+    </div>
+
+    <div id="opps-grid" class="grid"></div>
+    <div id="empty-state" class="empty hidden">
+      <div class="empty-icon">∅</div>
+      <h2 data-i18n="no_setups">No High-Quality Setup Found</h2>
+      <p data-i18n="no_setups_sub">The scanner intentionally shows nothing when no opportunity scores above the quality threshold.</p>
+    </div>
+  </section>
+
+  <section id="tab-performance" class="tab-panel">
+    <div class="perf-grid" id="perf-grid"></div>
+    <div class="perf-note">⚠ <span data-i18n="perf_disclaimer">These statistics describe the scanner's own history. They are NOT a promise of future performance. Past results never guarantee future outcomes.</span></div>
+    <h3 data-i18n="closed_setups">Closed Setups History</h3>
+    <div class="table-wrap">
+      <table id="history-table">
+        <thead><tr>
+          <th data-i18n="h_pair">Pair</th><th data-i18n="h_dir">Dir</th><th data-i18n="h_setup">Setup</th>
+          <th data-i18n="h_entry">Entry</th><th data-i18n="h_result">Result</th><th data-i18n="h_score">Score</th>
+          <th data-i18n="h_hold">Hold</th><th data-i18n="h_closed">Closed</th>
+        </tr></thead>
+        <tbody id="history-body"></tbody>
+      </table>
+    </div>
+    <div id="history-empty" class="empty hidden">
+      <p data-i18n="no_history">No closed setups yet — history builds up as opportunities play out.</p>
+    </div>
+  </section>
+
+  <section id="tab-about" class="tab-panel">
+    <div class="about-box">
+      <h2 data-i18n="about_title">How this system works</h2>
+      <p data-i18n="about_p1">Every 15 minutes a GitHub Actions workflow pulls live public Binance market data, screens hundreds of USDT spot pairs, runs deterministic multi-timeframe technical analysis (15m/1h/4h/1d: EMA 20/50/200, RSI, MACD, ATR, VWAP, structure, breakout detection), computes entry zones, stop losses and targets, scores each plan out of 100, tracks the lifecycle of published setups, and commits the results as JSON.</p>
+      <p data-i18n="about_p2">The dashboard is a static page that reads those JSON files — nothing is invented, no LLM produces any price or level, and the system never places orders. It is 100% read-only.</p>
+      <div class="about-stats" id="about-stats"></div>
+      <p class="legal" data-i18n="about_legal">Trading digital assets carries high risk. This tool is for informational and educational purposes only and is not financial advice.</p>
+    </div>
+  </section>
+</main>
+
+<!-- opportunity detail modal -->
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h2 id="m-title">—</h2>
+        <div class="m-sub" id="m-sub"></div>
+      </div>
+      <button class="close" id="m-close">✕</button>
+    </div>
+    <div class="modal-body" id="m-body"></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <span data-i18n="footer1">Read-only market analysis. No orders, no withdrawals, no API keys.</span>
+  <span id="footer-version"></span>
+</footer>
+
+<script>
+// Embedded snapshot fallback (injected by scripts/build_static.py)
+window.__EMBEDDED__ = window.__EMBEDDED__ || null;
+</script>
+<script src="js/i18n.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
