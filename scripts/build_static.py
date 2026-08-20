@@ -31,12 +31,19 @@ def load_data():
             with open(p, 'r', encoding='utf-8') as f:
                 return json.load(f)
         return default
+    klines = {}
+    kdir = os.path.join(DATA, 'klines')
+    if os.path.isdir(kdir):
+        for fn in os.listdir(kdir):
+            if fn.endswith('.json'):
+                klines[fn[:-5]] = j(os.path.join('klines', fn))
     return {
         'opportunities': j('opportunities.json', []),
         'meta': j('meta.json'),
         'market': j('market.json'),
         'performance': j('performance.json'),
         'history': j('history.json', []),
+        'klines': klines,
     }
 
 

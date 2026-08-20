@@ -49,7 +49,7 @@ const I18N = {
     tp1_rate: "TP1 Hit Rate", tp2_rate: "TP2 Hit Rate", tp3_rate: "TP3 Hit Rate",
     avg_score: "Average Score", avg_rr: "Average R:R (TP2)", avg_hold: "Avg Hold (h)",
     market_bullish: "Bullish", market_bearish: "Bearish", market_neutral: "Neutral",
-    data_from: "Data source", last_success: "Last successful update", engine: "Engine version",
+    data_from: "Data source", last_success: "Last successful update", engine: "Engine version", update_interval: "Update interval", max_opps: "Opportunities cap",
     no_data: "No data yet — run the analyzer first.",
     live: "LIVE", stale_warn: "Data is stale — last successful update",
     filters_min: "Min score", col_symbol: "Symbol", col_score: "Score",
@@ -103,14 +103,14 @@ const I18N = {
     tp1_rate: "نسبة تحقق TP1", tp2_rate: "نسبة تحقق TP2", tp3_rate: "نسبة تحقق TP3",
     avg_score: "متوسط النقاط", avg_rr: "متوسط R:R (TP2)", avg_hold: "متوسط المدة (ساعة)",
     market_bullish: "صاعد", market_bearish: "هابط", market_neutral: "محايد",
-    data_from: "مصدر البيانات", last_success: "آخر تحديث ناجح", engine: "إصدار المحرك",
+    data_from: "مصدر البيانات", last_success: "آخر تحديث ناجح", engine: "إصدار المحرك", update_interval: "فترة التحديث", max_opps: "حد أقصى للفرص",
     no_data: "لا توجد بيانات بعد — شغّل المحلل أولًا.",
     live: "مباشر", stale_warn: "البيانات قديمة — آخر تحديث ناجح",
     filters_min: "الحد الأدنى للنقاط", col_symbol: "العملة", col_score: "النقاط",
   }
 };
 
-let LANG = (localStorage.getItem('dash-lang') || 'en');
+var LANG = (localStorage.getItem('dash-lang') || 'en');
 function t(key) { return (I18N[LANG] && I18N[LANG][key]) || I18N.en[key] || key; }
 function setLang(lang) {
   LANG = lang;

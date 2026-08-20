@@ -297,12 +297,18 @@ async function openModal(id) {
       <h3>${t('confirmation')}</h3><div class="note">${esc(o.confirmation || '—')}</div>
       <h3>${t('events')}</h3><div class="timeline">${evs}</div>
     </div>`;
-  // load chart
+  // load chart (network first, embedded snapshot as fallback)
+  let cd = null;
   try {
-    const cd = await fetchJSON(`data/klines/${o.symbol}_4h.json`);
+    cd = await fetchJSON(`data/klines/${o.symbol}_4h.json`);
+  } catch (e) {
+    const em = window.__EMBEDDED__;
+    cd = em && em.klines ? (em.klines[`${o.symbol}_4h`] || null) : null;
+  }
+  if (cd) {
     const canvas = document.getElementById('m-chart');
     if (canvas && canvas.clientWidth > 0) drawChart(canvas, cd, o);
-  } catch (e) { /* chart unavailable — modal still works */ }
+  }
 }
 
 function closeModal() {
@@ -347,8 +353,8 @@ function renderAbout() {
     cell(t('last_success'), locTime(m.data_timestamp)) +
     cell(t('data_from'), (m.source || '').replace('https://', '')) +
     cell(t('filters_min'), m.config.min_score_to_show) +
-    cell('Update interval', m.update_interval_minutes + ' min') +
-    cell(t('col_symbol') + ' cap', m.config.max_opportunities);
+    cell(t('update_interval'), m.update_interval_minutes + ' min') +
+    cell(t('max_opps'), m.config.max_opportunities);
 }
 
 /* ---------------- filters / events ---------------- */
@@ -385,6 +391,8 @@ window.renderAll = function () {
 
 /* ---------------- boot ---------------- */
 async function init() {
+  if (window.__dashInit) return; // guard against double initialization
+  window.__dashInit = true;
   bindControls();
   setLang(LANG); // applies i18n + triggers first renderAll
   await loadAll();
@@ -401,3 +409,4 @@ async function init() {
   setInterval(tickCountdown, 1000);
 }
 document.addEventListener('DOMContentLoaded', init);
+if (document.readyState !== 'loading') init(); // script loaded after DOM is ready
