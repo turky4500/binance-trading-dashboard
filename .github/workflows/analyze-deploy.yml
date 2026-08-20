@@ -64,7 +64,11 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # checkout the LATEST main (not the trigger SHA) so the freshly
+      # committed data from the analyze job is included in the deployment
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/configure-pages@v5
       - name: Build static site
         run: python scripts/build_static.py
