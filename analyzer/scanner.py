@@ -23,7 +23,7 @@ from .storage import load_json, save_json, data_path, iso
 TFS = ['15m', '1h', '4h', '1d']
 SKIP_BASE = {
     'USDC', 'FDUSD', 'TUSD', 'USDP', 'DAI', 'AEUR', 'BUSD', 'PAXG', 'XAUT', 'PYUSD',
-    'XUSD', 'BFUSD', 'EURI', 'RLUSD', 'USDE', 'USD1', 'USDR', 'WBTC', 'BTCB', 'CBBTC',
+    'XUSD', 'BFUSD', 'EURI', 'RLUSD', 'USDE', 'USD1', 'USDR', 'USDX', 'U', 'WBTC', 'BTCB', 'CBBTC',
     'LBTC', 'WETH', 'WBETH', 'WBNB', 'STETH', 'LSTETH', 'EUR', 'USTC',
 }
 
