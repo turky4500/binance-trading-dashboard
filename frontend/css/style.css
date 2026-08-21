@@ -283,3 +283,22 @@ body.ws-on .lp-dot{background:var(--green);animation:pulse 1.8s infinite}
 .calc-field input:focus{outline:none;border-color:var(--accent)}
 .calc-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .calc-note{font-size:11.5px;color:var(--text3);margin-top:10px}
+
+/* ---------- settings panel ---------- */
+.mini-select,.mini-input{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:12.5px;font-family:var(--mono)}
+.mini-input{width:70px;text-align:center}
+.mini-select{cursor:pointer}
+
+/* ---------- market tab ---------- */
+.market-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.market-charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.mcell{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.mcell-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;font-size:12.5px;color:var(--text2);font-weight:600}
+.mcell-head b{font-family:var(--mono);font-size:14px;color:var(--text)}
+.health-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.update-log{display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto}
+.ul-row{display:flex;gap:14px;align-items:center;font-family:var(--mono);font-size:12.5px;color:var(--text2);border-bottom:1px dashed var(--divider);padding-bottom:5px}
+.ul-row time{color:var(--text3);min-width:110px}
+.ul-row .ok{color:var(--green)}
+.ul-row .dur{color:var(--text3);margin-inline-start:auto}
+@media (max-width:720px){.market-charts{grid-template-columns:1fr}}

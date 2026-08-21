@@ -349,3 +349,31 @@ def test_brand_new_opportunity_detected():
     new = _carry_over_fresh(active, [fresh_plan], '2026-01-01T01:00:00Z', ('TRIGGERED',))
     assert new == [fresh_plan]
     assert active['NUSDT|LONG'] is fresh_plan
+
+
+# ---------------- market history recording ----------------
+def test_record_market_history_caps_and_dedup(tmp_path, monkeypatch):
+    from analyzer import scanner as sc
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    market = {'breadth_pct_above_ema50': 62.3, 'status': 'BULLISH', 'btc': {'price': 77000.0}}
+    sc._record_market_history(market, '2026-01-01T00:00:00Z', 35.2)
+    sc._record_market_history(market, '2026-01-01T00:00:00Z', 35.2)  # duplicate ignored
+    for i in range(1, 25):
+        sc._record_market_history({'breadth_pct_above_ema50': 50.0 + i, 'status': 'BULLISH', 'btc': {'price': 77000.0 + i}},
+                                  f'2026-01-01T{i:02d}:00:00Z', 40.0)
+    bh = st.load_json(st.data_path('breadth_history.json'))
+    ul = st.load_json(st.data_path('update_log.json'))
+    assert len(bh) == 25, f'cap + dedup (got {len(bh)})'
+    assert len(ul) == 25
+    assert bh[0]['breadth'] == 62.3
+    assert ul[0]['ok'] is True and ul[0]['duration'] == 35.2
+
+
+def test_record_market_history_never_raises(tmp_path, monkeypatch):
+    from analyzer import scanner as sc
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    # even with a poisoned market payload, recording must not raise
+    sc._record_market_history({'breadth_pct_above_ema50': None, 'status': None, 'btc': None}, 'x', None)
+    assert True  # no exception = pass

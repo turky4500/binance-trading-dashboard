@@ -248,6 +248,8 @@ def scan(cfg, now_iso=None, verbose=True):
 
     # ---------- 6. market status + persist
     market = _market_status(daily, meta_by_sym)
+    runtime = round(time.time() - t0, 1)
+    _record_market_history(market, now_iso, runtime)
     # chart data for displayed symbols
     _write_chart_cache(merged, intraday, daily, now_iso, stp)
 
@@ -274,7 +276,7 @@ def scan(cfg, now_iso=None, verbose=True):
             'allow_shorts': cfg.get('strategy', {}).get('allow_shorts', True),
         },
         'errors': errors[-10:],
-        'runtime_seconds': round(time.time() - t0, 1),
+        'runtime_seconds': runtime,
     })
     if verbose:
         print(f"[6/6] Saved. Source: {bc.source_host()} | runtime {time.time()-t0:.1f}s")
@@ -457,3 +459,26 @@ def _market_status(daily, meta_by_sym):
         'btc': btc,
         'top_quote_volume_24h': round(sum(v['quoteVol'] for _, v in top) / 1e6, 1),
     }
+
+
+def _record_market_history(market, now_iso, runtime):
+    """Append this cycle's breadth snapshot + a pipeline update-log entry.
+    Both files are capped so the repo stays small; the dashboard uses them
+    for the Market tab (breadth chart, BTC line, pipeline health)."""
+    try:
+        bh = load_json(data_path('breadth_history.json'), [])
+        if not bh or bh[-1].get('t') != now_iso:
+            bh.append({
+                't': now_iso,
+                'breadth': market['breadth_pct_above_ema50'],
+                'status': market['status'],
+                'btc': (market.get('btc') or {}).get('price'),
+            })
+        save_json(data_path('breadth_history.json'), bh[-1000:])
+
+        ul = load_json(data_path('update_log.json'), [])
+        if not ul or ul[-1].get('t') != now_iso:
+            ul.append({'t': now_iso, 'ok': True, 'duration': runtime})
+        save_json(data_path('update_log.json'), ul[-120:])
+    except Exception:
+        pass  # history recording must never break the analysis cycle

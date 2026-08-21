@@ -52,6 +52,10 @@ The engine is **100% deterministic**: every indicator, entry, stop and target is
 - 📉 Upgraded charts: 1H/4H timeframe switcher, volume bars, RSI(14) panel, EMA/VWAP/SuperTrend overlays and trade levels drawn on the same canvas
 - 🧮 Position size calculator in every analysis (risk-based sizing: qty = capital × risk% ÷ stop distance — spot only, no leverage)
 - ⭐ Persistent watchlist with live prices, star-to-follow cards and a dedicated filter
+- 📈 Market tab: historical breadth chart (% of top-30 above EMA50), BTC line, pipeline health (cycles/24h, longest gap, avg duration) and a live pipeline log
+- ⚙️ In-page settings panel (theme, language, live prices on/off, display min-score and card limits, alert toggles) — persisted locally
+- 📱 Installable PWA (manifest + service worker with honest network-first caching — stale data is never served as live), works offline
+- 🩺 Health monitoring: [UptimeRobot guide](docs/HEALTH_MONITORING.md) + optional Telegram notification when the pipeline fails
 - 🔍 Search, filters (direction/status/high-score) and sorting
 - 📱 Responsive dark UI, English/Arabic (RTL), 4H candlestick charts with levels drawn
 - 🔔 Full lifecycle alerts: Telegram notifications for every transition (READY / TRIGGERED / TP hits / STOPPED / EXPIRED / INVALIDATED — per-event toggles), plus optional in-browser notifications and distinctive sounds for each event while the dashboard is open

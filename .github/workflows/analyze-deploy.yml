@@ -76,6 +76,17 @@ jobs:
           done
           echo "push failed after 3 attempts"
           exit 1
+      - name: Notify failure (Telegram — optional)
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            python scripts/notify_failure.py
+          else
+            echo "no telegram secrets — skipping failure notification"
+          fi
 
   deploy:
     needs: analyze

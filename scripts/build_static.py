@@ -44,6 +44,8 @@ def load_data():
         'performance': j('performance.json'),
         'history': j('history.json', []),
         'backtest': j('performance_backtest.json'),
+        'breadth_history': j('breadth_history.json'),
+        'update_log': j('update_log.json'),
         'klines': klines,
     }
 

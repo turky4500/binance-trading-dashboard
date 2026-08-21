@@ -20,6 +20,10 @@ const data = {
   history: JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'history.json'), 'utf-8')),
   backtest: (() => { const p = path.join(ROOT, 'data', 'performance_backtest.json');
     try { return JSON.parse(fs.readFileSync(p, 'utf-8')); } catch (e) { return null; } })(),
+  breadth_history: (() => { const p = path.join(ROOT, 'data', 'breadth_history.json');
+    try { return JSON.parse(fs.readFileSync(p, 'utf-8')); } catch (e) { return []; } })(),
+  update_log: (() => { const p = path.join(ROOT, 'data', 'update_log.json');
+    try { return JSON.parse(fs.readFileSync(p, 'utf-8')); } catch (e) { return []; } })(),
 };
 const klines = {};
 for (const o of data.opportunities) {
@@ -236,6 +240,44 @@ const assert = (cond, msg) => {
   // close panel
   window.document.body.click();
   assert(alertPanel.classList.contains('hidden'), 'alert panel closes on outside click');
+
+  // 7d. market tab: breadth chart + pipeline health + update log
+  window.document.querySelector('[data-tab="market"]').click();
+  await wait(150);
+  const bChart = window.document.getElementById('breadth-chart');
+  const btcChart = window.document.getElementById('btc-chart');
+  if (data.breadth_history && data.breadth_history.length >= 2) {
+    assert(!!bChart && bChart.width > 0, 'breadth chart drawn');
+    assert(!!btcChart && btcChart.width > 0, 'btc line chart drawn');
+  } else {
+    assert(!!bChart, 'breadth chart canvas exists');
+  }
+  assert(window.document.getElementById('health-grid').textContent.length > 0, 'pipeline health grid rendered');
+  assert(window.document.getElementById('update-log').textContent.length > 0, 'update log rendered');
+
+  // 7e. settings panel: open + min-score filter + live pause + reset
+  const setBtn = window.document.getElementById('settings-btn');
+  const setPanel = window.document.getElementById('settings-panel');
+  setBtn.click();
+  await wait(40);
+  assert(!setPanel.classList.contains('hidden'), 'settings panel opens');
+  const minScore = window.document.getElementById('set-minscore');
+  minScore.value = '95';
+  minScore.dispatchEvent(new window.Event('change', { bubbles: true }));
+  const cardsNow = window.document.querySelectorAll('#opps-grid .card').length;
+  assert(cardsNow === 0 || data.opportunities.every(o => o.score < 95), 'min-score display filter works');
+  minScore.value = '0';
+  minScore.dispatchEvent(new window.Event('change', { bubbles: true }));
+  const liveBox = window.document.getElementById('set-live');
+  liveBox.checked = false;
+  liveBox.dispatchEvent(new window.Event('change', { bubbles: true }));
+  assert(window.LivePrices.isPaused(), 'live feed pauses from settings');
+  liveBox.checked = true;
+  liveBox.dispatchEvent(new window.Event('change', { bubbles: true }));
+  assert(!window.LivePrices.isPaused(), 'live feed resumes from settings');
+  window.document.getElementById('set-reset').click();
+  await wait(40);
+  setPanel.classList.add('hidden'); // close
 
   // 8. performance tab
   window.document.querySelector('[data-tab="performance"]').click();

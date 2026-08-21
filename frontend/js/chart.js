@@ -286,3 +286,91 @@ function drawChart(canvas, data, opp, opts) {
 window.drawChart = drawChart;
 window.fmtNum = fmtNum;
 window.fmtVol = fmtVol;
+
+/* Generic time-series line chart (Market tab: breadth, BTC) */
+function drawLineChart(canvas, opts) {
+  // opts: { labels:[{t,label}], values:[], color, band?:[lo,hi], yFmt?:(v)=>str, fill?:bool }
+  if (!canvas || !opts || !opts.values || opts.values.length < 2) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth || 700, H = opts.height || 220;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const vals = opts.values;
+  let lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+  if (opts.band) { lo = Math.min(lo, opts.band[0]); hi = Math.max(hi, opts.band[1]); }
+  const span = hi - lo || 1;
+  lo -= span * 0.08; hi += span * 0.08;
+  const plotL = 8, plotR = 64, plotT = 10, plotB = 22;
+  const pw = W - plotL - plotR, ph = H - plotT - plotB;
+  const n = vals.length;
+  const X = i => plotL + (n === 1 ? pw / 2 : i * pw / (n - 1));
+  const Y = v => plotT + (hi - v) / (hi - lo) * ph;
+  const isLight = document.documentElement.dataset.theme === 'light';
+  const GRID = isLight ? 'rgba(10,20,35,.08)' : 'rgba(255,255,255,.05)';
+  const LABEL = isLight ? '#7a8694' : '#6b7886';
+  const color = opts.color || '#f0b90b';
+
+  ctx.font = '10px ui-monospace,monospace';
+  // grid + y labels
+  for (let s = 0; s <= 4; s++) {
+    const v = lo + (hi - lo) * s / 4;
+    ctx.strokeStyle = GRID;
+    ctx.beginPath(); ctx.moveTo(plotL, Y(v)); ctx.lineTo(W - plotR, Y(v)); ctx.stroke();
+    ctx.fillStyle = LABEL; ctx.textAlign = 'right';
+    ctx.fillText(opts.yFmt ? opts.yFmt(v) : fmtNum(v), W - plotR + 58, Y(v) + 3);
+  }
+  // band (e.g. 35-60 breadth thresholds)
+  if (opts.band) {
+    ctx.fillStyle = 'rgba(240,185,11,.05)';
+    ctx.fillRect(plotL, Y(opts.band[1]), pw, Y(opts.band[0]) - Y(opts.band[1]));
+    ctx.setLineDash([4, 4]);
+    opts.band.forEach(b => {
+      ctx.strokeStyle = 'rgba(240,185,11,.35)';
+      ctx.beginPath(); ctx.moveTo(plotL, Y(b)); ctx.lineTo(W - plotR, Y(b)); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+  }
+  // time labels
+  ctx.textAlign = 'center';
+  const step = Math.max(1, Math.ceil(n / 6));
+  for (let i = 0; i < n; i += step) {
+    const l = opts.labels[i];
+    ctx.fillStyle = LABEL;
+    ctx.fillText(l ? (l.label || '') : '', X(i), H - 6);
+  }
+  // fill + line
+  if (opts.fill !== false) {
+    let grad = null;
+    try { grad = ctx.createLinearGradient(0, plotT, 0, plotT + ph); } catch (e) { /* stub contexts */ }
+    if (grad && grad.addColorStop) {
+      grad.addColorStop(0, color + '55');
+      grad.addColorStop(1, color + '05');
+      ctx.fillStyle = grad;
+    } else {
+      ctx.fillStyle = color + '22';
+    }
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(vals[0]));
+    for (let i = 1; i < n; i++) ctx.lineTo(X(i), Y(vals[i]));
+    ctx.lineTo(X(n - 1), plotT + ph); ctx.lineTo(X(0), plotT + ph); ctx.closePath();
+    ctx.fill();
+  }
+  ctx.strokeStyle = color; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const x = X(i), y = Y(vals[i]);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke(); ctx.lineWidth = 1;
+  // last point marker + value
+  const lx = X(n - 1), ly = Y(vals[n - 1]);
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(lx, ly, 3.2, 0, Math.PI * 2); ctx.fill();
+  ctx.font = 'bold 10px ui-monospace,monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText(opts.yFmt ? opts.yFmt(vals[n - 1]) : fmtNum(vals[n - 1]), W - plotR + 58, ly + 3);
+}
+window.drawLineChart = drawLineChart;

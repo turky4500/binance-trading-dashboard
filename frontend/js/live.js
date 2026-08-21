@@ -11,6 +11,7 @@ const LivePrices = (function () {
   let ws = null;
   let endpointIdx = 0;
   let active = false;
+  let paused = false;
   let symbols = [];
   let prices = {};
   let timers = {};
@@ -52,7 +53,7 @@ const LivePrices = (function () {
   function connect() {
     if (typeof WebSocket === 'undefined') return; // no WS support -> stay passive
     if (!symbols.length) return;
-    if (active) return; // already connected
+    if (active || paused) return; // already connected / user paused the feed
     clearTimeout(retryTimer);
     const streams = symbols.map(s => s.toLowerCase() + '@miniTicker').join('/');
     const url = ENDPOINTS[endpointIdx % ENDPOINTS.length] + '/stream?streams=' + streams;
@@ -83,13 +84,28 @@ const LivePrices = (function () {
   }
 
   function scheduleRetry() {
-    if (retryTimer) return;
+    if (retryTimer || paused) return;
     setActive(false);
     retryTimer = setTimeout(() => {
       retryTimer = null;
       retryDelay = Math.min(retryDelay * 1.7, 30000);
       connect();
     }, retryDelay);
+  }
+
+  function pause() {
+    paused = true;
+    clearTimeout(retryTimer);
+    retryTimer = null;
+    if (ws) { try { ws.close(); } catch (e) {} }
+    ws = null;
+    setActive(false);
+  }
+
+  function resume() {
+    paused = false;
+    retryDelay = 5000;
+    connect();
   }
 
   function subscribe(syms) {
@@ -109,6 +125,9 @@ const LivePrices = (function () {
   return {
     subscribe,
     isActive: () => active,
+    isPaused: () => paused,
+    pause,
+    resume,
     currentPrice: sym => prices[sym],
   };
 })();

@@ -3,9 +3,28 @@
 
 const state = {
   meta: null, market: null, opps: [], perf: null, history: [], bt: null,
+  bh: null, ul: null,
   filter: { q: '', dir: 'ALL', status: 'ALL', sort: 'score', high: false, watch: false },
+  prefs: loadPrefs(),
   usingEmbedded: false, chartData: null,
 };
+
+function loadPrefs() {
+  const d = { minScore: 0, maxCards: 20, live: true };
+  try {
+    const s = localStorage.getItem('dash-prefs');
+    if (s) {
+      const p = JSON.parse(s);
+      d.minScore = isFinite(+p.minScore) ? Math.max(0, Math.min(100, +p.minScore)) : 0;
+      d.maxCards = isFinite(+p.maxCards) ? Math.max(1, Math.min(50, +p.maxCards)) : 20;
+      d.live = p.live !== false;
+    }
+  } catch (e) { /* defaults */ }
+  return d;
+}
+function savePrefs() {
+  try { localStorage.setItem('dash-prefs', JSON.stringify(state.prefs)); } catch (e) {}
+}
 
 /* ---------------- data loading ---------------- */
 async function fetchJSON(path) {
@@ -22,13 +41,15 @@ async function loadAll() {
   // embedded snapshot unless there is no data at all.
   const hadMeta = !!state.meta;
   const prevOpps = window.__dashDataSeeded ? state.opps.slice() : null;
-  const [m, mk, o, p, h, bt] = await Promise.allSettled([
+  const [m, mk, o, p, h, bt, bh, ul] = await Promise.allSettled([
     fetchJSON('data/meta.json'),
     fetchJSON('data/market.json'),
     fetchJSON('data/opportunities.json'),
     fetchJSON('data/performance.json'),
     fetchJSON('data/history.json'),
     fetchJSON('data/performance_backtest.json'),
+    fetchJSON('data/breadth_history.json'),
+    fetchJSON('data/update_log.json'),
   ]);
   if (m.status === 'fulfilled') {
     state.meta = m.value;
@@ -38,6 +59,8 @@ async function loadAll() {
     state.meta = em.meta; state.market = em.market; state.opps = em.opportunities;
     state.perf = em.performance; state.history = em.history || [];
     state.bt = em.backtest || null;
+    state.bh = em.breadth_history || null;
+    state.ul = em.update_log || null;
     state.usingEmbedded = true;
   } else if (!hadMeta) {
     state.meta = null;
@@ -47,6 +70,8 @@ async function loadAll() {
   if (p.status === 'fulfilled') state.perf = p.value;
   if (h.status === 'fulfilled') state.history = h.value;
   if (bt.status === 'fulfilled') state.bt = bt.value;
+  if (bh.status === 'fulfilled') state.bh = bh.value;
+  if (ul.status === 'fulfilled') state.ul = ul.value;
   // lifecycle alerts: diff vs previously displayed data (skipped on first seed)
   if (window.Alerts && prevOpps && prevOpps.length && o.status === 'fulfilled') {
     window.Alerts.diffEvents(prevOpps, state.opps).forEach(ev => window.Alerts.emit(ev));
@@ -342,6 +367,9 @@ function filteredOpps() {
     updated: (a, b) => new Date(b.updated_at) - new Date(a.updated_at),
   };
   list.sort(sorters[f.sort] || sorters.score);
+  // display preferences: min score + max cards (client-side, local only)
+  if (state.prefs.minScore > 0) list = list.filter(o => o.score >= state.prefs.minScore);
+  list = list.slice(0, state.prefs.maxCards);
   return list;
 }
 
@@ -658,6 +686,74 @@ function renderBacktest() {
     <details class="bt-approx"><summary>${t('bt_approx')}</summary><ul>${approx}</ul></details>`;
 }
 
+/* ---------------- market tab (breadth + pipeline health) ---------------- */
+function renderMarketTab() {
+  const stats = document.getElementById('market-stats');
+  if (stats) {
+    const m = state.market;
+    stats.innerHTML = m ? `
+      <div class="perf"><div class="k">${t('market_bullish')} / ${t('market_bearish')} / ${t('market_neutral')}</div>
+        <div class="v" style="color:${m.status === 'BULLISH' ? 'var(--green)' : m.status === 'BEARISH' ? 'var(--red)' : 'var(--yellow)'}">${m.status}</div></div>
+      <div class="perf"><div class="k">${t('breadth')}</div><div class="v">${m.breadth_pct_above_ema50}%</div></div>
+      <div class="perf"><div class="k">${t('btc_price')}</div><div class="v">${m.btc ? fmtPrice(m.btc.price) : '—'}</div></div>
+      <div class="perf"><div class="k">${t('coins_analyzed')}</div><div class="v">${m.coins_analyzed}</div></div>
+      <div class="perf"><div class="k">${t('volume_24h')} (top30)</div><div class="v">$${m.top_quote_volume_24h}M</div></div>` : '';
+  }
+  const bh = state.bh;
+  const bChart = document.getElementById('breadth-chart');
+  const btcChart = document.getElementById('btc-chart');
+  if (bh && bh.length >= 2) {
+    document.getElementById('breadth-now').textContent = bh[bh.length - 1].breadth + '%';
+    const labels = bh.map(x => ({ label: locTime(x.t) }));
+    if (bChart) drawLineChart(bChart, {
+      values: bh.map(x => x.breadth), labels, color: '#f0b90b',
+      band: [35, 60], yFmt: v => v.toFixed(0) + '%',
+    });
+    const btcVals = bh.map(x => x.btc).filter(v => isFinite(v));
+    if (btcChart && btcVals.length >= 2) {
+      document.getElementById('btc-now').textContent = fmtPrice(btcVals[btcVals.length - 1]);
+      drawLineChart(btcChart, {
+        values: bh.map(x => x.btc).map(v => isFinite(v) ? v : null), labels, color: '#16c784',
+        yFmt: v => fmtPrice(v),
+      });
+    }
+  } else if (bChart) {
+    document.getElementById('breadth-now').textContent = '—';
+    document.getElementById('btc-now').textContent = '—';
+  }
+  // pipeline health (last 24h) from update log
+  const ul = state.ul || [];
+  const dayAgo = Date.now() - 24 * 3600 * 1000;
+  const recent = ul.filter(x => new Date(x.t).getTime() >= dayAgo);
+  let maxGap = 0;
+  for (let i = 1; i < recent.length; i++) {
+    maxGap = Math.max(maxGap, (new Date(recent[i].t) - new Date(recent[i - 1].t)) / 60000);
+  }
+  const durs = recent.filter(x => isFinite(x.duration)).map(x => x.duration);
+  const avgDur = durs.length ? durs.reduce((a, b) => a + b, 0) / durs.length : null;
+  const hg = document.getElementById('health-grid');
+  if (hg) {
+    const cell = (k, v, cls) => `<div class="perf"><div class="k">${k}</div><div class="v ${cls || ''}">${v}</div></div>`;
+    hg.innerHTML =
+      cell(t('cycles_24h'), recent.length, recent.length >= 10 ? 'good' : recent.length > 0 ? 'bad' : '') +
+      cell(t('max_gap'), maxGap > 0 ? Math.round(maxGap) + ' min' : '—') +
+      cell(t('avg_duration'), avgDur != null ? avgDur.toFixed(0) + ' s' : '—');
+    const hs = document.getElementById('health-summary');
+    if (hs) {
+      hs.textContent = recent.length === 0 ? t('no_market_history')
+        : maxGap > 90 ? '⚠ ' + Math.round(maxGap) + ' min' : 'OK';
+      hs.style.color = maxGap > 90 ? 'var(--yellow)' : 'var(--green)';
+    }
+  }
+  const log = document.getElementById('update-log');
+  if (log) {
+    const rows = ul.slice(-12).reverse().map(x => `<div class="ul-row">
+      <time>${locTime(x.t)}</time><span class="ok">${x.ok ? '✓' : '✗'}</span>
+      <span class="dur">${x.duration != null ? x.duration + 's' : ''}</span></div>`).join('');
+    log.innerHTML = rows || `<p class="alert-note">${t('no_market_history')}</p>`;
+  }
+}
+
 /* ---------------- about ---------------- */
 function renderAbout() {
   const m = state.meta;
@@ -692,6 +788,7 @@ function bindControls() {
     document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     document.getElementById('tab-' + b.dataset.tab).classList.add('active');
+    if (b.dataset.tab === 'market') renderMarketTab(); // canvases need visible width
   }));
   document.getElementById('m-close').addEventListener('click', closeModal);
   document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
@@ -700,6 +797,58 @@ function bindControls() {
   document.getElementById('theme-btn').addEventListener('click', () => {
     applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
   });
+  bindSettingsPanel();
+}
+
+function bindSettingsPanel() {
+  const btn = document.getElementById('settings-btn');
+  const panel = document.getElementById('settings-panel');
+  if (!btn || !panel) return;
+  const sync = () => {
+    document.getElementById('set-theme').value = document.documentElement.dataset.theme || 'dark';
+    document.getElementById('set-lang').value = LANG;
+    document.getElementById('set-live').checked = state.prefs.live;
+    document.getElementById('set-minscore').value = state.prefs.minScore;
+    document.getElementById('set-maxcards').value = state.prefs.maxCards;
+    const ap = window.Alerts ? window.Alerts.prefs() : null;
+    if (ap) {
+      document.getElementById('set-sound').checked = ap.sound;
+      document.getElementById('set-notif').checked = ap.notif;
+    }
+  };
+  btn.addEventListener('click', e => { e.stopPropagation(); panel.classList.toggle('hidden'); if (!panel.classList.contains('hidden')) sync(); });
+  document.addEventListener('click', e => {
+    if (!panel.classList.contains('hidden') && !panel.contains(e.target) && e.target !== btn) panel.classList.add('hidden');
+  });
+  document.getElementById('set-theme').addEventListener('change', e => applyTheme(e.target.value));
+  document.getElementById('set-lang').addEventListener('change', e => setLang(e.target.value));
+  document.getElementById('set-live').addEventListener('change', e => {
+    state.prefs.live = e.target.checked; savePrefs();
+    if (window.LivePrices) {
+      if (state.prefs.live) window.LivePrices.resume();
+      else window.LivePrices.pause();
+    }
+  });
+  document.getElementById('set-sound').addEventListener('change', e => {
+    if (window.Alerts) { const p = window.Alerts.prefs(); p.sound = e.target.checked; window.Alerts.setPrefs(p); }
+  });
+  document.getElementById('set-notif').addEventListener('change', e => {
+    if (window.Alerts) { const p = window.Alerts.prefs(); p.notif = e.target.checked; window.Alerts.setPrefs(p); }
+  });
+  document.getElementById('set-minscore').addEventListener('change', e => {
+    state.prefs.minScore = Math.max(0, Math.min(100, +e.target.value || 0)); savePrefs(); renderCards();
+  });
+  document.getElementById('set-maxcards').addEventListener('change', e => {
+    state.prefs.maxCards = Math.max(1, Math.min(50, +e.target.value || 20)); savePrefs(); renderCards();
+  });
+  document.getElementById('set-reset').addEventListener('click', () => {
+    try { localStorage.removeItem('dash-prefs'); } catch (e) {}
+    state.prefs = loadPrefs();
+    applyTheme('dark'); setLang('en');
+    if (window.Alerts) window.Alerts.setPrefs({ sound: true, notif: true });
+    sync(); renderCards();
+    toast(t('reset_prefs'), 'ok');
+  });
 }
 
 /* ---------------- render all ---------------- */
@@ -707,6 +856,7 @@ window.renderAll = function () {
   renderHeader();
   renderCards();
   renderWatchBar();
+  renderMarketTab();
   renderPerformance();
   renderAbout();
 };
@@ -724,6 +874,13 @@ async function init() {
   if (window.Alerts) window.Alerts.initPanel();
   setLang(LANG); // applies i18n + triggers first renderAll
   await loadAll();
+  if (window.LivePrices && !state.prefs.live) window.LivePrices.pause();
+  // PWA: register the service worker (http/https only; harmless elsewhere)
+  try {
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  } catch (e) { /* unsupported context */ }
   // tick every second: data age, live badge, countdown ring, auto-refresh at zero
   setInterval(tick, 1000);
   // safety net: background check every minute (silent unless new data arrives)

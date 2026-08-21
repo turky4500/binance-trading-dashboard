@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Binance Trading Dashboard</title>
+<meta name="theme-color" content="#0b0e11">
+<meta name="description" content="Automated read-only Binance spot trading-opportunities dashboard — analysis only, no trading.">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -27,8 +32,7 @@
     </div>
     <div class="alert-wrap">
       <button class="lang-btn" id="alert-btn" title="Alerts">🔔</button>
-      <div class="alert-panel hidden" id="alert-panel">
-        <h4 data-i18n="alerts_title">Alerts &amp; Notifications</h4>
+      <div class="alert-panel hidden" id="alert-panel">        <h4 data-i18n="alerts_title">Alerts &amp; Notifications</h4>
         <p class="alert-note" data-i18n="alerts_note"></p>
         <label class="alert-row"><input type="checkbox" id="al-notif"> <span data-i18n="notif_master"></span></label>
         <label class="alert-row"><input type="checkbox" id="al-sound"> <span data-i18n="sound_master"></span></label>
@@ -41,6 +45,27 @@
         <label class="alert-row"><input type="checkbox" id="al-ev-expired"> <span data-i18n="ev_expired"></span></label>
         <label class="alert-row"><input type="checkbox" id="al-ev-invalidated"> <span data-i18n="ev_invalidated"></span></label>
         <button class="btn small" id="al-test" data-i18n="test_sound">Test sound</button>
+      </div>
+    </div>
+    <div class="alert-wrap">
+      <button class="lang-btn" id="settings-btn" title="Settings">⚙️</button>
+      <div class="alert-panel hidden" id="settings-panel">
+        <h4 data-i18n="settings_title">Settings</h4>
+        <p class="alert-note" data-i18n="settings_note"></p>
+        <label class="alert-row"><span data-i18n="theme_label" style="flex:1"></span>
+          <select id="set-theme" class="mini-select"><option value="dark" data-i18n="theme_dark">Dark</option><option value="light" data-i18n="theme_light">Light</option></select></label>
+        <label class="alert-row"><span data-i18n="lang_label" style="flex:1"></span>
+          <select id="set-lang" class="mini-select"><option value="en">English</option><option value="ar">العربية</option></select></label>
+        <div class="alert-divider"></div>
+        <label class="alert-row"><span data-i18n="live_prices" style="flex:1"></span><input type="checkbox" id="set-live"></label>
+        <label class="alert-row"><span data-i18n="sound_master" style="flex:1"></span><input type="checkbox" id="set-sound"></label>
+        <label class="alert-row"><span data-i18n="notif_master" style="flex:1"></span><input type="checkbox" id="set-notif"></label>
+        <div class="alert-divider"></div>
+        <label class="alert-row"><span data-i18n="min_score_disp" style="flex:1"></span>
+          <input type="number" id="set-minscore" min="0" max="100" step="5" class="mini-input" value="0"></label>
+        <label class="alert-row"><span data-i18n="max_cards_disp" style="flex:1"></span>
+          <input type="number" id="set-maxcards" min="1" max="50" step="1" class="mini-input" value="20"></label>
+        <button class="btn small" id="set-reset" data-i18n="reset_prefs">Reset</button>
       </div>
     </div>
     <button class="lang-btn" id="theme-btn">🌙</button>
@@ -67,6 +92,7 @@
 
 <div class="tabs" id="tabs">
   <button class="tab active" data-tab="opportunities"><span data-i18n="tab_opps">Opportunities</span><span class="tab-count" id="opp-count">0</span></button>
+  <button class="tab" data-tab="market"><span data-i18n="tab_market">Market</span></button>
   <button class="tab" data-tab="performance"><span data-i18n="tab_perf">Performance</span></button>
   <button class="tab" data-tab="about"><span data-i18n="tab_about">About</span></button>
 </div>
@@ -109,6 +135,28 @@
       <div class="empty-icon">∅</div>
       <h2 data-i18n="no_setups">No High-Quality Setup Found</h2>
       <p data-i18n="no_setups_sub">The scanner intentionally shows nothing when no opportunity scores above the quality threshold.</p>
+    </div>
+  </section>
+
+  <section id="tab-market" class="tab-panel">
+    <div class="market-stats" id="market-stats"></div>
+    <div class="market-charts">
+      <div class="mcell">
+        <div class="mcell-head"><span data-i18n="breadth_chart">Market Breadth (% above EMA50)</span><b id="breadth-now">—</b></div>
+        <div class="chart-wrap"><canvas id="breadth-chart" style="width:100%"></canvas></div>
+      </div>
+      <div class="mcell">
+        <div class="mcell-head"><span data-i18n="btc_chart">BTC / USDT</span><b id="btc-now">—</b></div>
+        <div class="chart-wrap"><canvas id="btc-chart" style="width:100%"></canvas></div>
+      </div>
+    </div>
+    <div class="mcell" style="margin-top:16px">
+      <div class="mcell-head"><span data-i18n="pipeline_health">Pipeline Health (last 24h)</span><b id="health-summary">—</b></div>
+      <div class="health-grid" id="health-grid"></div>
+    </div>
+    <div class="mcell" style="margin-top:16px">
+      <div class="mcell-head"><span data-i18n="update_log">Pipeline Log</span></div>
+      <div class="update-log" id="update-log"></div>
     </div>
   </section>
 
