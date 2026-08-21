@@ -119,6 +119,7 @@ const assert = (cond, msg) => {
   st.value = 'READY'; st.dispatchEvent(new window.Event('change', { bubbles: true }));
   const ready = data.opportunities.filter(o => o.status === 'READY').length;
   assert(window.document.querySelectorAll('#opps-grid .card').length === ready, `status filter (READY=${ready})`);
+  st.value = 'ALL'; st.dispatchEvent(new window.Event('change', { bubbles: true })); // reset for later checks
 
   // 5. language toggle (AR + RTL)
   window.document.getElementById('lang-btn').click();
