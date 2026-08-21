@@ -16,6 +16,8 @@ const data = {
   market: JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'market.json'), 'utf-8')),
   performance: JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'performance.json'), 'utf-8')),
   history: JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'history.json'), 'utf-8')),
+  backtest: (() => { const p = path.join(ROOT, 'data', 'performance_backtest.json');
+    try { return JSON.parse(fs.readFileSync(p, 'utf-8')); } catch (e) { return null; } })(),
 };
 const klines = {};
 for (const o of data.opportunities) {
@@ -156,6 +158,13 @@ const assert = (cond, msg) => {
   await wait(50);
   assert(window.document.getElementById('perf-grid').textContent.length > 0 ||
          window.document.getElementById('history-empty').textContent.length > 0, 'performance tab renders');
+  const btBox = window.document.getElementById('bt-section');
+  assert(btBox && btBox.textContent.length > 20, 'backtest section rendered');
+  if (btBox.textContent.includes('Score Calibration') || btBox.textContent.includes('معايرة')) {
+    assert(true, 'calibration table present');
+  } else {
+    assert(!data.backtest, 'backtest section empty only when no data');
+  }
 
   console.log('\nJS console errors captured:', errors.length);
   errors.slice(0, 5).forEach(e => console.log('  ERR:', String(e).slice(0, 200)));

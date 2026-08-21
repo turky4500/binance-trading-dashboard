@@ -1,0 +1,53 @@
+name: Daily Backtest
+
+on:
+  schedule:
+    # once per day (00:17 UTC) — the simulation is heavy (~100+ kline requests)
+    - cron: '17 0 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: backtest-cycle
+  cancel-in-progress: false
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run historical backtest
+        run: python -m analyzer.backtest
+      - name: Commit results (race-proof)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp data/backtest.json /tmp/bt.json
+          cp data/performance_backtest.json /tmp/pbt.json
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/bt.json data/backtest.json
+            cp /tmp/pbt.json data/performance_backtest.json
+            git add data/backtest.json data/performance_backtest.json
+            if git diff --cached --quiet; then
+              echo "no changes"
+              exit 0
+            fi
+            git commit -m "chore: daily backtest refresh $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            if git push origin main; then
+              echo "pushed"
+              exit 0
+            fi
+            echo "push rejected — retrying"
+            sleep 4
+          done
+          exit 1

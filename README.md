@@ -45,6 +45,7 @@ The engine is **100% deterministic**: every indicator, entry, stop and target is
 - 🏆 Configurable 100-point scoring with per-component breakdown
 - 🔁 Automatic refresh every 15 minutes via GitHub Actions (no manual re-runs)
 - ⏱ Live countdown to the next data cycle + fully automatic in-page refresh — new data renders without any manual reload, with a visible toast and a LIVE/STALE indicator
+- 🧪 Historical backtest (last 6 months, same deterministic rules) with score calibration and per-setup-type statistics — refreshed daily and shown transparently on the Performance page
 - 🌗 Dark / Light theme toggle (persisted across visits)
 - 🟢 Setup lifecycle: `READY`, `WAITING_CONFIRMATION`, `TRIGGERED`, `TP1_HIT`, `TP2_HIT`, `TP3_HIT`, `STOPPED`, `EXPIRED`, `INVALIDATED`
 - 📊 Performance history page (win rate, TP hit rates, avg score/R:R) — with the explicit caveat that it is not a promise
@@ -144,6 +145,8 @@ Everything is tunable in one file:
 | `universe.exclude_assets` | list | Extra symbols to ignore |
 | `scoring.*` | 20/15/15/15/10/10/10/5 | Per-component weights (must sum to 100) |
 | `risk.atr_sl_min` / `atr_sl_max` | `0.8` / `2.0` | Stop-loss distance bounds in ATR multiples |
+| `strategy.allow_shorts` | `false` | SHORT setups disabled (spot trading — sell signals only make sense if you hold the asset) |
+| `backtest.months` / `backtest.top_symbols` | `6` / `12` | Historical simulation depth (runs daily via `backtest.yml`) |
 | `supertrend.period` / `supertrend.multiplier` | `10` / `3.0` | SuperTrend parameters (per timeframe, on charts, in scoring) |
 | `risk.pullback_zone_atr` | `0.6` | Entry-zone width (pullback setups) |
 | `telegram.enabled` | `false` | Enable Telegram alerts |

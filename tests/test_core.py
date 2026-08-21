@@ -197,3 +197,60 @@ def test_supertrend_flip():
     df.iloc[-20:, df.columns.get_loc('c')] *= 0.75
     e = enrich(df)
     assert e['st_dir'].iloc[-1] == -1, 'crash should flip SuperTrend to DOWN'
+
+
+# ---------------- backtest simulation ----------------
+def _mk_bars(rows):
+    import pandas as pd
+    return pd.DataFrame(rows, columns=['t', 'o', 'h', 'l', 'c', 'v'])
+
+
+def test_simulate_tp2_hit():
+    from analyzer.backtest import simulate_lifecycle
+    bars = _mk_bars([(i * 14400000, 100 + i, 100 + i + 1, 100 + i - 1, 100 + i, 1000) for i in range(10)])
+    plan = {'entry_zone': [101.0, 102.0], 'stop_loss': 98.0, 'tp1': 105.0, 'tp2': 108.0,
+            'tp3': 115.0, 'invalidation_level': 97.0}
+    status, end = simulate_lifecycle(bars, plan)
+    assert status == 'TP2_HIT', f'got {status}'
+
+
+def test_simulate_stopped_first():
+    from analyzer.backtest import simulate_lifecycle
+    # wick goes below SL before touching targets -> STOPPED (conservative)
+    bars = _mk_bars([(i * 14400000, 100, 101, 99, 100, 1000) for i in range(4)] +
+                    [(4 * 14400000, 100, 101, 97.5, 100, 1000)])
+    plan = {'entry_zone': [100.5, 101.0], 'stop_loss': 98.0, 'tp1': 105.0, 'tp2': 108.0,
+            'tp3': 115.0, 'invalidation_level': 97.0}
+    status, end = simulate_lifecycle(bars, plan)
+    assert status == 'STOPPED', f'got {status}'
+
+
+def test_simulate_invalidated_and_expired():
+    from analyzer.backtest import simulate_lifecycle
+    plan = {'entry_zone': [101.0, 102.0], 'stop_loss': 98.0, 'tp1': 105.0, 'tp2': 108.0,
+            'tp3': 115.0, 'invalidation_level': 97.0}
+    # close below invalidation before any touch
+    bars = _mk_bars([(i * 14400000, 99, 99.5, 96.8, 96.9, 1000) for i in range(5)])
+    status, _ = simulate_lifecycle(bars, plan)
+    assert status == 'INVALIDATED', f'got {status}'
+    # never touches the zone within expiry window
+    bars2 = _mk_bars([(i * 14400000, 103, 104, 103, 103.5, 1000) for i in range(14)])
+    status2, end2 = simulate_lifecycle(bars2, plan, expiry_bars=6)
+    assert status2 == 'EXPIRED', f'got {status2}'
+
+
+def test_calibration_bands():
+    from analyzer.backtest import calibration
+    recs = [
+        {'score': 72, 'result': 'WIN', 'final_status': 'TP2_HIT'},
+        {'score': 74, 'result': 'LOSS', 'final_status': 'STOPPED'},
+        {'score': 86, 'result': 'WIN', 'final_status': 'TP1_HIT'},
+        {'score': 90, 'result': 'WIN', 'final_status': 'TP3_HIT'},
+        {'score': 83, 'result': 'EXPIRED', 'final_status': 'EXPIRED'},
+    ]
+    rows = calibration(recs)
+    assert len(rows) == 5
+    band_70 = next(r for r in rows if r['band'] == '70-74')
+    assert band_70['decided'] == 2 and band_70['win_rate'] == 50.0
+    band_90 = next(r for r in rows if r['band'] == '90-100')
+    assert band_90['win_rate'] == 100.0

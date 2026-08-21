@@ -102,8 +102,11 @@ def price(symbol):
         return None
 
 
-def klines(symbol, interval, limit=500):
-    return _get(f"/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}")
+def klines(symbol, interval, limit=500, end_time=None):
+    url = f"/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
+    if end_time:
+        url += f"&endTime={int(end_time)}"
+    return _get(url)
 
 
 def source_host():

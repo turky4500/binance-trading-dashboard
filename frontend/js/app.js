@@ -2,7 +2,7 @@
 'use strict';
 
 const state = {
-  meta: null, market: null, opps: [], perf: null, history: [],
+  meta: null, market: null, opps: [], perf: null, history: [], bt: null,
   filter: { q: '', dir: 'ALL', status: 'ALL', sort: 'score', high: false },
   usingEmbedded: false, chartData: null,
 };
@@ -21,12 +21,13 @@ async function loadAll() {
   // the last good data instead of blanking the page. Never falls back to the
   // embedded snapshot unless there is no data at all.
   const hadMeta = !!state.meta;
-  const [m, mk, o, p, h] = await Promise.allSettled([
+  const [m, mk, o, p, h, bt] = await Promise.allSettled([
     fetchJSON('data/meta.json'),
     fetchJSON('data/market.json'),
     fetchJSON('data/opportunities.json'),
     fetchJSON('data/performance.json'),
     fetchJSON('data/history.json'),
+    fetchJSON('data/performance_backtest.json'),
   ]);
   if (m.status === 'fulfilled') {
     state.meta = m.value;
@@ -35,6 +36,7 @@ async function loadAll() {
     const em = window.__EMBEDDED__;
     state.meta = em.meta; state.market = em.market; state.opps = em.opportunities;
     state.perf = em.performance; state.history = em.history || [];
+    state.bt = em.backtest || null;
     state.usingEmbedded = true;
   } else if (!hadMeta) {
     state.meta = null;
@@ -43,9 +45,23 @@ async function loadAll() {
   if (o.status === 'fulfilled') state.opps = o.value;
   if (p.status === 'fulfilled') state.perf = p.value;
   if (h.status === 'fulfilled') state.history = h.value;
+  if (bt.status === 'fulfilled') state.bt = bt.value;
   renderAll();
+  syncDirectionFilter();
   // (re)subscribe the live price feed to the currently displayed symbols
   if (window.LivePrices) LivePrices.subscribe(state.opps.map(o => o.symbol));
+}
+
+function syncDirectionFilter() {
+  // SHORT setups can be disabled by engine config (user trades spot only)
+  const sel = document.getElementById('f-direction');
+  if (!sel) return;
+  const allow = !state.meta || !state.meta.config || state.meta.config.allow_shorts !== false;
+  const opt = sel.querySelector('option[value="SHORT"]');
+  if (!allow && opt) {
+    sel.removeChild(opt);
+    if (state.filter.dir === 'SHORT') { state.filter.dir = 'ALL'; sel.value = 'ALL'; }
+  }
 }
 
 /* ---------------- helpers ---------------- */
@@ -472,6 +488,54 @@ function renderPerformance() {
     <td>${esc(h.setup_label || '')}</td><td>${fmtPrice(h.entry_mid)}</td>
     <td class="${cls[h.result] || ''}">${h.result}</td><td>${h.score}</td>
     <td>${h.hold_hours != null ? h.hold_hours + 'h' : '—'}</td><td>${locTime(h.closed_at)}</td></tr>`).join('');
+  renderBacktest();
+}
+
+function renderBacktest() {
+  const box = document.getElementById('bt-section');
+  if (!box) return;
+  const bt = state.bt;
+  if (!bt) {
+    box.innerHTML = `<div class="empty"><p>${t('no_backtest')}</p></div>`;
+    return;
+  }
+  const st = bt.stats || {};
+  const cell = (k, v, cls) => `<div class="perf"><div class="k">${t(k)}</div><div class="v ${cls || ''}">${v == null ? '—' : v}</div></div>`;
+  const calRows = (bt.calibration || []).map(r => `<tr>
+    <td>${r.band}</td><td>${r.count}</td><td>${r.decided}</td>
+    <td class="${r.win_rate == null ? '' : r.win_rate >= 50 ? 'result-win' : 'result-loss'}">${r.win_rate == null ? '—' : r.win_rate + '%'}</td>
+    <td>${r.tp1_rate == null ? '—' : r.tp1_rate + '%'}</td></tr>`).join('');
+  const setupRows = (bt.setup_stats || []).map(r => `<tr>
+    <td>${esc(r.label)}</td><td>${r.count}</td>
+    <td class="${r.win_rate == null ? '' : r.win_rate >= 50 ? 'result-win' : 'result-loss'}">${r.win_rate == null ? '—' : r.win_rate + '%'}</td>
+    <td>${r.avg_score}</td></tr>`).join('');
+  const approx = (bt.approximations || []).map(a => `<li>${esc(a)}</li>`).join('');
+  const total = st.total || 0;
+  box.innerHTML = `
+    <div class="bt-head">
+      <h3>${t('bt_title')}</h3>
+      <span class="bt-meta">${t('bt_months')}: ${bt.months} · ${total} ${t('signals_word')} · ${locTime(bt.updated_at)}</span>
+    </div>
+    <div class="bt-warn">⚠ ${t('bt_disclaimer')}</div>
+    <div class="perf-grid">
+      ${cell('win_rate', st.win_rate != null ? st.win_rate + '%' : '—', st.win_rate >= 50 ? 'good' : 'bad')}
+      ${cell('tp1_rate', st.tp1_hit_rate != null ? st.tp1_hit_rate + '%' : '—', 'good')}
+      ${cell('tp2_rate', st.tp2_hit_rate != null ? st.tp2_hit_rate + '%' : '—', 'good')}
+      ${cell('avg_score', st.avg_score)}
+      ${cell('avg_rr', st.avg_rr_tp2)}
+      ${cell('avg_hold', st.avg_hold_hours)}
+      ${cell('successful', st.successful, 'good')}
+      ${cell('stopped_n', st.stopped, 'bad')}
+    </div>
+    <h4 class="bt-sub">${t('bt_calib')}</h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>${t('bt_band')}</th><th>${t('bt_signals')}</th><th>${t('bt_decided')}</th><th>${t('bt_win')}</th><th>${t('bt_tp1')}</th></tr></thead>
+      <tbody>${calRows}</tbody></table></div>
+    <h4 class="bt-sub">${t('bt_setups')}</h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>${t('setup')}</th><th>${t('bt_signals')}</th><th>${t('bt_win')}</th><th>${t('bt_avg_score')}</th></tr></thead>
+      <tbody>${setupRows}</tbody></table></div>
+    <details class="bt-approx"><summary>${t('bt_approx')}</summary><ul>${approx}</ul></details>`;
 }
 
 /* ---------------- about ---------------- */

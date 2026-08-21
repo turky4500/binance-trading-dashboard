@@ -178,6 +178,8 @@ def scan(cfg, now_iso=None, verbose=True):
                   '4h': tf_state(enrich(d4h, **st_kw), k=3), '1d': tf_state(enrich(dd, **st_kw), k=3)}
             brk = detect_breakout(enrich(d4h), tf['4h'])
             plans = generate_plans(tf, brk, cfg_risk)
+            if not cfg.get('strategy', {}).get('allow_shorts', True):
+                plans = [p for p in plans if p['direction'] == 'LONG']
             for plan in plans:
                 # post-pump cooldown: never chase a coin that pumped hard intraday
                 if meta['chg24'] > 12 and plan['status'] == 'READY':
@@ -284,6 +286,7 @@ def scan(cfg, now_iso=None, verbose=True):
             'max_opportunities': cfg['max_opportunities'],
             'stale_after_minutes': cfg['stale_after_minutes'],
             'expiry_hours': cfg['expiry_hours'],
+            'allow_shorts': cfg.get('strategy', {}).get('allow_shorts', True),
         },
         'errors': errors[-10:],
         'runtime_seconds': round(time.time() - t0, 1),

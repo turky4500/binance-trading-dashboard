@@ -43,6 +43,7 @@ def load_data():
         'market': j('market.json'),
         'performance': j('performance.json'),
         'history': j('history.json', []),
+        'backtest': j('performance_backtest.json'),
         'klines': klines,
     }
 
