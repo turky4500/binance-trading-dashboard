@@ -124,7 +124,7 @@ If you ever want a personal key anyway: Binance → API Management → Create AP
 
 > Geo-note: some regions block `api.binance.com`. The client automatically falls back to Binance's official public data host `data-api.binance.vision` (same market data, also maintained by Binance), so the pipeline keeps working.
 
-> **Why can an update arrive late?** GitHub Actions does **not** guarantee exact cron timing — scheduled slots are frequently delayed or skipped (often by 10–45 minutes). The dashboard handles this honestly: when the expected cycle time passes, the "Next Update" field switches to **SYNC (مزامنة)** and the page retries automatically until fresh data lands — you never need to reload. The workflow uses two overlapping schedules to increase the chance that a slot runs on time. If you need hard 15-minute precision, an external scheduler (e.g. cron-job.org) can trigger the workflow instead.
+> **Precise scheduling:** GitHub's cron is best-effort (it frequently runs 10–45 min late). For hard on-the-second timing, an external free scheduler (cron-job.org) triggers the workflow via the GitHub API — full setup guide in [docs/EXTERNAL_SCHEDULER.md](docs/EXTERNAL_SCHEDULER.md) (English/Arabic, ~3 minutes, tested end-to-end). The dashboard itself is always honest about timing: the countdown ring reaches zero, the "Next Update" field switches to **SYNC (مزامنة)** if the pipeline is late, and the page retries automatically until fresh data arrives — no manual reloads ever needed.
 
 ## ⚙️ Configuration — `config/settings.json`
 
