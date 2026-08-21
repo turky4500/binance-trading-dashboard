@@ -3,7 +3,7 @@
 
 const state = {
   meta: null, market: null, opps: [], perf: null, history: [], bt: null,
-  filter: { q: '', dir: 'ALL', status: 'ALL', sort: 'score', high: false },
+  filter: { q: '', dir: 'ALL', status: 'ALL', sort: 'score', high: false, watch: false },
   usingEmbedded: false, chartData: null,
 };
 
@@ -107,6 +107,36 @@ function fmtPrice(p) {
 function pct(x) { return (x >= 0 ? '+' : '') + Number(x).toFixed(2) + '%'; }
 function scoreClass(s) { return s >= 90 ? 's90' : s >= 80 ? 's80' : s >= 70 ? 's70' : 's0'; }
 function langText(o) { return LANG === 'ar' ? (o?.ar || o?.en) : (o?.en || o?.ar); }
+function fmtQty(q) {
+  if (q >= 1000) return q.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  if (q >= 1) return q.toFixed(3).replace(/\.?0+$/, '');
+  if (q >= 0.01) return q.toFixed(5).replace(/\.?0+$/, '');
+  return q.toFixed(8).replace(/\.?0+$/, '');
+}
+
+/* Risk-based position sizing — deterministic, no leverage (spot only) */
+function calcPosition(capital, riskPct, entry, sl, tps) {
+  const cap = parseFloat(capital), rp = parseFloat(riskPct);
+  if (!isFinite(cap) || !isFinite(rp) || cap <= 0 || rp <= 0 || rp > 100) return null;
+  const risk = cap * rp / 100;
+  const dist = Math.abs(entry - sl);
+  if (!isFinite(dist) || dist <= 0) return null;
+  const qty = risk / dist;
+  const notional = qty * entry;
+  const gains = (tps || []).map(tp => (tp - entry) * qty);
+  const rrs = (tps || []).map(tp => Math.abs(tp - entry) / dist);
+  return { risk, qty, notional, gains, rrs };
+}
+window.calcPosition = calcPosition;
+
+async function loadChartData(symbol, tf) {
+  try {
+    return await fetchJSON(`data/klines/${symbol}_${tf}.json`);
+  } catch (e) {
+    const em = window.__EMBEDDED__;
+    return em && em.klines ? (em.klines[`${symbol}_${tf}`] || null) : null;
+  }
+}
 
 /* ---------------- header / status bar ---------------- */
 function renderHeader() {
@@ -278,7 +308,7 @@ function applyTheme(theme) {
   // redraw chart (if a modal is open) with theme colors
   if (state.chartData) {
     const c = document.getElementById('m-chart');
-    if (c) drawChart(c, state.chartData.data, state.chartData.opp);
+    if (c) drawChart(c, state.chartData.data, state.chartData.opp, state.chartData.opts);
   }
 }
 
@@ -303,6 +333,7 @@ function filteredOpps() {
   }
   if (f.dir !== 'ALL') list = list.filter(o => o.direction === f.dir);
   if (f.status !== 'ALL') list = list.filter(o => o.status === f.status);
+  if (f.watch) list = list.filter(o => window.Watchlist && window.Watchlist.has(o.symbol));
   const sorters = {
     score: (a, b) => b.score - a.score,
     rr: (a, b) => b.rr_tp2 - a.rr_tp2,
@@ -321,7 +352,7 @@ function cardHTML(o, rank) {
     <div class="card-head">
       <div>
         <div class="rank">#${rank}</div>
-        <div class="pair-name">${esc(o.pair)}</div>
+        <div class="pair-name">${esc(o.pair)} <button class="star ${window.Watchlist && window.Watchlist.has(o.symbol) ? 'on' : ''}" data-star="${esc(o.symbol)}" title="${t('watchlist')}">${window.Watchlist && window.Watchlist.has(o.symbol) ? '★' : '☆'}</button></div>
       </div>
       <div class="score-badge"><span class="score-num ${scoreClass(o.score)}">${o.score}</span><span class="score-label">/100</span></div>
     </div>
@@ -360,6 +391,38 @@ function renderCards() {
   grid.querySelectorAll('[data-open]').forEach(b => {
     b.addEventListener('click', () => openModal(b.dataset.open));
   });
+  grid.querySelectorAll('.star').forEach(s => {
+    s.addEventListener('click', () => {
+      const sym = s.dataset.star;
+      const on = window.Watchlist ? window.Watchlist.toggle(sym) : false;
+      s.classList.toggle('on', on);
+      s.textContent = on ? '★' : '☆';
+      renderWatchBar();
+      if (state.filter.watch) renderCards();
+    });
+  });
+}
+
+function renderWatchBar() {
+  const bar = document.getElementById('watch-bar');
+  if (!bar) return;
+  const list = window.Watchlist ? window.Watchlist.list() : [];
+  if (!list.length) { bar.classList.add('hidden'); bar.innerHTML = ''; return; }
+  bar.classList.remove('hidden');
+  bar.innerHTML = `<span class="watch-title">⭐ ${t('watchlist')}</span>` + list.map(sym => {
+    const opp = state.opps.find(o => o.symbol === sym);
+    const chg = opp ? opp.change_24h : null;
+    return `<button class="watch-chip ${opp ? '' : 'inactive'}" data-wsym="${esc(sym)}">
+      <b>${esc(sym.replace('USDT', '/USDT'))}</b>
+      <span class="v" data-live-sym="${esc(sym)}">${opp ? fmtPrice(opp.current_price) : '—'}</span>
+      ${chg != null ? `<small data-live-chg="${esc(sym)}" style="color:${chg >= 0 ? 'var(--green)' : 'var(--red)'}">${pct(chg)}</small>` : ''}
+    </button>`;
+  }).join('');
+  bar.querySelectorAll('.watch-chip').forEach(b => b.addEventListener('click', () => {
+    const opp = state.opps.find(o => o.symbol === b.dataset.wsym);
+    if (opp) openModal(opp.id);
+    else toast(t('watch_no_opp'), 'warn');
+  }));
 }
 
 /* ---------------- modal ---------------- */
@@ -429,7 +492,20 @@ async function openModal(id) {
     </div>
     <div class="m-section">
       <h3>${t('chart_title')}</h3>
+      <div class="tf-switch">
+        <button class="tf-btn active" data-tf="4h">4H</button>
+        <button class="tf-btn" data-tf="1h">1H</button>
+      </div>
       <div class="chart-wrap"><canvas id="m-chart" style="width:100%"></canvas></div>
+    </div>
+    <div class="m-section">
+      <h3>${t('calculator_title')}</h3>
+      <div class="calc-grid">
+        <label class="calc-field">${t('capital')}<input type="number" id="calc-capital" min="1" step="100" value="1000"></label>
+        <label class="calc-field">${t('risk_pct')}<input type="number" id="calc-risk" min="0.1" max="100" step="0.1" value="1"></label>
+      </div>
+      <div class="calc-results" id="calc-results"></div>
+      <p class="calc-note">${t('calculator_note')}</p>
     </div>
     <div class="m-section">
       <h3>${t('support')} / ${t('resistance')}</h3>
@@ -450,19 +526,57 @@ async function openModal(id) {
       <h3>${t('confirmation')}</h3><div class="note">${esc(o.confirmation || '—')}</div>
       <h3>${t('events')}</h3><div class="timeline">${evs}</div>
     </div>`;
-  // load chart (network first, embedded snapshot as fallback)
-  let cd = null;
+  // load chart (default 4H) with volume + RSI panels
+  const canvas = document.getElementById('m-chart');
+  if (canvas) {
+    const cd = await loadChartData(o.symbol, '4h');
+    if (cd) {
+      state.chartData = { symbol: o.symbol, tf: '4h', data: cd, opp: o, opts: { volume: true, rsi: true } };
+      if (canvas.clientWidth > 0) drawChart(canvas, cd, o, state.chartData.opts);
+    }
+    document.querySelectorAll('.tf-btn').forEach(b => b.addEventListener('click', async () => {
+      if (!state.chartData) return;
+      document.querySelectorAll('.tf-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      const tf = b.dataset.tf;
+      const nd = await loadChartData(state.chartData.symbol, tf);
+      if (nd) {
+        state.chartData.tf = tf; state.chartData.data = nd;
+        const cv = document.getElementById('m-chart');
+        if (cv) drawChart(cv, nd, state.chartData.opp, state.chartData.opts);
+      }
+    }));
+  }
+  bindCalculator(o);
+}
+
+function bindCalculator(o) {
+  const capEl = document.getElementById('calc-capital');
+  const riskEl = document.getElementById('calc-risk');
+  if (!capEl || !riskEl) return;
   try {
-    cd = await fetchJSON(`data/klines/${o.symbol}_4h.json`);
-  } catch (e) {
-    const em = window.__EMBEDDED__;
-    cd = em && em.klines ? (em.klines[`${o.symbol}_4h`] || null) : null;
-  }
-  if (cd) {
-    state.chartData = { data: cd, opp: o };
-    const canvas = document.getElementById('m-chart');
-    if (canvas && canvas.clientWidth > 0) drawChart(canvas, cd, o);
-  }
+    const saved = JSON.parse(localStorage.getItem('dash-calc') || '{}');
+    if (saved.capital) capEl.value = saved.capital;
+    if (saved.risk) riskEl.value = saved.risk;
+  } catch (e) { /* defaults */ }
+  const update = () => {
+    const res = calcPosition(capEl.value, riskEl.value, o.entry_mid, o.stop_loss, [o.tp1, o.tp2, o.tp3]);
+    try { localStorage.setItem('dash-calc', JSON.stringify({ capital: capEl.value, risk: riskEl.value })); } catch (e) {}
+    const box = document.getElementById('calc-results');
+    if (!box) return;
+    if (!res) { box.innerHTML = '<div class="m-cell"><div class="k">—</div><div class="v">—</div></div>'; return; }
+    const cell = (k, v, cls) => `<div class="m-cell"><div class="k">${k}</div><div class="v ${cls || ''}">${v}</div></div>`;
+    box.innerHTML =
+      cell(t('position_size'), fmtQty(res.qty)) +
+      cell(t('notional'), '$' + res.notional.toLocaleString('en-US', { maximumFractionDigits: 0 })) +
+      cell(t('max_loss'), '-$' + res.risk.toFixed(2), 'neg') +
+      cell('TP1', '+$' + res.gains[0].toFixed(2) + ` <small class="mut">(${res.rrs[0].toFixed(1)}R)</small>`, 'pos') +
+      cell('TP2', '+$' + res.gains[1].toFixed(2) + ` <small class="mut">(${res.rrs[1].toFixed(1)}R)</small>`, 'pos') +
+      cell('TP3', '+$' + res.gains[2].toFixed(2) + ` <small class="mut">(${res.rrs[2].toFixed(1)}R)</small>`, 'pos');
+  };
+  capEl.addEventListener('input', update);
+  riskEl.addEventListener('input', update);
+  update();
 }
 
 function closeModal() {
@@ -567,6 +681,8 @@ function bindControls() {
   document.getElementById('f-sort').addEventListener('change', e => { state.filter.sort = e.target.value; renderCards(); });
   const chipHigh = document.getElementById('chip-high');
   chipHigh.addEventListener('click', () => { state.filter.high = !state.filter.high; chipHigh.classList.toggle('active', state.filter.high); renderCards(); });
+  const chipWatch = document.getElementById('chip-watch');
+  chipWatch.addEventListener('click', () => { state.filter.watch = !state.filter.watch; chipWatch.classList.toggle('active', state.filter.watch); renderCards(); });
   const chipReady = document.getElementById('chip-ready');
   chipReady.addEventListener('click', () => { state.filter.status = state.filter.status === 'READY' ? 'ALL' : 'READY'; document.getElementById('f-status').value = state.filter.status; chipReady.classList.toggle('active', state.filter.status === 'READY'); renderCards(); });
   const chipLong = document.getElementById('chip-long');
@@ -590,6 +706,7 @@ function bindControls() {
 window.renderAll = function () {
   renderHeader();
   renderCards();
+  renderWatchBar();
   renderPerformance();
   renderAbout();
 };

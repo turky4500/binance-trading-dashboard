@@ -49,6 +49,9 @@ The engine is **100% deterministic**: every indicator, entry, stop and target is
 - 🌗 Dark / Light theme toggle (persisted across visits)
 - 🟢 Setup lifecycle: `READY`, `WAITING_CONFIRMATION`, `TRIGGERED`, `TP1_HIT`, `TP2_HIT`, `TP3_HIT`, `STOPPED`, `EXPIRED`, `INVALIDATED`
 - 📊 Performance history page (win rate, TP hit rates, avg score/R:R) — with the explicit caveat that it is not a promise
+- 📉 Upgraded charts: 1H/4H timeframe switcher, volume bars, RSI(14) panel, EMA/VWAP/SuperTrend overlays and trade levels drawn on the same canvas
+- 🧮 Position size calculator in every analysis (risk-based sizing: qty = capital × risk% ÷ stop distance — spot only, no leverage)
+- ⭐ Persistent watchlist with live prices, star-to-follow cards and a dedicated filter
 - 🔍 Search, filters (direction/status/high-score) and sorting
 - 📱 Responsive dark UI, English/Arabic (RTL), 4H candlestick charts with levels drawn
 - 🔔 Full lifecycle alerts: Telegram notifications for every transition (READY / TRIGGERED / TP hits / STOPPED / EXPIRED / INVALIDATED — per-event toggles), plus optional in-browser notifications and distinctive sounds for each event while the dashboard is open

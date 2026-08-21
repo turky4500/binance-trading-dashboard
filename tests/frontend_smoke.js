@@ -10,6 +10,7 @@ const i18n = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'i18n.js'), 'utf-
 const chart = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'chart.js'), 'utf-8');
 const live = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'live.js'), 'utf-8');
 const alerts = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'alerts.js'), 'utf-8');
+const watchlist = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'watchlist.js'), 'utf-8');
 const app = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'app.js'), 'utf-8');
 const data = {
   opportunities: JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf-8')),
@@ -22,8 +23,10 @@ const data = {
 };
 const klines = {};
 for (const o of data.opportunities) {
-  const p = path.join(ROOT, 'data', 'klines', `${o.symbol}_4h.json`);
-  if (fs.existsSync(p)) klines[`${o.symbol}_4h`] = JSON.parse(fs.readFileSync(p, 'utf-8'));
+  for (const tf of ['4h', '1h']) {
+    const p = path.join(ROOT, 'data', 'klines', `${o.symbol}_${tf}.json`);
+    if (fs.existsSync(p)) klines[`${o.symbol}_${tf}`] = JSON.parse(fs.readFileSync(p, 'utf-8'));
+  }
 }
 
 const errors = [];
@@ -60,6 +63,7 @@ window.eval(i18n);
 window.eval(chart);
 window.eval(live);
 window.eval(alerts);
+window.eval(watchlist);
 window.eval(app);
 window.document.dispatchEvent(new window.Event('DOMContentLoaded', { bubbles: true }));
 
@@ -102,6 +106,28 @@ const assert = (cond, msg) => {
     assert(mbody.textContent.includes('Support'), 'modal: support/resistance');
     const cvs = window.document.getElementById('m-chart');
     assert(!!cvs && cvs.width > 0, 'modal: chart canvas drawn');
+    assert(cvs.style.height === '446px' || cvs.style.height.endsWith('px'), 'modal: chart has volume+RSI panels');
+    // TF switch
+    const tfBtn = window.document.querySelector('.tf-btn[data-tf="1h"]');
+    if (tfBtn) {
+      tfBtn.click();
+      await wait(200);
+      assert(tfBtn.classList.contains('active'), 'TF switch: 1H becomes active');
+      assert(cvs.width > 0, 'chart redrawn on TF switch');
+    }
+    // calculator: pure function + UI
+    const calc = window.calcPosition(1000, 1, 100, 98, [103, 105, 110]);
+    assert(calc && Math.abs(calc.qty - 5) < 1e-9, 'calcPosition qty = risk/dist (5)');
+    assert(calc && Math.abs(calc.risk - 10) < 1e-9, 'calcPosition risk = 10 USDT');
+    assert(calc && Math.abs(calc.gains[0] - 15) < 1e-9, 'calcPosition TP1 gain (15 USDT = 1.5R)');
+    assert(calc && Math.abs(calc.rrs[0] - 1.5) < 1e-9, 'calcPosition TP1 = 1.5R');
+    const capInput = window.document.getElementById('calc-capital');
+    assert(!!capInput, 'calculator inputs exist');
+    capInput.value = '2000';
+    capInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+    await wait(60);
+    const res = window.document.getElementById('calc-results');
+    assert(res.textContent.length > 10 && res.textContent.includes('TP3'), 'calculator renders results');
     window.document.getElementById('m-close').click();
     assert(modal.classList.contains('hidden'), 'modal closes');
   }
@@ -115,6 +141,21 @@ const assert = (cond, msg) => {
   search.dispatchEvent(new window.Event('input', { bubbles: true }));
   const sort = window.document.getElementById('f-sort');
   sort.value = 'rr'; sort.dispatchEvent(new window.Event('change', { bubbles: true }));
+  // watchlist: star toggle + bar + filter chip (cards still visible here)
+  const starBtn = window.document.querySelector('.star');
+  if (starBtn) {
+    const sym = starBtn.dataset.star;
+    starBtn.click();
+    assert(window.Watchlist.has(sym), 'watchlist toggles on via card star');
+    const wbar = window.document.getElementById('watch-bar');
+    assert(!wbar.classList.contains('hidden'), 'watch bar becomes visible');
+    const chipWatch = window.document.getElementById('chip-watch');
+    chipWatch.click();
+    const wCards = window.document.querySelectorAll('#opps-grid .card');
+    assert(wCards.length >= 1 && wCards.length <= 1, 'watchlist filter narrows grid');
+    chipWatch.click(); // reset filter
+    window.Watchlist.toggle(sym); // cleanup watchlist
+  }
   const st = window.document.getElementById('f-status');
   st.value = 'READY'; st.dispatchEvent(new window.Event('change', { bubbles: true }));
   const ready = data.opportunities.filter(o => o.status === 'READY').length;
