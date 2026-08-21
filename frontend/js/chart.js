@@ -11,6 +11,12 @@ function drawChart(canvas, data, opp) {
   const candles = data.candles.map(c => ({ t: c[0], o: c[1], h: c[2], l: c[3], c: c[4], v: c[5] }));
   const ema20 = data.ema20 || [], ema50 = data.ema50 || [], vwap = data.vwap || [];
   const GREEN = '#16c784', RED = '#ea3943';
+  const isLight = document.documentElement.dataset.theme === 'light';
+  const GRID = isLight ? 'rgba(10,20,35,.08)' : 'rgba(255,255,255,.05)';
+  const LABEL = isLight ? '#7a8694' : '#6b7886';
+  const TIP_BG = isLight ? '#ffffff' : '#0b0e11';
+  const TIP_BORDER = isLight ? '#c8d2de' : '#2c3744';
+  const TIP_TEXT = isLight ? '#10151c' : '#e8edf2';
 
   let lo = Infinity, hi = -Infinity;
   candles.forEach(c => { lo = Math.min(lo, c.l); hi = Math.max(hi, c.h); });
@@ -31,9 +37,9 @@ function drawChart(canvas, data, opp) {
   for (let s = 0; s <= steps; s++) {
     const p = lo + (hi - lo) * s / steps;
     const y = Y(p);
-    ctx.strokeStyle = 'rgba(255,255,255,.05)';
+    ctx.strokeStyle = GRID;
     ctx.beginPath(); ctx.moveTo(plotL, y); ctx.lineTo(W - plotR, y); ctx.stroke();
-    ctx.fillStyle = '#6b7886';
+    ctx.fillStyle = LABEL;
     ctx.textAlign = 'right';
     ctx.fillText(fmtNum(p), W - plotR + 66, y + 3);
   }
@@ -42,7 +48,7 @@ function drawChart(canvas, data, opp) {
   const n = candles.length;
   for (let i = 0; i < n; i += Math.ceil(n / 6)) {
     const d = new Date(candles[i].t);
-    ctx.fillStyle = '#6b7886';
+    ctx.fillStyle = LABEL;
     ctx.fillText(`${d.getUTCMonth()+1}/${d.getUTCDate()}`, X(i), H - 8);
   }
 
@@ -102,8 +108,8 @@ function drawChart(canvas, data, opp) {
   let tip = null;
   const mkTip = () => {
     tip = document.createElement('div');
-    tip.style.cssText = 'position:absolute;pointer-events:none;background:#0b0e11;border:1px solid #2c3744;' +
-      'border-radius:8px;padding:8px 10px;font:11px ui-monospace,monospace;color:#e8edf2;display:none;z-index:10;white-space:nowrap';
+    tip.style.cssText = 'position:absolute;pointer-events:none;background:' + TIP_BG + ';border:1px solid ' + TIP_BORDER + ';' +
+      'border-radius:8px;padding:8px 10px;font:11px ui-monospace,monospace;color:' + TIP_TEXT + ';display:none;z-index:10;white-space:nowrap';
     canvas.parentElement.appendChild(tip);
   };
   mkTip();

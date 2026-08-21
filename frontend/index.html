@@ -17,6 +17,15 @@
   </div>
   <div class="topbar-right">
     <div class="market-status" id="market-status"><span class="dot"></span><span id="market-status-text">—</span></div>
+    <div class="live-badge" id="live-badge"><span class="pulse-dot"></span><span id="live-text">LIVE</span></div>
+    <div class="countdown" id="countdown" title="Countdown to next data cycle">
+      <svg viewBox="0 0 36 36">
+        <circle class="ring-bg" cx="18" cy="18" r="15.5"/>
+        <circle class="ring" id="countdown-ring" cx="18" cy="18" r="15.5"/>
+      </svg>
+      <span id="countdown-text">--:--</span>
+    </div>
+    <button class="lang-btn" id="theme-btn">🌙</button>
     <button class="lang-btn" id="lang-btn">العربية</button>
   </div>
 </header>
@@ -106,6 +115,7 @@
       <h2 data-i18n="about_title">How this system works</h2>
       <p data-i18n="about_p1">Every 15 minutes a GitHub Actions workflow pulls live public Binance market data, screens hundreds of USDT spot pairs, runs deterministic multi-timeframe technical analysis (15m/1h/4h/1d: EMA 20/50/200, RSI, MACD, ATR, VWAP, structure, breakout detection), computes entry zones, stop losses and targets, scores each plan out of 100, tracks the lifecycle of published setups, and commits the results as JSON.</p>
       <p data-i18n="about_p2">The dashboard is a static page that reads those JSON files — nothing is invented, no LLM produces any price or level, and the system never places orders. It is 100% read-only.</p>
+      <p data-i18n="about_p3">The page updates itself automatically: a countdown shows the time left until the next data cycle, fresh data is pulled and rendered without a manual reload, and you can switch between dark and light themes.</p>
       <div class="about-stats" id="about-stats"></div>
       <p class="legal" data-i18n="about_legal">Trading digital assets carries high risk. This tool is for informational and educational purposes only and is not financial advice.</p>
     </div>
@@ -125,6 +135,9 @@
     <div class="modal-body" id="m-body"></div>
   </div>
 </div>
+
+<!-- toast notifications -->
+<div id="toasts" class="toasts"></div>
 
 <footer class="footer">
   <span data-i18n="footer1">Read-only market analysis. No orders, no withdrawals, no API keys.</span>

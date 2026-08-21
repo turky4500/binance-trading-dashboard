@@ -4,12 +4,14 @@
 const state = {
   meta: null, market: null, opps: [], perf: null, history: [],
   filter: { q: '', dir: 'ALL', status: 'ALL', sort: 'score', high: false },
-  usingEmbedded: false,
+  usingEmbedded: false, chartData: null,
 };
 
 /* ---------------- data loading ---------------- */
 async function fetchJSON(path) {
-  const r = await fetch(path, { cache: 'no-store' });
+  // cache-busting query param: always pulls the freshest file from the CDN
+  const sep = path.includes('?') ? '&' : '?';
+  const r = await fetch(`${path}${sep}v=${Date.now()}`, { cache: 'no-store' });
   if (!r.ok) throw new Error(r.status);
   return r.json();
 }
@@ -123,25 +125,128 @@ function renderHeader() {
       banner.classList.add('hidden');
     }
   }
-  // countdown
-  window._nextAt = state.meta && state.meta.next_update_at ? new Date(state.meta.next_update_at).getTime() : null;
-  if (state.meta && !state.meta.next_update_at && state.meta.update_interval_minutes) {
-    window._nextAt = new Date(state.meta.data_timestamp).getTime() + state.meta.update_interval_minutes * 60000;
-  }
-  tickCountdown();
 }
 
-function tickCountdown() {
-  const el = document.getElementById('next-update');
-  if (!el || !window._nextAt) return;
-  const diff = (window._nextAt - Date.now()) / 1000;
-  if (diff <= 0) {
-    el.textContent = t('now');
+/* ---------------- live badge / countdown / auto-refresh ---------------- */
+const RING_C = 2 * Math.PI * 15.5; // circumference of the countdown ring (r=15.5)
+
+function scheduleTarget() {
+  // countdown target: retry timer first, then the pipeline's next update time
+  if (window.__retryAt && window.__retryAt > Date.now()) return window.__retryAt;
+  if (state.meta && state.meta.next_update_at) return new Date(state.meta.next_update_at).getTime();
+  if (state.meta && state.meta.data_timestamp && state.meta.update_interval_minutes) {
+    return new Date(state.meta.data_timestamp).getTime() + state.meta.update_interval_minutes * 60000;
+  }
+  return null;
+}
+
+function setLive(mode) {
+  const el = document.getElementById('live-badge');
+  if (!el) return;
+  el.className = 'live-badge ' + mode;
+  const txt = document.getElementById('live-text');
+  if (txt) txt.textContent = mode === 'live' ? t('live') : mode === 'stale' ? t('stale') : t('sync');
+}
+
+function toast(msg, kind) {
+  const box = document.getElementById('toasts');
+  if (!box) return;
+  const el = document.createElement('div');
+  el.className = 'toast ' + (kind || 'ok');
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity .4s'; el.style.opacity = '0';
+    setTimeout(() => el.remove(), 420);
+  }, 4200);
+}
+
+async function refreshCycle() {
+  // pulls the freshest data; re-renders everything when the pipeline published new data
+  if (window.__refreshing) return;
+  if (state.usingEmbedded) { // offline snapshot: no network, retry silently later
+    window.__retryAt = Date.now() + 5 * 60000;
     return;
   }
-  const mm = Math.floor(diff / 60), ss = Math.floor(diff % 60);
-  el.textContent = `${mm}:${String(ss).padStart(2, '0')}`;
+  window.__refreshing = true;
+  try {
+    const meta = await fetchJSON('data/meta.json');
+    if (!state.meta || meta.data_timestamp !== state.meta.data_timestamp) {
+      window.__retryAt = 0;
+      await loadAll();
+      toast(t('data_updated'), 'ok');
+      const sb = document.querySelector('.statusbar');
+      if (sb) { sb.classList.remove('flash'); void sb.offsetWidth; sb.classList.add('flash'); }
+    } else {
+      // the pipeline hasn't published yet — retry shortly (silently)
+      window.__retryAt = Date.now() + 45000;
+    }
+  } catch (e) {
+    toast(t('offline'), 'warn');
+    window.__retryAt = Date.now() + 90000;
+  } finally {
+    window.__refreshing = false;
+  }
 }
+
+function tick() {
+  // runs every second: data age, live badge, countdown ring + trigger refresh at zero
+  if (state.meta) document.getElementById('data-age').textContent = relTime(state.meta.data_timestamp);
+  const staleMin = (state.meta && state.meta.config && state.meta.config.stale_after_minutes) || 45;
+  const ageMs = state.meta ? Date.now() - new Date(state.meta.data_timestamp).getTime() : Infinity;
+  if (!state.meta) setLive('stale');
+  else if (window.__refreshing) setLive('updating');
+  else if (ageMs > staleMin * 60000) setLive('stale');
+  else setLive('live');
+
+  const cd = document.getElementById('countdown');
+  if (!cd) return;
+  const txtEl = document.getElementById('countdown-text');
+  const ringEl = document.getElementById('countdown-ring');
+  const target = scheduleTarget();
+  if (!target) {
+    txtEl.textContent = '--:--';
+    ringEl.style.strokeDashoffset = RING_C;
+    if (!state.meta && !window.__retryAt) window.__retryAt = Date.now() + 60000;
+    return;
+  }
+  const diff = target - Date.now();
+  if (diff <= 0) {
+    txtEl.textContent = t('sync');
+    ringEl.style.strokeDashoffset = 0;
+    cd.classList.add('done');
+    refreshCycle();
+    return;
+  }
+  cd.classList.remove('done');
+  const mm = Math.floor(diff / 60000), ss = Math.floor((diff % 60000) / 1000);
+  txtEl.textContent = `${mm}:${String(ss).padStart(2, '0')}`;
+  const total = (state.meta && state.meta.update_interval_minutes) ? state.meta.update_interval_minutes * 60000 : 900000;
+  const frac = Math.max(0, Math.min(1, diff / total));
+  ringEl.style.strokeDashoffset = RING_C * (1 - frac);
+}
+
+/* ---------------- theme (dark / light) ---------------- */
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem('dash-theme', theme); } catch (e) {}
+  updateChromeButtons();
+  // redraw chart (if a modal is open) with theme colors
+  if (state.chartData) {
+    const c = document.getElementById('m-chart');
+    if (c) drawChart(c, state.chartData.data, state.chartData.opp);
+  }
+}
+
+function updateChromeButtons() {
+  const tb = document.getElementById('theme-btn');
+  if (tb) {
+    const isLight = document.documentElement.dataset.theme === 'light';
+    tb.textContent = (isLight ? '☀️ ' : '🌙 ') + t(isLight ? 'theme_light' : 'theme_dark');
+    tb.title = t('theme_' + (isLight ? 'dark' : 'light'));
+  }
+}
+window.updateChromeButtons = updateChromeButtons;
 
 /* ---------------- cards ---------------- */
 function filteredOpps() {
@@ -306,6 +411,7 @@ async function openModal(id) {
     cd = em && em.klines ? (em.klines[`${o.symbol}_4h`] || null) : null;
   }
   if (cd) {
+    state.chartData = { data: cd, opp: o };
     const canvas = document.getElementById('m-chart');
     if (canvas && canvas.clientWidth > 0) drawChart(canvas, cd, o);
   }
@@ -379,6 +485,9 @@ function bindControls() {
   document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
   document.getElementById('lang-btn').addEventListener('click', () => setLang(LANG === 'ar' ? 'en' : 'ar'));
+  document.getElementById('theme-btn').addEventListener('click', () => {
+    applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+  });
 }
 
 /* ---------------- render all ---------------- */
@@ -393,20 +502,14 @@ window.renderAll = function () {
 async function init() {
   if (window.__dashInit) return; // guard against double initialization
   window.__dashInit = true;
+  applyTheme((function () { try { return localStorage.getItem('dash-theme') || 'dark'; } catch (e) { return 'dark'; } })());
   bindControls();
   setLang(LANG); // applies i18n + triggers first renderAll
   await loadAll();
-  setInterval(async () => {
-    // cheap refresh of data age + countdown
-    renderHeader();
-    if (!state.usingEmbedded && document.getElementById('tab-opportunities').classList.contains('active')) {
-      try {
-        const meta = await fetchJSON('data/meta.json');
-        if (!state.meta || meta.data_timestamp !== state.meta.data_timestamp) await loadAll();
-      } catch (e) { /* transient network error: keep showing last known state */ }
-    }
-  }, 60000);
-  setInterval(tickCountdown, 1000);
+  // tick every second: data age, live badge, countdown ring, auto-refresh at zero
+  setInterval(tick, 1000);
+  // safety net: background check every minute (silent unless new data arrives)
+  setInterval(() => refreshCycle(), 60000);
 }
 document.addEventListener('DOMContentLoaded', init);
 if (document.readyState !== 'loading') init(); // script loaded after DOM is ready

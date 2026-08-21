@@ -50,6 +50,10 @@ const I18N = {
     avg_score: "Average Score", avg_rr: "Average R:R (TP2)", avg_hold: "Avg Hold (h)",
     market_bullish: "Bullish", market_bearish: "Bearish", market_neutral: "Neutral",
     data_from: "Data source", last_success: "Last successful update", engine: "Engine version", update_interval: "Update interval", max_opps: "Opportunities cap",
+    live: "LIVE", stale: "STALE", sync: "SYNC",
+    data_updated: "New market data received", offline: "Data source unreachable — retrying automatically",
+    theme_dark: "Dark", theme_light: "Light",
+    about_p3: "The page updates itself automatically: a countdown shows the time left until the next data cycle, fresh data is pulled and rendered without a manual reload, and you can switch between dark and light themes.",
     no_data: "No data yet — run the analyzer first.",
     live: "LIVE", stale_warn: "Data is stale — last successful update",
     filters_min: "Min score", col_symbol: "Symbol", col_score: "Score",
@@ -104,6 +108,10 @@ const I18N = {
     avg_score: "متوسط النقاط", avg_rr: "متوسط R:R (TP2)", avg_hold: "متوسط المدة (ساعة)",
     market_bullish: "صاعد", market_bearish: "هابط", market_neutral: "محايد",
     data_from: "مصدر البيانات", last_success: "آخر تحديث ناجح", engine: "إصدار المحرك", update_interval: "فترة التحديث", max_opps: "حد أقصى للفرص",
+    live: "مباشر", stale: "قديمة", sync: "مزامنة",
+    data_updated: "تم استلام بيانات سوق جديدة", offline: "تعذر الوصول لمصدر البيانات — ستتم إعادة المحاولة تلقائيًا",
+    theme_dark: "ليلي", theme_light: "نهاري",
+    about_p3: "الصفحة تحدّث نفسها تلقائيًا: عداد تنازلي يعرض الوقت المتبقي حتى دورة البيانات القادمة، وتُسحب البيانات الجديدة وتُعرض دون تحديث يدوي، ويمكنك التبديل بين الوضعين الليلي والنهاري.",
     no_data: "لا توجد بيانات بعد — شغّل المحلل أولًا.",
     live: "مباشر", stale_warn: "البيانات قديمة — آخر تحديث ناجح",
     filters_min: "الحد الأدنى للنقاط", col_symbol: "العملة", col_score: "النقاط",
@@ -121,6 +129,7 @@ function setLang(lang) {
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   const btn = document.getElementById('lang-btn');
   if (btn) btn.textContent = lang === 'ar' ? 'English' : 'العربية';
-  // re-render dynamic parts
+  // re-render dynamic parts + chrome buttons (theme label)
+  if (window.updateChromeButtons) window.updateChromeButtons();
   if (window.renderAll) window.renderAll();
 }

@@ -43,6 +43,8 @@ The engine is **100% deterministic**: every indicator, entry, stop and target is
 - 🎯 Complete trade plans: entry zone, SL (ATR + structure based), TP1/TP2/TP3, R:R, invalidation level
 - 🏆 Configurable 100-point scoring with per-component breakdown
 - 🔁 Automatic refresh every 15 minutes via GitHub Actions (no manual re-runs)
+- ⏱ Live countdown to the next data cycle + fully automatic in-page refresh — new data renders without any manual reload, with a visible toast and a LIVE/STALE indicator
+- 🌗 Dark / Light theme toggle (persisted across visits)
 - 🟢 Setup lifecycle: `READY`, `WAITING_CONFIRMATION`, `TRIGGERED`, `TP1_HIT`, `TP2_HIT`, `TP3_HIT`, `STOPPED`, `EXPIRED`, `INVALIDATED`
 - 📊 Performance history page (win rate, TP hit rates, avg score/R:R) — with the explicit caveat that it is not a promise
 - 🔍 Search, filters (direction/status/high-score) and sorting
