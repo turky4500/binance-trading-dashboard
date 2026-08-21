@@ -48,8 +48,35 @@ def atr(df, n=14):
     return tr.ewm(alpha=1 / n, adjust=False).mean()
 
 
-def enrich(df):
-    """Add EMA20/50/200, RSI(14), MACD, ATR(14), session VWAP, volume ratios."""
+def supertrend(df, period=10, mult=3.0):
+    """Classic ATR-based SuperTrend. Returns (line, direction) where direction is +1 (up) / -1 (down)."""
+    a = atr(df, period)
+    hl2 = (df['h'] + df['l']) / 2
+    ub = (hl2 + mult * a).values
+    lb = (hl2 - mult * a).values
+    close = df['c'].values
+    n = len(df)
+    if n == 0:
+        return pd.Series(dtype=float), pd.Series(dtype=int)
+    fu = np.empty(n)
+    fl = np.empty(n)
+    fu[0], fl[0] = ub[0], lb[0]
+    trend = np.ones(n, dtype=int)
+    for i in range(1, n):
+        fu[i] = ub[i] if (ub[i] < fu[i - 1] or close[i - 1] > fu[i - 1]) else fu[i - 1]
+        fl[i] = lb[i] if (lb[i] > fl[i - 1] or close[i - 1] < fl[i - 1]) else fl[i - 1]
+        if close[i] > fu[i - 1]:
+            trend[i] = 1
+        elif close[i] < fl[i - 1]:
+            trend[i] = -1
+        else:
+            trend[i] = trend[i - 1]
+    line = np.where(trend == 1, fl, fu)
+    return pd.Series(line, index=df.index), pd.Series(trend, index=df.index)
+
+
+def enrich(df, st_period=10, st_mult=3.0):
+    """Add EMA20/50/200, RSI(14), MACD, ATR(14), session VWAP, volume ratios, SuperTrend."""
     d = df.copy()
     d['ema20'] = ema(d['c'], 20)
     d['ema50'] = ema(d['c'], 50)
@@ -59,6 +86,7 @@ def enrich(df):
     d['atr'] = atr(d)
     d['vma20'] = d['v'].rolling(20).mean()
     d['vol_ratio'] = (d['v'] / d['vma20']).fillna(1.0)
+    d['st_line'], d['st_dir'] = supertrend(d, period=st_period, mult=st_mult)
     day = d['t'].dt.floor('D')
     tp = (d['h'] + d['l'] + d['c']) / 3
     cumv = d.groupby(day)['v'].cumsum()

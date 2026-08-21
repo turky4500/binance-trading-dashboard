@@ -44,6 +44,8 @@ async function loadAll() {
   if (p.status === 'fulfilled') state.perf = p.value;
   if (h.status === 'fulfilled') state.history = h.value;
   renderAll();
+  // (re)subscribe the live price feed to the currently displayed symbols
+  if (window.LivePrices) LivePrices.subscribe(state.opps.map(o => o.symbol));
 }
 
 /* ---------------- helpers ---------------- */
@@ -306,6 +308,7 @@ function cardHTML(o, rank) {
       <span class="badge setup">${esc(o.setup_label)}</span>
       <span class="badge tf">${esc(o.primary_timeframe)}</span>
       <span class="badge status-${statusKey(o.status)}">${statusLabel(o.status)}</span>
+      ${o.analysis && o.analysis['4h'] && o.analysis['4h'].supertrend ? `<span class="badge ${o.analysis['4h'].supertrend === 'UP' ? 'st-up' : 'st-down'}" title="${t('st')} (4H)">ST ${o.analysis['4h'].supertrend === 'UP' ? '↑' : '↓'}</span>` : ''}
     </div>
     <div class="card-body">
       <div class="kv"><span class="k">${t('entry_zone')}</span><span class="v">${fmtPrice(o.entry_zone[0])} – ${fmtPrice(o.entry_zone[1])}</span></div>
@@ -316,7 +319,7 @@ function cardHTML(o, rank) {
       <div class="kv"><span class="k">${t('rr')} (TP1/TP2)</span><span class="v mut">1:${o.rr_tp1} / 1:${o.rr_tp2}</span></div>
       <div class="kv"><span class="k">${t('profit_potential')}</span><span class="v pos">${pct(o.profit_pct_tp1)} / ${pct(o.profit_pct_tp2)} / ${pct(o.profit_pct_tp3)}</span></div>
       <div class="kv"><span class="k">${t('sl_distance')}</span><span class="v mut">${o.sl_distance_pct}%</span></div>
-      <div class="kv"><span class="k">${t('current_price')}</span><span class="v">${fmtPrice(o.current_price)} <small style="color:${o.change_24h >= 0 ? '#16c784' : '#ea3943'}">${pct(o.change_24h)}</small></span></div>
+      <div class="kv"><span class="k">${t('live_price')}</span><span class="v"><span class="lp-dot"></span><span data-live-sym="${esc(o.symbol)}">${fmtPrice(o.current_price)}</span> <small data-live-chg="${esc(o.symbol)}" style="color:${o.change_24h >= 0 ? 'var(--green)' : 'var(--red)'}">${pct(o.change_24h)}</small></span></div>
     </div>
     <div class="card-foot">
       <span class="card-updated">${t('updated')}: ${relTime(o.updated_at)}</span>
@@ -357,8 +360,11 @@ async function openModal(id) {
     const tr = a.trend === 'Bullish' ? 'bull' : a.trend === 'Bearish' ? 'bear' : 'mixed';
     const emaTags = [['20', a.above_ema20], ['50', a.above_ema50]].map(([n, ab]) =>
       `<span class="tag ${ab ? 'bull' : 'bear'}">EMA${n} ${ab ? t('above') : t('below')}</span>`).join(' ');
+    const stTag = a.supertrend
+      ? `<span class="tag ${a.supertrend === 'UP' ? 'bull' : 'bear'}">${a.supertrend === 'UP' ? '▲' : '▼'} ${fmtPrice(a.supertrend_value)}</span>`
+      : '—';
     return `<tr><td>${tf}</td><td><span class="tag ${tr}">${t(a.trend.toLowerCase())}</span></td>
-      <td>${a.rsi}</td><td>${a.macd}</td><td>${emaTags}</td><td>${a.atr_pct}%</td><td>${a.vol_ratio}x</td></tr>`;
+      <td>${a.rsi}</td><td>${a.macd}</td><td>${emaTags}</td><td>${stTag}</td><td>${a.atr_pct}%</td><td>${a.vol_ratio}x</td></tr>`;
   }).join('');
   const lv = (arr, cls) => (arr || []).map(([p, name]) =>
     `<div class="level ${cls}"><b>${fmtPrice(p)}</b><span>${esc(name)}</span></div>`).join('');
@@ -374,7 +380,7 @@ async function openModal(id) {
     <div class="m-section">
       <h3>Overview</h3>
       <div class="m-grid">
-        <div class="m-cell"><div class="k">${t('current_price')}</div><div class="v">${fmtPrice(o.current_price)}</div></div>
+        <div class="m-cell"><div class="k">${t('current_price')}</div><div class="v"><span class="lp-dot"></span><span data-live-sym="${esc(o.symbol)}">${fmtPrice(o.current_price)}</span></div></div>
         <div class="m-cell"><div class="k">${t('direction')}</div><div class="v ${dirClass(o.direction)}">${o.direction}</div></div>
         <div class="m-cell"><div class="k">${t('entry_zone')}</div><div class="v">${fmtPrice(o.entry_zone[0])} – ${fmtPrice(o.entry_zone[1])}</div></div>
         <div class="m-cell"><div class="k">${t('stop')}</div><div class="v" style="color:var(--red)">${fmtPrice(o.stop_loss)}</div></div>
@@ -396,7 +402,7 @@ async function openModal(id) {
     <div class="m-section">
       <h3>${t('tf_analysis')}</h3>
       <div class="table-wrap"><table class="tf-table">
-        <thead><tr><th>${t('tf')}</th><th>${t('trend')}</th><th>RSI</th><th>MACD</th><th>EMA</th><th>${t('atr_pct')}</th><th>${t('vol')}</th></tr></thead>
+        <thead><tr><th>${t('tf')}</th><th>${t('trend')}</th><th>RSI</th><th>MACD</th><th>EMA</th><th>${t('st')}</th><th>${t('atr_pct')}</th><th>${t('vol')}</th></tr></thead>
         <tbody>${tfRows}</tbody></table></div>
     </div>
     <div class="m-section">

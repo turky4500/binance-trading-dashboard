@@ -47,6 +47,8 @@ def tf_state(df, k=3):
         'last_low': float(ls[-1][1]) if ls else c,
         'hi20': hi20, 'lo20': lo20, 'hi50': hi50, 'lo50': lo50,
         'hi6': hi6, 'lo6': lo6,
+        'st_dir': int(df['st_dir'].iloc[-1]),
+        'st_line': float(df['st_line'].iloc[-1]),
         'resistance': res, 'support': sup,
     }
 

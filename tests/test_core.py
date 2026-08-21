@@ -175,3 +175,25 @@ def test_storage_roundtrip(tmp_path):
     save_json(p, {'a': [1, 2], 'b': 'ok'})
     assert load_json(p) == {'a': [1, 2], 'b': 'ok'}
     assert load_json(os.path.join(str(tmp_path), 'missing.json'), []) == []
+
+
+def test_supertrend_direction():
+    from analyzer.indicators import supertrend
+    # strong uptrend -> SuperTrend direction UP (+1)
+    df_up = enrich(make_df(n=300, drift=1.2, noise=0.4))
+    assert 'st_line' in df_up.columns and 'st_dir' in df_up.columns
+    assert df_up['st_dir'].iloc[-1] == 1, 'uptrend should end with SuperTrend UP'
+    # strong downtrend -> SuperTrend direction DOWN (-1)
+    df_dn = enrich(make_df(n=300, drift=-1.2, noise=0.4))
+    assert df_dn['st_dir'].iloc[-1] == -1, 'downtrend should end with SuperTrend DOWN'
+    # line is finite
+    assert not df_up['st_line'].isna().any()
+
+
+def test_supertrend_flip():
+    from analyzer.indicators import supertrend
+    # uptrend then crash -> direction flips to -1
+    df = make_df(n=200, drift=1.0, noise=0.3)
+    df.iloc[-20:, df.columns.get_loc('c')] *= 0.75
+    e = enrich(df)
+    assert e['st_dir'].iloc[-1] == -1, 'crash should flip SuperTrend to DOWN'

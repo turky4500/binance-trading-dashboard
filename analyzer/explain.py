@@ -101,9 +101,12 @@ def volume_note(tf, ticker):
 
 def momentum_note(tf, direction):
     t4, t1 = tf['4h'], tf['1h']
+    st4 = 'bullish' if t4['st_dir'] > 0 else 'bearish'
+    st1 = 'bullish' if t1['st_dir'] > 0 else 'bearish'
     en = (f"Momentum check — 4H: RSI {t4['rsi']:.0f}, MACD histogram {'positive' if t4['macd_h']>=0 else 'negative'} "
-          f"({'rising' if t4['macd_h'] > t4['macd_h_prev'] else 'falling'}); 1H: RSI {t1['rsi']:.0f}, "
-          f"MACD histogram {'positive' if t1['macd_h']>=0 else 'negative'}.")
+          f"({'rising' if t4['macd_h'] > t4['macd_h_prev'] else 'falling'}), SuperTrend {st4}; "
+          f"1H: RSI {t1['rsi']:.0f}, MACD histogram {'positive' if t1['macd_h']>=0 else 'negative'}, SuperTrend {st1}.")
     ar = (f"فحص الزخم — 4 ساعات: RSI {t4['rsi']:.0f}، MACD {'موجب' if t4['macd_h']>=0 else 'سالب'} "
-          f"({'صاعد' if t4['macd_h'] > t4['macd_h_prev'] else 'هابط'}); ساعة: RSI {t1['rsi']:.0f}، MACD {'موجب' if t1['macd_h']>=0 else 'سالب'}.")
+          f"({'صاعد' if t4['macd_h'] > t4['macd_h_prev'] else 'هابط'})، سوبر ترند {('صاعد' if st4=='bullish' else 'هابط')}؛ "
+          f"ساعة: RSI {t1['rsi']:.0f}، MACD {'موجب' if t1['macd_h']>=0 else 'سالب'}، سوبر ترند {('صاعد' if st1=='bullish' else 'هابط')}.")
     return {'en': en, 'ar': ar}

@@ -54,6 +54,7 @@ def scan(cfg, now_iso=None, verbose=True):
     now_iso = now_iso or iso()
     errors = []
     uni = cfg['universe']
+    stp = cfg.get('supertrend', {'period': 10, 'multiplier': 3.0})
     t0 = time.time()
 
     # ---------- 1. market snapshot: tickers + spreads + tradable symbols
@@ -106,7 +107,7 @@ def scan(cfg, now_iso=None, verbose=True):
         if k is None:
             continue
         try:
-            daily[sym] = enrich(klines_to_df(k))
+            daily[sym] = enrich(klines_to_df(k), st_period=stp['period'], st_mult=stp['multiplier'])
         except Exception:
             continue
     if verbose:
@@ -149,6 +150,14 @@ def scan(cfg, now_iso=None, verbose=True):
     for sym, tf, k in _fetch_many(lambda s: _get_klines(s, '15m', 500), tracked_syms).values():
         if k is not None:
             intraday.setdefault(sym, {})['15m'] = klines_to_df(k)
+    # also refresh 1h/4h for tracked (triggered) setups so their ANALYSIS
+    # section stays current (levels remain frozen after trigger)
+    for sym, tf, k in _fetch_many(lambda s: _get_klines(s, '1h', 400), tracked_syms).values():
+        if k is not None:
+            intraday.setdefault(sym, {})['1h'] = klines_to_df(k)
+    for sym, tf, k in _fetch_many(lambda s: _get_klines(s, '4h', 400), tracked_syms).values():
+        if k is not None:
+            intraday.setdefault(sym, {})['4h'] = klines_to_df(k)
     if verbose:
         print(f"[4/6] Intraday klines: {len(intraday)} symbols")
 
@@ -164,8 +173,9 @@ def scan(cfg, now_iso=None, verbose=True):
         try:
             d15, d1h, d4h = frames['15m'], frames['1h'], frames['4h']
             dd = daily[sym]
-            tf = {'15m': tf_state(enrich(d15), k=2), '1h': tf_state(enrich(d1h), k=2),
-                  '4h': tf_state(enrich(d4h), k=3), '1d': tf_state(enrich(dd), k=3)}
+            st_kw = dict(st_period=stp['period'], st_mult=stp['multiplier'])
+            tf = {'15m': tf_state(enrich(d15, **st_kw), k=2), '1h': tf_state(enrich(d1h, **st_kw), k=2),
+                  '4h': tf_state(enrich(d4h, **st_kw), k=3), '1d': tf_state(enrich(dd, **st_kw), k=3)}
             brk = detect_breakout(enrich(d4h), tf['4h'])
             plans = generate_plans(tf, brk, cfg_risk)
             for plan in plans:
@@ -189,11 +199,35 @@ def scan(cfg, now_iso=None, verbose=True):
     prev = load_json(data_path('opportunities.json'), [])
     k15 = {s: _df_to_klines(f['15m']) for s, f in intraday.items() if '15m' in f}
     closed = track(prev, k15, cfg['expiry_hours'], now_iso)
+    # fresh multi-timeframe state for tracked setups (analysis refresh only —
+    # entry/SL/TP of triggered trades stay frozen)
+    st_kw = dict(st_period=stp['period'], st_mult=stp['multiplier'])
+    tracked_tf = {}
+    for sym in tracked_syms:
+        frames = intraday.get(sym)
+        dd = daily.get(sym)
+        if frames and all(t in frames for t in ('15m', '1h', '4h')) and dd is not None:
+            try:
+                tracked_tf[sym] = {
+                    '15m': tf_state(enrich(frames['15m'], **st_kw), k=2),
+                    '1h': tf_state(enrich(frames['1h'], **st_kw), k=2),
+                    '4h': tf_state(enrich(frames['4h'], **st_kw), k=3),
+                    '1d': tf_state(enrich(dd, **st_kw), k=3),
+                }
+            except Exception:
+                continue
     FROZEN = ('TRIGGERED', 'TP1_HIT', 'TP2_HIT')
     active_by_key = {}
     for o in prev:
         if o.get('status') in FROZEN:
             o['updated_at'] = now_iso
+            tfo = tracked_tf.get(o['symbol'])
+            if tfo:
+                o['analysis'] = _analysis_dict(tfo)
+            cur = next((r for r in rows if r['sym'] == o['symbol']), None)
+            if cur:
+                o['current_price'] = cur['last']
+                o['change_24h'] = cur['chg24']
             active_by_key[f"{o['symbol']}|{o['direction']}"] = o
             continue
         # terminal opportunities were moved to history by the tracker
@@ -228,7 +262,7 @@ def scan(cfg, now_iso=None, verbose=True):
     # ---------- 6. market status + persist
     market = _market_status(daily, meta_by_sym)
     # chart data for displayed symbols
-    _write_chart_cache(merged, intraday, daily, now_iso)
+    _write_chart_cache(merged, intraday, daily, now_iso, stp)
 
     save_json(data_path('opportunities.json'), merged)
     hist = load_json(data_path('history.json'), [])
@@ -259,15 +293,8 @@ def scan(cfg, now_iso=None, verbose=True):
     return merged, market
 
 
-def _build_opportunity(sym, meta, tf, plan, score, parts, R, now_iso):
-    entry = plan['entry_mid']
-    t4 = tf['4h']
-    dirn = plan['direction']
-    rr1 = round(abs(plan['tp1'] - entry) / R, 2)
-    rr2 = round(abs(plan['tp2'] - entry) / R, 2)
-    rr3 = round(abs(plan['tp3'] - entry) / R, 2)
-    sl_pct = round(abs(entry - plan['stop_loss']) / entry * 100, 2)
-    sgn = 1 if dirn == 'LONG' else -1
+def _analysis_dict(tf):
+    """Per-timeframe analysis snapshot for the dashboard (deterministic values)."""
     analyses = {}
     for tf_name in TFS:
         st = tf[tf_name]
@@ -280,7 +307,21 @@ def _build_opportunity(sym, meta, tf, plan, score, parts, R, now_iso):
             'above_ema20': st['above20'], 'above_ema50': st['above50'],
             'atr_pct': round(st['atr'] / st['close'] * 100, 2),
             'vol_ratio': round(st['vol_ratio3'], 2),
+            'supertrend': 'UP' if st['st_dir'] > 0 else 'DOWN',
+            'supertrend_value': round(st['st_line'], 8),
         }
+    return analyses
+
+
+def _build_opportunity(sym, meta, tf, plan, score, parts, R, now_iso):
+    entry = plan['entry_mid']
+    dirn = plan['direction']
+    rr1 = round(abs(plan['tp1'] - entry) / R, 2)
+    rr2 = round(abs(plan['tp2'] - entry) / R, 2)
+    rr3 = round(abs(plan['tp3'] - entry) / R, 2)
+    sl_pct = round(abs(entry - plan['stop_loss']) / entry * 100, 2)
+    sgn = 1 if dirn == 'LONG' else -1
+    analyses = _analysis_dict(tf)
     breakdown = {k: v for k, v in parts.items()}
     return {
         'id': f"{sym}_{dirn}_{plan['setup_type']}_{now_iso[:10]}_{entry:.6f}",
@@ -330,7 +371,7 @@ def _df_to_klines(df):
             zip(df['t'], df['o'], df['h'], df['l'], df['c'], df['v'])]
 
 
-def _write_chart_cache(ops, intraday, daily, now_iso):
+def _write_chart_cache(ops, intraday, daily, now_iso, stp):
     kdir = os.path.join(data_path('klines'), '')
     os.makedirs(kdir, exist_ok=True)
     wanted = set()
@@ -341,7 +382,7 @@ def _write_chart_cache(ops, intraday, daily, now_iso):
         for tf_name, src in (('4h', intraday.get(sym, {}).get('4h')), ('1h', intraday.get(sym, {}).get('1h'))):
             if src is None:
                 continue
-            e = enrich(src)
+            e = enrich(src, st_period=stp['period'], st_mult=stp['multiplier'])
             n = 160
             tail = e.tail(n)
             payload = {
@@ -352,6 +393,8 @@ def _write_chart_cache(ops, intraday, daily, now_iso):
                 'ema20': [round(x, 10) for x in tail['ema20'].tolist()],
                 'ema50': [round(x, 10) for x in tail['ema50'].tolist()],
                 'vwap': [round(x, 10) for x in tail['vwap'].fillna(0).tolist()],
+                'st_line': [round(x, 10) for x in tail['st_line'].fillna(0).tolist()],
+                'st_dir': [int(x) for x in tail['st_dir'].tolist()],
             }
             save_json(os.path.join(kdir, f"{sym}_{tf_name}.json"), payload)
     # prune stale chart cache

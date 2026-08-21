@@ -63,13 +63,14 @@ def build_dist():
     js = (
         read(os.path.join(FRONTEND, 'js', 'i18n.js')) + '\n' +
         read(os.path.join(FRONTEND, 'js', 'chart.js')) + '\n' +
+        read(os.path.join(FRONTEND, 'js', 'live.js')) + '\n' +
         read(os.path.join(FRONTEND, 'js', 'app.js'))
     )
     data = load_data()
     embedded = json.dumps(data, ensure_ascii=False)
     # replace external references with inline content
     html = html.replace('<link rel="stylesheet" href="css/style.css">', f'<style>{css}</style>')
-    for src in ('js/i18n.js', 'js/chart.js', 'js/app.js'):
+    for src in ('js/i18n.js', 'js/chart.js', 'js/live.js', 'js/app.js'):
         html = html.replace(f'<script src="{src}"></script>', '')
     html = html.replace('</body>', f'<script>window.__EMBEDDED__ = {embedded};</script>\n<script>{js}</script>\n</body>')
     out = os.path.join(DIST, 'index.html')

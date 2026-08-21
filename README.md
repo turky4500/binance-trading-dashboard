@@ -18,7 +18,7 @@ Universe filter (USDT spot pairs, liquidity, spread, activity)
         │
         ▼
 Multi-timeframe technical analysis  (15m / 1h / 4h / 1d)
-  EMA 20/50/200 · RSI · MACD · ATR · VWAP · volume · structure
+  EMA 20/50/200 · RSI · MACD · ATR · VWAP · SuperTrend · volume · structure
   swing levels · breakout detection · retest confirmation
         │
         ▼
@@ -39,7 +39,8 @@ The engine is **100% deterministic**: every indicator, entry, stop and target is
 ## Features
 
 - 🌐 Live Binance spot data (public endpoints only — zero secrets required)
-- 📈 Multi-timeframe analysis: 15m / 1h / 4h / 1d with EMA 20/50/200, RSI, MACD, ATR, VWAP, volume, structure
+- ⚡ Real-time prices in the dashboard via Binance public WebSocket streams — prices flash green/red on every change (degrades gracefully to pipeline prices when the stream is unavailable)
+- 📈 Multi-timeframe analysis: 15m / 1h / 4h / 1d with EMA 20/50/200, RSI, MACD, ATR, VWAP, SuperTrend (10,3), volume, structure
 - 🎯 Complete trade plans: entry zone, SL (ATR + structure based), TP1/TP2/TP3, R:R, invalidation level
 - 🏆 Configurable 100-point scoring with per-component breakdown
 - 🔁 Automatic refresh every 15 minutes via GitHub Actions (no manual re-runs)
@@ -143,6 +144,7 @@ Everything is tunable in one file:
 | `universe.exclude_assets` | list | Extra symbols to ignore |
 | `scoring.*` | 20/15/15/15/10/10/10/5 | Per-component weights (must sum to 100) |
 | `risk.atr_sl_min` / `atr_sl_max` | `0.8` / `2.0` | Stop-loss distance bounds in ATR multiples |
+| `supertrend.period` / `supertrend.multiplier` | `10` / `3.0` | SuperTrend parameters (per timeframe, on charts, in scoring) |
 | `risk.pullback_zone_atr` | `0.6` | Entry-zone width (pullback setups) |
 | `telegram.enabled` | `false` | Enable Telegram alerts |
 | `telegram.min_score_alert` | `85` | Alert threshold |

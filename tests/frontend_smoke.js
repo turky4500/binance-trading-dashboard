@@ -8,6 +8,7 @@ const ROOT = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(ROOT, 'frontend', 'index.html'), 'utf-8');
 const i18n = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'i18n.js'), 'utf-8');
 const chart = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'chart.js'), 'utf-8');
+const live = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'live.js'), 'utf-8');
 const app = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'app.js'), 'utf-8');
 const data = {
   opportunities: JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf-8')),
@@ -49,6 +50,7 @@ const dom = new JSDOM(html, {
 const { window } = dom;
 window.eval(i18n);
 window.eval(chart);
+window.eval(live);
 window.eval(app);
 window.document.dispatchEvent(new window.Event('DOMContentLoaded', { bubbles: true }));
 
@@ -87,6 +89,7 @@ const assert = (cond, msg) => {
     const mbody = window.document.getElementById('m-body');
     assert(mbody.textContent.includes('Score Breakdown'), 'modal: score breakdown');
     assert(mbody.textContent.includes('Timeframe Analysis'), 'modal: timeframe analysis');
+    assert(mbody.textContent.includes('SuperTrend') || mbody.textContent.includes('سوبر ترند'), 'modal: SuperTrend column');
     assert(mbody.textContent.includes('Support'), 'modal: support/resistance');
     const cvs = window.document.getElementById('m-chart');
     assert(!!cvs && cvs.width > 0, 'modal: chart canvas drawn');
@@ -99,6 +102,8 @@ const assert = (cond, msg) => {
   search.value = data.opportunities[0] ? data.opportunities[0].symbol.slice(0, 3) : 'BTC';
   search.dispatchEvent(new window.Event('input', { bubbles: true }));
   assert(window.document.querySelectorAll('#opps-grid .card').length >= 1, 'search filter works');
+  search.value = '';
+  search.dispatchEvent(new window.Event('input', { bubbles: true }));
   const sort = window.document.getElementById('f-sort');
   sort.value = 'rr'; sort.dispatchEvent(new window.Event('change', { bubbles: true }));
   const st = window.document.getElementById('f-status');
@@ -135,6 +140,16 @@ const assert = (cond, msg) => {
   const nu = window.document.getElementById('next-update').textContent;
   assert(/\(\d{1,2}:\d{2}\)$/.test(nu) || /^\d{1,2}:\d{2}$/.test(nu) || nu === 'SYNC' || nu === 'مزامنة',
          `next-update stat is dynamic (got "${nu}")`);
+
+  // 7b. live prices (WebSocket) — graceful in jsdom (no WS): elements must exist
+  assert(typeof window.LivePrices === 'object' && typeof window.LivePrices.subscribe === 'function',
+         'LivePrices module loaded');
+  assert(window.document.querySelectorAll('[data-live-sym]').length >= 1, 'live price elements rendered');
+  if (window.document.querySelector('.badge.st-up, .badge.st-down')) {
+    assert(true, 'SuperTrend badge on card');
+  } else {
+    assert(data.opportunities.every(o => !o.analysis || !o.analysis['4h']), 'no ST badge only when no 4h analysis');
+  }
 
   // 8. performance tab
   window.document.querySelector('[data-tab="performance"]').click();

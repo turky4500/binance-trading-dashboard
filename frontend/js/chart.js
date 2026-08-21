@@ -90,6 +90,21 @@ function drawChart(canvas, data, opp) {
   poly(ema50, 'rgba(168,85,247,.9)');
   poly(vwap, 'rgba(240,185,11,.55)');
 
+  // SuperTrend line: green segments while UP, red while DOWN
+  const stLine = data.st_line || [], stDir = data.st_dir || [];
+  if (stLine.length === n && stDir.length === n) {
+    ctx.lineWidth = 1.7;
+    for (let i = 0; i < n - 1; i++) {
+      if (!stLine[i] || !stLine[i + 1]) continue;
+      ctx.strokeStyle = stDir[i] === 1 ? 'rgba(22,199,132,.9)' : 'rgba(234,57,67,.9)';
+      ctx.beginPath();
+      ctx.moveTo(X(i), Y(stLine[i]));
+      ctx.lineTo(X(i + 1), Y(stLine[i + 1]));
+      ctx.stroke();
+    }
+    ctx.lineWidth = 1;
+  }
+
   // candles
   const cw = Math.max(2, Math.min(11, pw / n * 0.7));
   for (let i = 0; i < n; i++) {
@@ -136,6 +151,7 @@ function drawChart(canvas, data, opp) {
   lg('rgba(59,130,246,.9)', 'EMA20', plotL);
   lg('rgba(168,85,247,.9)', 'EMA50', plotL + 58);
   lg('rgba(240,185,11,.8)', 'VWAP', plotL + 118);
+  lg('rgba(45,212,191,.95)', 'ST', plotL + 172);
 }
 
 function fmtNum(p) {

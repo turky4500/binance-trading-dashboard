@@ -26,6 +26,8 @@ def _trend(tf, direction, w):
         pts += 2 if tf['1d']['above200'] else 0
         pts += 1 if tf['1d']['macd_h'] > 0 else 0
         pts += 1 if tf['4h']['above200'] else 0
+        pts += 1 if tf['4h']['st_dir'] == 1 else 0   # SuperTrend alignment (4H)
+        pts += 1 if tf['1h']['st_dir'] == 1 else 0   # SuperTrend alignment (1H)
     else:
         for k in tfs:
             pts += 1 if not tf[k]['above20'] else 0
@@ -33,7 +35,9 @@ def _trend(tf, direction, w):
         pts += 2 if not tf['1d']['above200'] else 0
         pts += 1 if tf['1d']['macd_h'] < 0 else 0
         pts += 1 if not tf['4h']['above200'] else 0
-    return round(w * clamp(pts / 10.0, 0, 1), 1)
+        pts += 1 if tf['4h']['st_dir'] == -1 else 0
+        pts += 1 if tf['1h']['st_dir'] == -1 else 0
+    return round(w * clamp(pts / 12.0, 0, 1), 1)
 
 
 def _structure(tf, direction, w):
