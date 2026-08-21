@@ -254,3 +254,45 @@ def test_calibration_bands():
     assert band_70['decided'] == 2 and band_70['win_rate'] == 50.0
     band_90 = next(r for r in rows if r['band'] == '90-100')
     assert band_90['win_rate'] == 100.0
+
+
+# ---------------- lifecycle alerts ----------------
+def test_notify_key_mapping():
+    from analyzer.run import _notify_key
+    assert _notify_key('TP1_HIT') == 'tp_hit'
+    assert _notify_key('TP2_HIT') == 'tp_hit'
+    assert _notify_key('TRIGGERED') == 'triggered'
+    assert _notify_key('READY') == 'ready'
+    assert _notify_key('STOPPED') == 'stopped'
+    assert _notify_key('EXPIRED') == 'expired'
+    assert _notify_key('INVALIDATED') == 'invalidated'
+    assert _notify_key('UNKNOWN') is None
+
+
+def test_lifecycle_text_builders():
+    from analyzer.run import lifecycle_text
+    opp = {'pair': 'BTC/USDT', 'direction': 'LONG', 'entry_zone': [100.0, 101.0],
+           'entry_mid': 100.5, 'stop_loss': 98.0, 'tp1': 104.0, 'tp2': 108.0, 'tp3': 114.0,
+           'score': 85, 'invalidation_level': 97.0}
+    t1 = lifecycle_text(opp, 'READY', 'TRIGGERED')
+    assert 'TRIGGERED' in t1 and 'BTC/USDT' in t1 and '100.0 - 101.0' in t1
+    t2 = lifecycle_text(opp, 'TRIGGERED', 'TP1_HIT')
+    assert 'TP1 HIT' in t2 and '+1.4R' in t2  # (104-100.5)/2.5 = 1.4
+    t3 = lifecycle_text(opp, 'TRIGGERED', 'STOPPED')
+    assert 'STOPPED' in t3
+    t4 = lifecycle_text(opp, 'READY', 'INVALIDATED')
+    assert 'INVALIDATED' in t4
+
+
+def test_extract_transitions():
+    from analyzer.scanner import _extract_transitions
+    opps = [
+        {'id': 'a', 'status': 'TRIGGERED'},
+        {'id': 'b', 'status': 'READY'},
+        {'id': 'c', 'status': 'READY'},
+    ]
+    tr = _extract_transitions({'a': 'READY', 'b': 'READY', 'c': 'WAITING_CONFIRMATION'}, opps)
+    assert len(tr) == 2
+    by_id = {t['opp']['id']: t for t in tr}
+    assert by_id['a']['to'] == 'TRIGGERED'
+    assert by_id['c']['from'] == 'WAITING_CONFIRMATION'

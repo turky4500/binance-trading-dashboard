@@ -9,6 +9,7 @@ const html = fs.readFileSync(path.join(ROOT, 'frontend', 'index.html'), 'utf-8')
 const i18n = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'i18n.js'), 'utf-8');
 const chart = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'chart.js'), 'utf-8');
 const live = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'live.js'), 'utf-8');
+const alerts = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'alerts.js'), 'utf-8');
 const app = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'app.js'), 'utf-8');
 const data = {
   opportunities: JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf-8')),
@@ -37,6 +38,11 @@ const dom = new JSDOM(html, {
     window.addEventListener('error', e => errors.push('window error: ' + e.message));
     window.addEventListener('unhandledrejection', e => errors.push('unhandled rejection: ' + e.reason));
     window.console.error = (...a) => errors.push(a.map(String).join(' '));
+    // Notification stub (jsdom has no Notification API)
+    window.__notifs = [];
+    window.Notification = function (title, opts) { window.__notifs.push({ title: String(title), opts: opts || {} }); };
+    window.Notification.permission = 'granted';
+    window.Notification.requestPermission = () => Promise.resolve('granted');
     // canvas stubs so chart.js executes fully without a real canvas
     const noop = () => {};
     const ctxStub = new Proxy({}, {
@@ -53,6 +59,7 @@ const { window } = dom;
 window.eval(i18n);
 window.eval(chart);
 window.eval(live);
+window.eval(alerts);
 window.eval(app);
 window.document.dispatchEvent(new window.Event('DOMContentLoaded', { bubbles: true }));
 
@@ -152,6 +159,41 @@ const assert = (cond, msg) => {
   } else {
     assert(data.opportunities.every(o => !o.analysis || !o.analysis['4h']), 'no ST badge only when no 4h analysis');
   }
+
+  // 7c. alerts: panel, diff detection, emit pipeline
+  assert(typeof window.Alerts === 'object' && typeof window.Alerts.diffEvents === 'function', 'Alerts module loaded');
+  const alertBtn = window.document.getElementById('alert-btn');
+  const alertPanel = window.document.getElementById('alert-panel');
+  assert(!!alertBtn && !!alertPanel, 'alert button + panel exist');
+  alertBtn.click();
+  await wait(40);
+  assert(!alertPanel.classList.contains('hidden'), 'alert panel opens');
+  assert(alertPanel.querySelectorAll('input[type="checkbox"]').length >= 8, 'alert toggles present');
+  // diff: TP hit + new setup + stopped
+  const prevOpps = [
+    { id: 'a', pair: 'T/USDT', status: 'TRIGGERED' },
+    { id: 'b', pair: 'X/USDT', status: 'READY' },
+  ];
+  const nextOpps = [
+    { id: 'a', pair: 'T/USDT', status: 'TP1_HIT' },
+    { id: 'b', pair: 'X/USDT', status: 'STOPPED' },
+    { id: 'c', pair: 'Y/USDT', status: 'READY' },
+  ];
+  const evs = window.Alerts.diffEvents(prevOpps, nextOpps);
+  const types = evs.map(e => e.type).sort();
+  assert(JSON.stringify(types) === JSON.stringify(['new_setup', 'stopped', 'tp_hit']),
+         'diffEvents detects lifecycle changes: ' + types.join(','));
+  // emit -> toast + notification (permission granted stub)
+  const beforeToasts = window.document.querySelectorAll('.toast').length;
+  const beforeNotifs = window.__notifs.length;
+  window.Alerts.emit({ type: 'tp_hit', opp: { pair: 'T/USDT' } });
+  await wait(30);
+  assert(window.document.querySelectorAll('.toast').length === beforeToasts + 1, 'emit creates a toast');
+  assert(window.__notifs.length === beforeNotifs + 1, 'emit creates a browser notification');
+  assert(window.__notifs[beforeNotifs].title.includes('TP'), 'notification title mentions TP');
+  // close panel
+  window.document.body.click();
+  assert(alertPanel.classList.contains('hidden'), 'alert panel closes on outside click');
 
   // 8. performance tab
   window.document.querySelector('[data-tab="performance"]').click();

@@ -199,8 +199,10 @@ def scan(cfg, now_iso=None, verbose=True):
     # merge: keep lifecycle for triggered trades (levels frozen after trigger);
     # refresh levels/status for setups that never triggered.
     prev = load_json(data_path('opportunities.json'), [])
+    before_status = {o['id']: o.get('status') for o in prev}
     k15 = {s: _df_to_klines(f['15m']) for s, f in intraday.items() if '15m' in f}
     closed = track(prev, k15, cfg['expiry_hours'], now_iso)
+    transitions = _extract_transitions(before_status, prev)
     # fresh multi-timeframe state for tracked setups (analysis refresh only —
     # entry/SL/TP of triggered trades stay frozen)
     st_kw = dict(st_period=stp['period'], st_mult=stp['multiplier'])
@@ -293,7 +295,17 @@ def scan(cfg, now_iso=None, verbose=True):
     })
     if verbose:
         print(f"[6/6] Saved. Source: {bc.source_host()} | runtime {time.time()-t0:.1f}s")
-    return merged, market
+    return merged, market, {'new': new_ops, 'transitions': transitions}
+
+
+def _extract_transitions(before_status, opps):
+    """Diff statuses before/after the lifecycle tracker — lifecycle events only."""
+    out = []
+    for o in opps:
+        b = before_status.get(o['id'])
+        if b is not None and b != o.get('status'):
+            out.append({'opp': o, 'from': b, 'to': o['status']})
+    return out
 
 
 def _analysis_dict(tf):

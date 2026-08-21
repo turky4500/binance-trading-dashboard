@@ -21,6 +21,7 @@ async function loadAll() {
   // the last good data instead of blanking the page. Never falls back to the
   // embedded snapshot unless there is no data at all.
   const hadMeta = !!state.meta;
+  const prevOpps = window.__dashDataSeeded ? state.opps.slice() : null;
   const [m, mk, o, p, h, bt] = await Promise.allSettled([
     fetchJSON('data/meta.json'),
     fetchJSON('data/market.json'),
@@ -46,6 +47,11 @@ async function loadAll() {
   if (p.status === 'fulfilled') state.perf = p.value;
   if (h.status === 'fulfilled') state.history = h.value;
   if (bt.status === 'fulfilled') state.bt = bt.value;
+  // lifecycle alerts: diff vs previously displayed data (skipped on first seed)
+  if (window.Alerts && prevOpps && prevOpps.length && o.status === 'fulfilled') {
+    window.Alerts.diffEvents(prevOpps, state.opps).forEach(ev => window.Alerts.emit(ev));
+  }
+  window.__dashDataSeeded = true;
   renderAll();
   syncDirectionFilter();
   // (re)subscribe the live price feed to the currently displayed symbols
@@ -589,11 +595,16 @@ window.renderAll = function () {
 };
 
 /* ---------------- boot ---------------- */
+/* explicit exports for cross-module use (alerts, live prices) */
+window.toast = toast;
+window.fmtPrice = fmtPrice;
+
 async function init() {
   if (window.__dashInit) return; // guard against double initialization
   window.__dashInit = true;
   applyTheme((function () { try { return localStorage.getItem('dash-theme') || 'dark'; } catch (e) { return 'dark'; } })());
   bindControls();
+  if (window.Alerts) window.Alerts.initPanel();
   setLang(LANG); // applies i18n + triggers first renderAll
   await loadAll();
   // tick every second: data age, live badge, countdown ring, auto-refresh at zero

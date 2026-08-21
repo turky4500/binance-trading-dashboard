@@ -25,6 +25,24 @@
       </svg>
       <span id="countdown-text">--:--</span>
     </div>
+    <div class="alert-wrap">
+      <button class="lang-btn" id="alert-btn" title="Alerts">🔔</button>
+      <div class="alert-panel hidden" id="alert-panel">
+        <h4 data-i18n="alerts_title">Alerts &amp; Notifications</h4>
+        <p class="alert-note" data-i18n="alerts_note"></p>
+        <label class="alert-row"><input type="checkbox" id="al-notif"> <span data-i18n="notif_master"></span></label>
+        <label class="alert-row"><input type="checkbox" id="al-sound"> <span data-i18n="sound_master"></span></label>
+        <div class="alert-divider"></div>
+        <label class="alert-row"><input type="checkbox" id="al-ev-new_setup"> <span data-i18n="ev_new"></span></label>
+        <label class="alert-row"><input type="checkbox" id="al-ev-ready"> <span data-i18n="ev_ready"></span></label>
+        <label class="alert-row"><input type="checkbox" id="al-ev-triggered"> <span data-i18n="ev_triggered"></span></label>
+        <label class="alert-row"><input type="checkbox" id="al-ev-tp_hit"> <span data-i18n="ev_tp"></span></label>
+        <label class="alert-row"><input type="checkbox" id="al-ev-stopped"> <span data-i18n="ev_stopped"></span></label>
+        <label class="alert-row"><input type="checkbox" id="al-ev-expired"> <span data-i18n="ev_expired"></span></label>
+        <label class="alert-row"><input type="checkbox" id="al-ev-invalidated"> <span data-i18n="ev_invalidated"></span></label>
+        <button class="btn small" id="al-test" data-i18n="test_sound">Test sound</button>
+      </div>
+    </div>
     <button class="lang-btn" id="theme-btn">🌙</button>
     <button class="lang-btn" id="lang-btn">العربية</button>
   </div>
@@ -154,6 +172,7 @@ window.__EMBEDDED__ = window.__EMBEDDED__ || null;
 <script src="js/i18n.js"></script>
 <script src="js/chart.js"></script>
 <script src="js/live.js"></script>
+<script src="js/alerts.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

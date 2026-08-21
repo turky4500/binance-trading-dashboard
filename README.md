@@ -51,7 +51,7 @@ The engine is **100% deterministic**: every indicator, entry, stop and target is
 - 📊 Performance history page (win rate, TP hit rates, avg score/R:R) — with the explicit caveat that it is not a promise
 - 🔍 Search, filters (direction/status/high-score) and sorting
 - 📱 Responsive dark UI, English/Arabic (RTL), 4H candlestick charts with levels drawn
-- 🔔 Optional Telegram alerts for setups scoring ≥ 85
+- 🔔 Full lifecycle alerts: Telegram notifications for every transition (READY / TRIGGERED / TP hits / STOPPED / EXPIRED / INVALIDATED — per-event toggles), plus optional in-browser notifications and distinctive sounds for each event while the dashboard is open
 - 🛡️ Error handling: stale data is clearly flagged as `DATA SOURCE ERROR` with the last successful update shown
 
 ## Repository layout
@@ -150,7 +150,8 @@ Everything is tunable in one file:
 | `supertrend.period` / `supertrend.multiplier` | `10` / `3.0` | SuperTrend parameters (per timeframe, on charts, in scoring) |
 | `risk.pullback_zone_atr` | `0.6` | Entry-zone width (pullback setups) |
 | `telegram.enabled` | `false` | Enable Telegram alerts |
-| `telegram.min_score_alert` | `85` | Alert threshold |
+| `telegram.min_score_alert` | `85` | Alert threshold for new setups |
+| `telegram.notify.*` | per-event toggles | Enable/disable Telegram alerts per lifecycle event (`new_setup`, `ready`, `triggered`, `tp_hit`, `stopped`, `expired`, `invalidated`) |
 
 Timeframes are listed per opportunity and analyzed on `15m / 1h / 4h / 1d` (defined in `analyzer/scanner.py`, `TFS`).
 
@@ -176,18 +177,16 @@ Trend Alignment 20 · Market Structure 15 · Support/Resistance 15 · Volume 15 
 
 Statistics over the scanner's own closed history (win rate, TP1/TP2 hit rates, average score & R:R, hold times). **These describe the tool, not the future** — historical results never guarantee future performance.
 
-## 🔔 Telegram alerts (optional)
+## 🔔 Alerts (Telegram + browser + sound)
 
-Set `telegram.enabled: true` and add the two repository secrets (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`). When a **new** setup scores ≥ 85, the workflow sends:
+**Telegram (optional):** set `telegram.enabled: true` in `config/settings.json` and add two repository secrets (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`). The workflow then sends:
 
-```
-🚨 New High-Quality Setup
-ZEC/USDT
-LONG
-Entry: ...  SL: ...  TP1: ...  TP2: ...  R:R: ...  Score: 89/100
-```
+- 🚨 every **new** setup scoring ≥ `telegram.min_score_alert` (default 85)
+- 🎯 TRIGGERED / ✅ TP1-3 HIT / 🛑 STOPPED / ⏳ EXPIRED / ❌ INVALIDATED / 👌 READY transitions detected that cycle
 
-Tokens are read from environment variables only — never stored, never logged.
+Each event type has its own toggle under `telegram.notify` in the config. Tokens are read from environment variables only — never stored, never logged.
+
+**Browser notifications + sounds (no setup needed):** while the dashboard page is open, every fresh data cycle is diffed against what is displayed — lifecycle changes and brand-new setups fire a browser notification, a toast, and a distinctive beep (ascending tone for take-profits, descending for stop-outs, etc.). The 🔔 button in the top bar opens a control panel: master toggles for notifications/sound, per-event checkboxes, and a sound test. Preferences persist locally. Note: browser notifications require the page to be open (a background worker/Telegram covers the closed case).
 
 ## 🧪 Quality checks in CI
 

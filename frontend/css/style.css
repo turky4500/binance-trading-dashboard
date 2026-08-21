@@ -249,3 +249,15 @@ body.ws-on .lp-dot{background:var(--green);animation:pulse 1.8s infinite}
 .bt-approx{margin-top:16px;color:var(--text3);font-size:12.5px}
 .bt-approx ul{padding-inline-start:20px;margin-top:8px;display:flex;flex-direction:column;gap:4px}
 .bt-approx summary{cursor:pointer;color:var(--text2);font-weight:600}
+
+/* ---------- alerts panel ---------- */
+.alert-wrap{position:relative}
+.alert-panel{position:absolute;top:calc(100% + 8px);inset-inline-end:0;width:292px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);z-index:60;display:flex;flex-direction:column;gap:9px}
+.alert-panel h4{font-size:14px;margin:0}
+.alert-note{font-size:11.5px;color:var(--text3);margin:0;line-height:1.45}
+.alert-row{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text);cursor:pointer;user-select:none}
+.alert-row input{accent-color:var(--accent);width:16px;height:16px;cursor:pointer;flex:0 0 auto}
+.alert-divider{border-top:1px solid var(--border);margin:2px 0}
+.btn.small{padding:7px 12px;font-size:12px;align-self:flex-start}
+@media (max-width:720px){.alert-panel{width:270px}}
+.toast.alert{border-inline-start-color:var(--accent)}

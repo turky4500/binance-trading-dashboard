@@ -5,6 +5,11 @@ Entry point: python -m analyzer.run
 Runs one full analysis cycle and saves results under /data.
 Optionally sends Telegram alerts (only if TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID
 are configured via environment variables — never hard-coded, never logged).
+
+Alerts cover the full opportunity lifecycle:
+  * new high-score setups   (above telegram.min_score_alert)
+  * READY / TRIGGERED / TP1-3_HIT / STOPPED / EXPIRED / INVALIDATED
+    (per-event toggles in config/settings.json -> telegram.notify)
 """
 import json
 import os
@@ -13,10 +18,25 @@ import urllib.parse
 import urllib.request
 
 from .scanner import scan
-from .storage import load_json, data_path, iso
+from .storage import iso
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_CONFIG = os.path.join(ROOT, 'config', 'settings.json')
+
+NOTIFY_KEY = {
+    'READY': 'ready',
+    'TRIGGERED': 'triggered',
+    'TP1_HIT': 'tp_hit',
+    'TP2_HIT': 'tp_hit',
+    'TP3_HIT': 'tp_hit',
+    'STOPPED': 'stopped',
+    'EXPIRED': 'expired',
+    'INVALIDATED': 'invalidated',
+}
+
+
+def _notify_key(status):
+    return NOTIFY_KEY.get(status)
 
 
 def load_config(path=None):
@@ -57,21 +77,60 @@ def alert_text(op):
     )
 
 
+def lifecycle_text(opp, frm, to):
+    p = opp.get('pair') or opp.get('symbol')
+    d = opp.get('direction', '')
+    z = opp.get('entry_zone') or [opp.get('entry_mid'), opp.get('entry_mid')]
+    if to == 'READY':
+        return (f"👌 READY — {p} {d}\n\n"
+                f"Entry zone active: {z[0]} - {z[1]}\n"
+                f"SL: {opp.get('stop_loss')} | TP1: {opp.get('tp1')} | TP2: {opp.get('tp2')}\n"
+                f"Score: {opp.get('score')}/100")
+    if to == 'TRIGGERED':
+        return (f"🎯 TRIGGERED — {p} {d}\n\n"
+                f"Entry zone {z[0]} - {z[1]} touched\n"
+                f"SL: {opp.get('stop_loss')} | TP1: {opp.get('tp1')} | TP2: {opp.get('tp2')} | TP3: {opp.get('tp3')}\n"
+                f"Score: {opp.get('score')}/100")
+    if to in ('TP1_HIT', 'TP2_HIT', 'TP3_HIT'):
+        entry = opp.get('entry_mid', 0)
+        sl = opp.get('stop_loss', 0)
+        R = abs(entry - sl) or 1
+        level = {'TP1_HIT': opp.get('tp1'), 'TP2_HIT': opp.get('tp2'), 'TP3_HIT': opp.get('tp3')}[to]
+        gain = abs(level - entry) / R if R else 0
+        return (f"✅ {to.replace('_', ' ')} — {p} {d}\n\n"
+                f"≈ +{gain:.1f}R | Next: TP2 {opp.get('tp2')} · TP3 {opp.get('tp3')}")
+    if to == 'STOPPED':
+        return f"🛑 STOPPED — {p} {d}\n\nStop-loss hit: {opp.get('stop_loss')}"
+    if to == 'EXPIRED':
+        return f"⏳ EXPIRED — {p} {d}\n\nSetup never triggered within the expiry window."
+    if to == 'INVALIDATED':
+        return f"❌ INVALIDATED — {p} {d}\n\nInvalidation level {opp.get('invalidation_level')} broken — idea abandoned."
+    return f"{p} {d}: {frm} -> {to}"
+
+
 def main(argv=None):
     argv = argv if argv is not None else sys.argv[1:]
     cfg = load_config()
     verbose = '--quiet' not in argv
-    ops, market = scan(cfg, verbose=verbose)
+    ops, market, events = scan(cfg, verbose=verbose)
 
-    # Telegram alerts for brand-new READY setups above the alert threshold
-    min_alert = cfg.get('telegram', {}).get('min_score_alert', 85)
-    prev = load_json(data_path('opportunities.json'), [])
-    prev_ids = {o['id'] for o in prev}
+    tg = cfg.get('telegram', {})
     sent = 0
-    for op in ops:
-        if op['score'] >= min_alert and op['status'] in ('READY', 'WAITING_CONFIRMATION') and op['id'] not in prev_ids:
-            if send_telegram(alert_text(op), cfg):
-                sent += 1
+    if tg.get('enabled'):
+        notify = tg.get('notify', {})
+        min_alert = tg.get('min_score_alert', 85)
+        # 1) brand-new high-score setups (fresh opportunities from this cycle)
+        for op in events.get('new', []):
+            if (op.get('score', 0) >= min_alert and notify.get('new_setup', True)
+                    and op.get('status') in ('READY', 'WAITING_CONFIRMATION')):
+                if send_telegram(alert_text(op), cfg):
+                    sent += 1
+        # 2) lifecycle transitions detected by the tracker this cycle
+        for tr in events.get('transitions', []):
+            key = _notify_key(tr['to'])
+            if key and notify.get(key, False):
+                if send_telegram(lifecycle_text(tr['opp'], tr['from'], tr['to']), cfg):
+                    sent += 1
     if verbose:
         print(f"Analysis complete at {iso()} | market: {market['status']} | "
               f"opportunities: {len(ops)} | alerts sent: {sent}")
