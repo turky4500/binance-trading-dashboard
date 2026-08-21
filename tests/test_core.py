@@ -296,3 +296,56 @@ def test_extract_transitions():
     by_id = {t['opp']['id']: t for t in tr}
     assert by_id['a']['to'] == 'TRIGGERED'
     assert by_id['c']['from'] == 'WAITING_CONFIRMATION'
+
+
+# ---------------- frozen-trade merge protection (regression) ----------------
+def test_frozen_trade_not_replaced_by_fresh_plan():
+    from analyzer.scanner import _carry_over_fresh
+    frozen_statuses = ('TRIGGERED', 'TP1_HIT', 'TP2_HIT')
+    # a triggered trade exists for POL
+    frozen_op = {'id': 'POL_old', 'symbol': 'POLUSDT', 'direction': 'LONG',
+                 'status': 'TRIGGERED', 'created_at': '2026-01-01T00:00:00Z', 'events': []}
+    active = {'POLUSDT|LONG': frozen_op}
+    fresh_plan = {'id': 'POL_new', 'symbol': 'POLUSDT', 'direction': 'LONG',
+                  'status': 'WAITING_CONFIRMATION', 'entry_zone': [1, 2], 'events': []}
+    new = _carry_over_fresh(active, [fresh_plan], '2026-01-01T01:00:00Z', frozen_statuses)
+    assert new == []
+    assert active['POLUSDT|LONG'] is frozen_op, 'frozen trade must be untouched'
+    assert frozen_op['status'] == 'TRIGGERED'
+    assert frozen_op['id'] == 'POL_old'
+
+
+def test_frozen_tp_hit_not_replaced():
+    from analyzer.scanner import _carry_over_fresh
+    frozen_op = {'id': 'X_old', 'symbol': 'XUSDT', 'direction': 'LONG',
+                 'status': 'TP1_HIT', 'created_at': 'x', 'events': []}
+    active = {'XUSDT|LONG': frozen_op}
+    fresh_plan = {'id': 'X_new', 'symbol': 'XUSDT', 'direction': 'LONG',
+                  'status': 'READY', 'entry_zone': [1, 2], 'events': []}
+    _carry_over_fresh(active, [fresh_plan], '2026-01-01T01:00:00Z', ('TRIGGERED', 'TP1_HIT', 'TP2_HIT'))
+    assert active['XUSDT|LONG'] is frozen_op and frozen_op['status'] == 'TP1_HIT'
+
+
+def test_non_frozen_refresh_keeps_identity():
+    from analyzer.scanner import _carry_over_fresh
+    ready_op = {'id': 'X_old', 'symbol': 'XUSDT', 'direction': 'LONG',
+                'status': 'READY', 'created_at': '2026-01-01T00:00:00Z', 'events': []}
+    active = {'XUSDT|LONG': ready_op}
+    fresh_plan = {'id': 'X_new', 'symbol': 'XUSDT', 'direction': 'LONG',
+                  'status': 'READY', 'entry_zone': [1, 2], 'events': []}
+    new = _carry_over_fresh(active, [fresh_plan], '2026-01-01T01:00:00Z', ('TRIGGERED',))
+    assert new == []
+    merged = active['XUSDT|LONG']
+    assert merged['id'] == 'X_old', 'identity carried over'
+    assert merged['entry_zone'] == [1, 2], 'plan refreshed'
+    assert merged['events'][-1]['from'] == 'READY'
+
+
+def test_brand_new_opportunity_detected():
+    from analyzer.scanner import _carry_over_fresh
+    active = {}
+    fresh_plan = {'id': 'N_new', 'symbol': 'NUSDT', 'direction': 'LONG',
+                  'status': 'READY', 'entry_zone': [1, 2], 'events': []}
+    new = _carry_over_fresh(active, [fresh_plan], '2026-01-01T01:00:00Z', ('TRIGGERED',))
+    assert new == [fresh_plan]
+    assert active['NUSDT|LONG'] is fresh_plan

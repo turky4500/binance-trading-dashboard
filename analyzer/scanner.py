@@ -237,24 +237,7 @@ def scan(cfg, now_iso=None, verbose=True):
         # terminal opportunities were moved to history by the tracker
         if o.get('status') in TERMINAL:
             continue
-    new_ops = []
-    for op in fresh:
-        key = f"{op['symbol']}|{op['direction']}"
-        old = active_by_key.get(key)
-        if old is not None:
-            # carry over identity/lifecycle, refresh the plan with fresh data
-            op['id'] = old['id']
-            op['created_at'] = old['created_at']
-            op['events'] = list(old.get('events', []))
-            if old.get('status') == 'READY' and op['status'] == 'WAITING_CONFIRMATION':
-                op['status'] = 'READY'
-            if old.get('status') == 'READY' and op['status'] == 'READY':
-                op['status'] = 'READY'
-            op['events'].append({'at': now_iso, 'from': old.get('status'), 'to': op['status'],
-                                 'note': 'plan refreshed with latest data'})
-        else:
-            new_ops.append(op)
-        active_by_key[key] = op
+    new_ops = _carry_over_fresh(active_by_key, fresh, now_iso, FROZEN)
     merged = list(active_by_key.values())
     # remove opportunities that disappeared from the tradable universe
     merged = [o for o in merged if any(r['sym'] == o['symbol'] for r in rows)]
@@ -306,6 +289,35 @@ def _extract_transitions(before_status, opps):
         if b is not None and b != o.get('status'):
             out.append({'opp': o, 'from': b, 'to': o['status']})
     return out
+
+
+def _carry_over_fresh(active_by_key, fresh, now_iso, frozen):
+    """Merge freshly computed plans into the active map.
+
+    Frozen trades (TRIGGERED/TP hits) are untouchable — fresh plans for the same
+    symbol+direction are dropped so entry/SL/TP stay locked after the trigger.
+    Non-frozen setups are refreshed with latest data while keeping their
+    identity and lifecycle history. Returns the list of brand-new opportunities.
+    """
+    new_ops = []
+    for op in fresh:
+        key = f"{op['symbol']}|{op['direction']}"
+        old = active_by_key.get(key)
+        if old is not None and old.get('status') in frozen:
+            continue  # frozen trade — fresh plans must not touch it
+        if old is not None:
+            # carry over identity/lifecycle, refresh the plan with fresh data
+            op['id'] = old['id']
+            op['created_at'] = old['created_at']
+            op['events'] = list(old.get('events', []))
+            if old.get('status') == 'READY' and op['status'] == 'WAITING_CONFIRMATION':
+                op['status'] = 'READY'
+            op['events'].append({'at': now_iso, 'from': old.get('status'), 'to': op['status'],
+                                 'note': 'plan refreshed with latest data'})
+        else:
+            new_ops.append(op)
+        active_by_key[key] = op
+    return new_ops
 
 
 def _analysis_dict(tf):
