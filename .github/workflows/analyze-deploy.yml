@@ -2,8 +2,11 @@ name: Analyze & Deploy Dashboard
 
 on:
   schedule:
-    # every 15 minutes (UTC)
+    # every 15 minutes (UTC) + an offset copy (+3 min). GitHub's scheduler
+    # frequently delays or skips cron slots, so the second schedule doubles
+    # the chance that a slot actually runs on time.
     - cron: '*/15 * * * *'
+    - cron: '3-59/15 * * * *'
   workflow_dispatch: {}
   push:
     branches: [main]

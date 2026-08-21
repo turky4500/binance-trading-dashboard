@@ -17,27 +17,32 @@ async function fetchJSON(path) {
 }
 
 async function loadAll() {
-  try {
-    const [meta, market, opps, perf, history] = await Promise.all([
-      fetchJSON('data/meta.json'),
-      fetchJSON('data/market.json'),
-      fetchJSON('data/opportunities.json'),
-      fetchJSON('data/performance.json').catch(() => null),
-      fetchJSON('data/history.json').catch(() => []),
-    ]);
-    state.meta = meta; state.market = market; state.opps = opps;
-    state.perf = perf; state.history = history;
+  // Resilient loading: fetch each file independently; on partial failure keep
+  // the last good data instead of blanking the page. Never falls back to the
+  // embedded snapshot unless there is no data at all.
+  const hadMeta = !!state.meta;
+  const [m, mk, o, p, h] = await Promise.allSettled([
+    fetchJSON('data/meta.json'),
+    fetchJSON('data/market.json'),
+    fetchJSON('data/opportunities.json'),
+    fetchJSON('data/performance.json'),
+    fetchJSON('data/history.json'),
+  ]);
+  if (m.status === 'fulfilled') {
+    state.meta = m.value;
     state.usingEmbedded = false;
-  } catch (e) {
-    if (window.__EMBEDDED__) {
-      const em = window.__EMBEDDED__;
-      state.meta = em.meta; state.market = em.market; state.opps = em.opportunities;
-      state.perf = em.performance; state.history = em.history || [];
-      state.usingEmbedded = true;
-    } else {
-      state.meta = null; state.opps = []; state.market = null; state.perf = null; state.history = [];
-    }
+  } else if (!hadMeta && window.__EMBEDDED__) {
+    const em = window.__EMBEDDED__;
+    state.meta = em.meta; state.market = em.market; state.opps = em.opportunities;
+    state.perf = em.performance; state.history = em.history || [];
+    state.usingEmbedded = true;
+  } else if (!hadMeta) {
+    state.meta = null;
   }
+  if (mk.status === 'fulfilled') state.market = mk.value;
+  if (o.status === 'fulfilled') state.opps = o.value;
+  if (p.status === 'fulfilled') state.perf = p.value;
+  if (h.status === 'fulfilled') state.history = h.value;
   renderAll();
 }
 
@@ -85,14 +90,10 @@ function renderHeader() {
   const el = (id, v) => { const n = document.getElementById(id); if (n) n.textContent = v; };
   if (meta) {
     el('last-update', locTime(meta.data_timestamp));
-    if (meta.next_update_at) {
-      el('next-update', locTime(meta.next_update_at));
-    } else {
-      el('next-update', '—');
-    }
     el('data-age', relTime(meta.data_timestamp));
     el('source', (meta.source || '').replace('https://', ''));
     document.getElementById('footer-version').textContent = `v${meta.engine_version || '—'} · ${t('data_from')}: ${(meta.source || '').replace('https://', '')}`;
+    updateNextStat(); // live countdown — refreshed every second by tick()
   } else {
     el('last-update', '—'); el('next-update', '—'); el('data-age', '—'); el('source', '—');
     document.getElementById('footer-version').textContent = t('no_data');
@@ -164,34 +165,53 @@ function toast(msg, kind) {
 async function refreshCycle() {
   // pulls the freshest data; re-renders everything when the pipeline published new data
   if (window.__refreshing) return;
-  if (state.usingEmbedded) { // offline snapshot: no network, retry silently later
-    window.__retryAt = Date.now() + 5 * 60000;
-    return;
-  }
   window.__refreshing = true;
   try {
     const meta = await fetchJSON('data/meta.json');
     if (!state.meta || meta.data_timestamp !== state.meta.data_timestamp) {
       window.__retryAt = 0;
+      window.__failStreak = 0;
       await loadAll();
-      toast(t('data_updated'), 'ok');
-      const sb = document.querySelector('.statusbar');
-      if (sb) { sb.classList.remove('flash'); void sb.offsetWidth; sb.classList.add('flash'); }
+      if (state.meta && state.meta.data_timestamp === meta.data_timestamp) {
+        toast(t('data_updated'), 'ok');
+        const sb = document.querySelector('.statusbar');
+        if (sb) { sb.classList.remove('flash'); void sb.offsetWidth; sb.classList.add('flash'); }
+      }
     } else {
       // the pipeline hasn't published yet — retry shortly (silently)
-      window.__retryAt = Date.now() + 45000;
+      window.__failStreak = 0;
+      window.__retryAt = Date.now() + 30000;
     }
   } catch (e) {
-    toast(t('offline'), 'warn');
-    window.__retryAt = Date.now() + 90000;
+    window.__failStreak = (window.__failStreak || 0) + 1;
+    if (window.__failStreak === 1) toast(t('offline'), 'warn'); // no toast spam on repeated failures
+    window.__retryAt = Date.now() + (window.__failStreak > 4 ? 120000 : 60000);
   } finally {
     window.__refreshing = false;
   }
 }
 
+function updateNextStat() {
+  // live "Next Update" stat: countdown while waiting, SYNC (yellow) when overdue
+  const el = document.getElementById('next-update');
+  if (!el) return;
+  const target = scheduleTarget();
+  if (!target) { el.textContent = '—'; el.style.color = ''; return; }
+  const diff = target - Date.now();
+  if (diff <= 0) {
+    el.textContent = t('sync');
+    el.style.color = 'var(--yellow)';
+    return;
+  }
+  el.style.color = '';
+  const mm = Math.floor(diff / 60000), ss = Math.floor((diff % 60000) / 1000);
+  el.textContent = `${locTime(new Date(target).toISOString())} (${mm}:${String(ss).padStart(2, '0')})`;
+}
+
 function tick() {
   // runs every second: data age, live badge, countdown ring + trigger refresh at zero
   if (state.meta) document.getElementById('data-age').textContent = relTime(state.meta.data_timestamp);
+  updateNextStat();
   const staleMin = (state.meta && state.meta.config && state.meta.config.stale_after_minutes) || 45;
   const ageMs = state.meta ? Date.now() - new Date(state.meta.data_timestamp).getTime() : Infinity;
   if (!state.meta) setLive('stale');

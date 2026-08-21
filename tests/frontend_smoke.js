@@ -132,6 +132,9 @@ const assert = (cond, msg) => {
   const ring = window.document.getElementById('countdown-ring');
   assert(ring.style.strokeDashoffset !== '' && !isNaN(parseFloat(ring.style.strokeDashoffset)),
          'countdown ring progress is being updated');
+  const nu = window.document.getElementById('next-update').textContent;
+  assert(/\(\d{1,2}:\d{2}\)$/.test(nu) || /^\d{1,2}:\d{2}$/.test(nu) || nu === 'SYNC' || nu === 'مزامنة',
+         `next-update stat is dynamic (got "${nu}")`);
 
   // 8. performance tab
   window.document.querySelector('[data-tab="performance"]').click();
