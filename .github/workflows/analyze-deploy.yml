@@ -48,17 +48,34 @@ jobs:
           # optional Telegram alerts — undefined by default, never logged
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-      - name: Commit updated data
+      - name: Commit updated data (race-proof)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/
-          if git diff --staged --quiet; then
-            echo "no data changes"
-          else
+          # Preserve the freshly computed data, then rebase onto the LATEST
+          # remote before committing — concurrent runs (external scheduler +
+          # GitHub schedule + manual dispatches) can commit between our
+          # checkout and our push, which would otherwise reject the push.
+          cp -r data /tmp/data_fresh
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp -r /tmp/data_fresh/. data/
+            git add data/
+            if git diff --cached --quiet; then
+              echo "no data changes — done"
+              exit 0
+            fi
             git commit -m "chore: market data refresh $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-            git push
-          fi
+            if git push origin main; then
+              echo "pushed successfully"
+              exit 0
+            fi
+            echo "push rejected (concurrent commit detected) — retrying in 4s"
+            sleep 4
+          done
+          echo "push failed after 3 attempts"
+          exit 1
 
   deploy:
     needs: analyze
