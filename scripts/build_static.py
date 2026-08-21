@@ -46,6 +46,8 @@ def load_data():
         'backtest': j('performance_backtest.json'),
         'breadth_history': j('breadth_history.json'),
         'update_log': j('update_log.json'),
+        'symbols': j('symbols.json'),
+        'config': j('config.json'),
         'klines': klines,
     }
 
@@ -69,13 +71,14 @@ def build_dist():
         read(os.path.join(FRONTEND, 'js', 'live.js')) + '\n' +
         read(os.path.join(FRONTEND, 'js', 'alerts.js')) + '\n' +
         read(os.path.join(FRONTEND, 'js', 'watchlist.js')) + '\n' +
+        read(os.path.join(FRONTEND, 'js', 'engine.js')) + '\n' +
         read(os.path.join(FRONTEND, 'js', 'app.js'))
     )
     data = load_data()
     embedded = json.dumps(data, ensure_ascii=False)
     # replace external references with inline content
     html = html.replace('<link rel="stylesheet" href="css/style.css">', f'<style>{css}</style>')
-    for src in ('js/i18n.js', 'js/chart.js', 'js/live.js', 'js/alerts.js', 'js/watchlist.js', 'js/app.js'):
+    for src in ('js/i18n.js', 'js/chart.js', 'js/live.js', 'js/alerts.js', 'js/watchlist.js', 'js/engine.js', 'js/app.js'):
         html = html.replace(f'<script src="{src}"></script>', '')
     html = html.replace('</body>', f'<script>window.__EMBEDDED__ = {embedded};</script>\n<script>{js}</script>\n</body>')
     out = os.path.join(DIST, 'index.html')

@@ -302,3 +302,31 @@ body.ws-on .lp-dot{background:var(--green);animation:pulse 1.8s infinite}
 .ul-row .ok{color:var(--green)}
 .ul-row .dur{color:var(--text3);margin-inline-start:auto}
 @media (max-width:720px){.market-charts{grid-template-columns:1fr}}
+
+/* ---------- coin analyzer tab ---------- */
+.analyzer-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap}
+.analyzer-input-wrap{position:relative;flex:1;min-width:260px}
+.analyzer-head .search{width:100%}
+.ana-suggest{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;box-shadow:var(--shadow);z-index:40;max-height:280px;overflow-y:auto}
+.ana-sugg-row{display:flex;justify-content:space-between;gap:10px;padding:9px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--divider)}
+.ana-sugg-row:hover{background:var(--bg3)}
+.ana-sugg-row b{font-family:var(--mono)}
+.ana-sugg-row span{color:var(--text3);font-size:11px}
+.analyzer-note{background:var(--blue-bg);border:1px solid var(--border);border-inline-start:3px solid var(--blue);color:var(--text2);border-radius:10px;padding:11px 14px;font-size:12.5px;margin-bottom:14px}
+.analyzer-note.error{background:var(--red-bg);border-inline-start-color:var(--red)}
+.analyzer-note.error b{color:var(--red)}
+.ana-verdict{display:flex;justify-content:space-between;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;flex-wrap:wrap}
+.ana-verdict .pair{font-size:21px;font-weight:800;font-family:var(--mono)}
+.ana-verdict .score{font-size:34px;font-weight:800;font-family:var(--mono)}
+.ana-verdict.no-setup{border-inline-start:4px solid var(--yellow)}
+.ana-verdict.has-setup{border-inline-start:4px solid var(--green)}
+.ana-diag{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin-bottom:14px}
+.ana-diag-row{display:flex;align-items:center;gap:9px;font-size:12.5px;padding:8px 12px;border-radius:8px;background:var(--card);border:1px solid var(--border)}
+.ana-diag-row.ok{border-inline-start:3px solid var(--green)}
+.ana-diag-row.no{border-inline-start:3px solid var(--red)}
+.ana-diag-row .mark{font-weight:800}
+.ana-diag-row.ok .mark{color:var(--green)}
+.ana-diag-row.no .mark{color:var(--red)}
+.ana-plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.ana-chart{margin-top:8px}
+@media (max-width:720px){.ana-verdict .score{font-size:26px}}

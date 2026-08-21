@@ -259,6 +259,19 @@ def scan(cfg, now_iso=None, verbose=True):
     save_json(data_path('history.json'), hist)
     save_json(data_path('market.json'), market)
     save_json(data_path('performance.json'), performance_stats(hist))
+    # engine config for the in-browser Coin Analyzer (JS mirror must match)
+    save_json(data_path('config.json'), {
+        'min_score_to_show': cfg['min_score_to_show'],
+        'min_rr_tp1': cfg.get('min_rr_tp1', 1.0),
+        'allow_shorts': cfg.get('strategy', {}).get('allow_shorts', True),
+        'scoring': cfg['scoring'],
+        'risk': cfg['risk'],
+        'supertrend': cfg.get('supertrend', {'period': 10, 'multiplier': 3.0}),
+        'universe': {'exclude_assets': cfg['universe'].get('exclude_assets', [])},
+        'engine_version': cfg.get('engine_version', '1.0.0'),
+    })
+    # symbol list for the analyzer autocomplete (static; identical rewrites produce no commit)
+    _save_symbol_list(einfo, now_iso)
     save_json(data_path('meta.json'), {
         'data_timestamp': now_iso,
         'server_time': iso(),
@@ -320,6 +333,20 @@ def _carry_over_fresh(active_by_key, fresh, now_iso, frozen):
             new_ops.append(op)
         active_by_key[key] = op
     return new_ops
+
+
+def _save_symbol_list(einfo, now_iso):
+    """Compact symbol list for the analyzer autocomplete (USDT pairs first)."""
+    try:
+        rows = []
+        for s in einfo['symbols']:
+            if s['status'] != 'TRADING' or not s.get('isSpotTradingAllowed'):
+                continue
+            rows.append({'s': s['symbol'], 'b': s['baseAsset'], 'q': s['quoteAsset']})
+        rows.sort(key=lambda r: (r['q'] != 'USDT', r['q'] != 'BTC', r['b']))
+        save_json(data_path('symbols.json'), {'updated_at': now_iso, 'symbols': rows[:3000]})
+    except Exception:
+        pass
 
 
 def _analysis_dict(tf):

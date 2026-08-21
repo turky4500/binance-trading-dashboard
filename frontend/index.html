@@ -92,6 +92,7 @@
 
 <div class="tabs" id="tabs">
   <button class="tab active" data-tab="opportunities"><span data-i18n="tab_opps">Opportunities</span><span class="tab-count" id="opp-count">0</span></button>
+  <button class="tab" data-tab="analyzer"><span data-i18n="tab_analyzer">Analyzer</span></button>
   <button class="tab" data-tab="market"><span data-i18n="tab_market">Market</span></button>
   <button class="tab" data-tab="performance"><span data-i18n="tab_perf">Performance</span></button>
   <button class="tab" data-tab="about"><span data-i18n="tab_about">About</span></button>
@@ -136,6 +137,18 @@
       <h2 data-i18n="no_setups">No High-Quality Setup Found</h2>
       <p data-i18n="no_setups_sub">The scanner intentionally shows nothing when no opportunity scores above the quality threshold.</p>
     </div>
+  </section>
+
+  <section id="tab-analyzer" class="tab-panel">
+    <div class="analyzer-head">
+      <div class="analyzer-input-wrap">
+        <input type="text" id="ana-input" class="search" data-i18n-ph="ana_placeholder" placeholder="SOLUSDT / SOL …" autocomplete="off" spellcheck="false">
+        <div id="ana-suggest" class="ana-suggest hidden"></div>
+      </div>
+      <button class="btn" id="ana-run" data-i18n="ana_btn">Analyze</button>
+    </div>
+    <div id="ana-status" class="analyzer-note hidden"></div>
+    <div id="ana-result"></div>
   </section>
 
   <section id="tab-market" class="tab-panel">
@@ -225,6 +238,7 @@ window.__EMBEDDED__ = window.__EMBEDDED__ || null;
 <script src="js/live.js"></script>
 <script src="js/alerts.js"></script>
 <script src="js/watchlist.js"></script>
+<script src="js/engine.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

@@ -3,9 +3,10 @@
 
 const state = {
   meta: null, market: null, opps: [], perf: null, history: [], bt: null,
-  bh: null, ul: null,
+  bh: null, ul: null, symbols: [], engineCfg: null,
   filter: { q: '', dir: 'ALL', status: 'ALL', sort: 'score', high: false, watch: false },
   prefs: loadPrefs(),
+  analyzer: { busy: false, result: null, frames4h: null },
   usingEmbedded: false, chartData: null,
 };
 
@@ -41,7 +42,7 @@ async function loadAll() {
   // embedded snapshot unless there is no data at all.
   const hadMeta = !!state.meta;
   const prevOpps = window.__dashDataSeeded ? state.opps.slice() : null;
-  const [m, mk, o, p, h, bt, bh, ul] = await Promise.allSettled([
+  const [m, mk, o, p, h, bt, bh, ul, syms, ecfg] = await Promise.allSettled([
     fetchJSON('data/meta.json'),
     fetchJSON('data/market.json'),
     fetchJSON('data/opportunities.json'),
@@ -50,6 +51,8 @@ async function loadAll() {
     fetchJSON('data/performance_backtest.json'),
     fetchJSON('data/breadth_history.json'),
     fetchJSON('data/update_log.json'),
+    fetchJSON('data/symbols.json'),
+    fetchJSON('data/config.json'),
   ]);
   if (m.status === 'fulfilled') {
     state.meta = m.value;
@@ -61,6 +64,8 @@ async function loadAll() {
     state.bt = em.backtest || null;
     state.bh = em.breadth_history || null;
     state.ul = em.update_log || null;
+    if (em.symbols && em.symbols.symbols) state.symbols = em.symbols.symbols;
+    if (em.config) state.engineCfg = em.config;
     state.usingEmbedded = true;
   } else if (!hadMeta) {
     state.meta = null;
@@ -72,6 +77,8 @@ async function loadAll() {
   if (bt.status === 'fulfilled') state.bt = bt.value;
   if (bh.status === 'fulfilled') state.bh = bh.value;
   if (ul.status === 'fulfilled') state.ul = ul.value;
+  if (syms.status === 'fulfilled' && syms.value && syms.value.symbols) state.symbols = syms.value.symbols;
+  if (ecfg.status === 'fulfilled' && ecfg.value) state.engineCfg = ecfg.value;
   // lifecycle alerts: diff vs previously displayed data (skipped on first seed)
   if (window.Alerts && prevOpps && prevOpps.length && o.status === 'fulfilled') {
     window.Alerts.diffEvents(prevOpps, state.opps).forEach(ev => window.Alerts.emit(ev));
@@ -80,7 +87,7 @@ async function loadAll() {
   renderAll();
   syncDirectionFilter();
   // (re)subscribe the live price feed to the currently displayed symbols
-  if (window.LivePrices) LivePrices.subscribe(state.opps.map(o => o.symbol));
+  if (window.LivePrices) LivePrices.subscribe(state.opps.map(o => o.symbol).concat(window.Watchlist ? window.Watchlist.list() : []));
 }
 
 function syncDirectionFilter() {
@@ -335,6 +342,31 @@ function applyTheme(theme) {
     const c = document.getElementById('m-chart');
     if (c) drawChart(c, state.chartData.data, state.chartData.opp, state.chartData.opts);
   }
+  // redraw the analyzer chart with theme colors
+  if (state.analyzer.result && state.analyzer.frames4h) {
+    const ac = document.getElementById('ana-chart');
+    if (ac) renderAnalyzerChart();
+  }
+}
+
+function renderAnalyzerChart() {
+  const canvas = document.getElementById('ana-chart');
+  const res = state.analyzer.result;
+  if (!canvas || !res || !state.analyzer.frames4h || !window.Engine) return;
+  const stp = (res.cfg && res.cfg.supertrend) || { period: 10, multiplier: 3.0 };
+  const bars = state.analyzer.frames4h;
+  const closes = bars.map(b => b.c);
+  const st = window.Engine.supertrend(bars, stp.period, stp.multiplier);
+  const chartData = {
+    candles: bars.map(b => [b.t, b.o, b.h, b.l, b.c, b.v]),
+    ema20: window.Engine.emaArr(closes, 20),
+    ema50: window.Engine.emaArr(closes, 50),
+    vwap: [],
+    st_line: st.line, st_dir: st.dir,
+  };
+  const plan = res.best;
+  const planLike = plan ? { entry_zone: plan.entry_zone, stop_loss: plan.stop_loss, tp1: plan.tp1, tp2: plan.tp2, tp3: plan.tp3 } : null;
+  if (canvas.clientWidth > 0) drawChart(canvas, chartData, planLike, { volume: true, rsi: true });
 }
 
 function updateChromeButtons() {
@@ -449,7 +481,7 @@ function renderWatchBar() {
   bar.querySelectorAll('.watch-chip').forEach(b => b.addEventListener('click', () => {
     const opp = state.opps.find(o => o.symbol === b.dataset.wsym);
     if (opp) openModal(opp.id);
-    else toast(t('watch_no_opp'), 'warn');
+    else openAnalyzerFor(b.dataset.wsym); // analyzed coins open the Coin Analyzer
   }));
 }
 
@@ -798,6 +830,7 @@ function bindControls() {
     applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
   });
   bindSettingsPanel();
+  bindAnalyzer();
 }
 
 function bindSettingsPanel() {
@@ -849,6 +882,187 @@ function bindSettingsPanel() {
     sync(); renderCards();
     toast(t('reset_prefs'), 'ok');
   });
+}
+
+/* ================= Coin Analyzer (on-demand, in-browser engine) ================= */
+const BINANCE_REST = 'https://data-api.binance.vision';
+
+async function fetchBinance(path) {
+  const r = await fetch(BINANCE_REST + path);
+  if (!r.ok) throw new Error('binance ' + r.status);
+  return r.json();
+}
+
+function normalizeSymbol(input) {
+  let s = String(input || '').toUpperCase().replace(/\//g, '').trim();
+  if (!s) return null;
+  if (!s.endsWith('USDT') && !s.endsWith('BTC') && !s.endsWith('ETH') && !s.endsWith('BNB')) {
+    s += 'USDT';
+  }
+  return s;
+}
+
+function renderSuggestions(query) {
+  const box = document.getElementById('ana-suggest');
+  if (!box) return;
+  const q = String(query || '').toUpperCase().trim();
+  if (!q || !state.symbols.length) { box.classList.add('hidden'); return; }
+  const usdt = [], other = [];
+  for (const s of state.symbols) {
+    if (s.s.startsWith(q)) { (s.q === 'USDT' ? usdt : other).push(s); }
+    else if (s.b.startsWith(q) && s.q === 'USDT') usdt.push(s);
+  }
+  const picks = usdt.slice(0, 8).concat(other.slice(0, 2));
+  if (!picks.length) { box.classList.add('hidden'); return; }
+  box.innerHTML = `<div class="ana-sugg-row" style="font-size:10.5px;color:var(--text3);cursor:default">${t('ana_sugg_note')}</div>` +
+    picks.map(s => `<div class="ana-sugg-row" data-sym="${esc(s.s)}"><b>${esc(s.s)}</b><span>${esc(s.b)}</span></div>`).join('');
+  box.classList.remove('hidden');
+  box.querySelectorAll('.ana-sugg-row[data-sym]').forEach(r => r.addEventListener('click', () => {
+    box.classList.add('hidden');
+    document.getElementById('ana-input').value = r.dataset.sym;
+    runAnalyzer(r.dataset.sym);
+  }));
+}
+
+async function runAnalyzer(rawSymbol) {
+  if (state.analyzer.busy) return;
+  const sym = normalizeSymbol(rawSymbol);
+  const status = document.getElementById('ana-status');
+  const resultBox = document.getElementById('ana-result');
+  if (!sym) { if (status) { status.classList.remove('hidden'); status.className = 'analyzer-note error'; status.textContent = t('ana_error_symbol'); } return; }
+  if (!window.Engine) { if (status) { status.textContent = 'Engine unavailable'; status.className = 'analyzer-note error'; status.classList.remove('hidden'); } return; }
+  state.analyzer.busy = true;
+  document.getElementById('ana-run').disabled = true;
+  status.classList.remove('hidden');
+  status.className = 'analyzer-note';
+  status.textContent = '⏳ ' + t('ana_fetching') + ' ' + sym;
+  resultBox.innerHTML = '';
+  try {
+    const cfg = state.engineCfg || {
+      min_score_to_show: 70, min_rr_tp1: 1.0, allow_shorts: false,
+      scoring: { trend_alignment: 20, structure: 15, support_resistance: 15, volume: 15, momentum: 10, entry_quality: 10, risk_reward: 10, liquidity: 5 },
+      risk: { atr_sl_min: 0.8, atr_sl_max: 2.0, pullback_zone_atr: 0.6 },
+      supertrend: { period: 10, multiplier: 3.0 },
+    };
+    const [k15, k1h, k4h, k1d, tick, book] = await Promise.all([
+      fetchBinance(`/api/v3/klines?symbol=${sym}&interval=15m&limit=500`),
+      fetchBinance(`/api/v3/klines?symbol=${sym}&interval=1h&limit=400`),
+      fetchBinance(`/api/v3/klines?symbol=${sym}&interval=4h&limit=400`),
+      fetchBinance(`/api/v3/klines?symbol=${sym}&interval=1d&limit=400`),
+      fetchBinance(`/api/v3/ticker/24hr?symbol=${sym}`),
+      fetchBinance(`/api/v3/ticker/bookTicker?symbol=${sym}`),
+    ]);
+    const last = parseFloat(tick.lastPrice);
+    const meta24 = {
+      quoteVol: parseFloat(tick.quoteVolume),
+      spread: last > 0 ? (parseFloat(book.askPrice) - parseFloat(book.bidPrice)) / last * 100 : 0,
+      trades: parseInt(tick.count, 10),
+      chg24: parseFloat(tick.priceChangePercent),
+    };
+    const res = window.Engine.analyze({ symbol: sym, klines: { '15m': k15, '1h': k1h, '4h': k4h, '1d': k1d }, meta24, cfg });
+    if (res.error) throw new Error(res.error === 'insufficient_data' ? 'insufficient' : res.error);
+    res.meta24 = meta24;
+    res.cfg = cfg;
+    state.analyzer.result = res;
+    state.analyzer.frames4h = k4h.map(r => ({ t: +r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4], v: +r[5] }));
+    status.classList.add('hidden');
+    renderAnalyzer(res);
+  } catch (e) {
+    status.className = 'analyzer-note error';
+    status.textContent = e.message === 'insufficient' ? t('ana_error_insufficient')
+      : t('ana_error_network') + ' (' + e.message + ')';
+    status.classList.remove('hidden');
+  } finally {
+    state.analyzer.busy = false;
+    document.getElementById('ana-run').disabled = false;
+  }
+}
+
+function renderAnalyzer(res) {
+  const box = document.getElementById('ana-result');
+  if (!box) return;
+  const plan = res.best;
+  const stp = (res.cfg && res.cfg.supertrend) || { period: 10, multiplier: 3.0 };
+  const note = t('ana_live_note').replace('{time}', locTime(res.analyzed_at));
+  const verdict = plan
+    ? `<div class="ana-verdict has-setup">
+        <div><div class="pair">${esc(res.symbol.replace('USDT', '/USDT'))} <span class="badge dir-${plan.direction.toLowerCase()}">${plan.direction}</span></div>
+        <div class="badge-row" style="padding:8px 0 0">${`<span class="badge setup">${esc(plan.setup_label)}</span> <span class="badge status-${statusKey(plan.status)}">${statusLabel(plan.status)}</span>`}</div></div>
+        <div class="score ${scoreClass(plan.score)}" style="color:var(--text)">${plan.score}<span style="font-size:14px;color:var(--text3)">/100 · ${plan.grade}</span></div>
+      </div>`
+    : `<div class="ana-verdict no-setup">
+        <div><div class="pair">${esc(res.symbol.replace('USDT', '/USDT'))}</div>
+        <div style="color:var(--yellow);font-weight:700;margin-top:6px">${t('ana_no_setup')}</div></div>
+      </div>`;
+  const tfTable = ['1d', '4h', '1h', '15m'].map(tf => {
+    const s = res.tf[tf];
+    const tr = s.above20 && s.e20_gt_e50 ? 'bull' : (!s.above20 && !s.e20_gt_e50 ? 'bear' : 'mixed');
+    return `<tr><td>${tf}</td><td><span class="tag ${tr}">${t(s.above20 && s.e20_gt_e50 ? 'bullish' : (!s.above20 && !s.e20_gt_e50 ? 'bearish' : 'mixed'))}</span></td>
+      <td>${s.rsi.toFixed(1)}</td><td>${s.macd_h >= 0 ? '+' : ''}${s.macd_h.toFixed(6)}</td>
+      <td>${s.above20 ? '<span class="tag bull">✓</span>' : '<span class="tag bear">✗</span>'} ${s.above50 ? '<span class="tag bull">✓</span>' : '<span class="tag bear">✗</span>'}</td>
+      <td><span class="tag ${s.st_dir === 1 ? 'bull' : 'bear'}">${s.st_dir === 1 ? '▲' : '▼'} ${fmtPrice(s.st_line)}</span></td>
+      <td>${(s.atr / s.close * 100).toFixed(2)}%</td><td>${s.vol_ratio3.toFixed(2)}x</td>
+      <td>${isFinite(s.vwap) ? fmtPrice(s.vwap) : '—'}</td></tr>`;
+  }).join('');
+  const diag = res.diagnostics.map(d =>
+    `<div class="ana-diag-row ${d.ok ? 'ok' : 'no'}"><span class="mark">${d.ok ? '✓' : '✗'}</span><span>${esc(LANG === 'ar' ? d.ar : d.en)}</span></div>`).join('');
+  const planGrid = plan ? `
+    <h3 style="font-size:13px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin:16px 0 10px">${t('ana_plan')}</h3>
+    <div class="ana-plan-grid">
+      <div class="m-cell"><div class="k">${t('entry_zone')}</div><div class="v">${fmtPrice(plan.entry_zone[0])} – ${fmtPrice(plan.entry_zone[1])}</div></div>
+      <div class="m-cell"><div class="k">${t('stop')}</div><div class="v neg">${fmtPrice(plan.stop_loss)}</div></div>
+      <div class="m-cell"><div class="k">TP1</div><div class="v pos">${fmtPrice(plan.tp1)}</div></div>
+      <div class="m-cell"><div class="k">TP2</div><div class="v pos">${fmtPrice(plan.tp2)}</div></div>
+      <div class="m-cell"><div class="k">TP3</div><div class="v pos">${fmtPrice(plan.tp3)}</div></div>
+      <div class="m-cell"><div class="k">${t('rr')} TP1/TP2/TP3</div><div class="v">1:${plan.rr_tp1} / 1:${plan.rr_tp2} / 1:${plan.rr_tp3}</div></div>
+      <div class="m-cell"><div class="k">${t('sl_distance')}</div><div class="v">${plan.sl_distance_pct}%</div></div>
+      <div class="m-cell"><div class="k">${t('invalidation')}</div><div class="v" style="color:var(--purple)">${fmtPrice(plan.invalidation_level)}</div></div>
+    </div>
+    <div class="m-section"><h3>${t('score_breakdown')}</h3><div class="scorebars">${Object.entries(plan.score_breakdown).map(([k, v]) => `<div class="sb-row"><span class="sb-label">${esc(k.replace(/_/g, ' '))}</span><span class="sb-track"><span class="sb-fill" style="width:${Math.min(100, v)}%"></span></span><span class="sb-val">${v}</span></div>`).join('')}</div></div>` : '';
+  const chartBlock = `<div class="m-section ana-chart"><h3>${t('chart_title')}</h3><div class="chart-wrap"><canvas id="ana-chart" style="width:100%"></canvas></div></div>`;
+  const wOn = window.Watchlist && window.Watchlist.has(res.symbol);
+  box.innerHTML = `
+    <div class="analyzer-note" style="background:var(--blue-bg);border-inline-start-color:var(--blue)">${esc(note)}</div>
+    ${verdict}
+    <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn small" id="ana-watch">${wOn ? '★' : '⭐'} ${t(wOn ? 'ana_watch_on' : 'ana_watch_add')}</button>
+    </div>
+    <div class="m-section"><h3>${t('ana_indicators')}</h3>
+      <div class="table-wrap"><table class="tf-table">
+        <thead><tr><th>${t('tf')}</th><th>${t('trend')}</th><th>RSI</th><th>MACD</th><th>EMA20/50</th><th>${t('st')}</th><th>${t('atr_pct')}</th><th>${t('vol')}</th><th>VWAP</th></tr></thead>
+        <tbody>${tfTable}</tbody></table></div></div>
+    ${planGrid}
+    <div class="m-section"><h3>${t('ana_why')}</h3><div class="ana-diag">${diag}</div></div>
+    <div class="m-section"><h3>${t('support')} / ${t('resistance')}</h3><div class="level-list">${plan ? (plan.supports || []).map(([p, n]) => `<div class="level s"><b>${fmtPrice(p)}</b><span>${esc(n)}</span></div>`).join('') + (plan.resistances || []).map(([p, n]) => `<div class="level r"><b>${fmtPrice(p)}</b><span>${esc(n)}</span></div>`).join('') : '<span class="alert-note">—</span>'}</div></div>
+    ${chartBlock}`;
+  document.getElementById('ana-watch').addEventListener('click', () => {
+    if (!window.Watchlist) return;
+    window.Watchlist.toggle(res.symbol);
+    renderAnalyzer(res);
+    renderWatchBar();
+    if (window.LivePrices) window.LivePrices.subscribe(state.opps.map(o => o.symbol).concat(window.Watchlist.list()));
+  });
+  // chart (4H with volume + RSI panels and plan levels)
+  renderAnalyzerChart();
+}
+
+function openAnalyzerFor(symbol) {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+  document.querySelector('[data-tab="analyzer"]').classList.add('active');
+  document.getElementById('tab-analyzer').classList.add('active');
+  document.getElementById('ana-input').value = symbol;
+  runAnalyzer(symbol);
+}
+
+function bindAnalyzer() {
+  const input = document.getElementById('ana-input');
+  const btn = document.getElementById('ana-run');
+  if (!input || !btn) return;
+  input.addEventListener('input', () => renderSuggestions(input.value));
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') { document.getElementById('ana-suggest').classList.add('hidden'); runAnalyzer(input.value); } });
+  input.addEventListener('blur', () => setTimeout(() => document.getElementById('ana-suggest').classList.add('hidden'), 180));
+  btn.addEventListener('click', () => { document.getElementById('ana-suggest').classList.add('hidden'); runAnalyzer(input.value); });
 }
 
 /* ---------------- render all ---------------- */

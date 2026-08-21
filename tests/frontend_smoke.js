@@ -11,6 +11,7 @@ const chart = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'chart.js'), 'ut
 const live = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'live.js'), 'utf-8');
 const alerts = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'alerts.js'), 'utf-8');
 const watchlist = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'watchlist.js'), 'utf-8');
+const engine = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'engine.js'), 'utf-8');
 const app = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'app.js'), 'utf-8');
 const data = {
   opportunities: JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf-8')),
@@ -24,6 +25,10 @@ const data = {
     try { return JSON.parse(fs.readFileSync(p, 'utf-8')); } catch (e) { return []; } })(),
   update_log: (() => { const p = path.join(ROOT, 'data', 'update_log.json');
     try { return JSON.parse(fs.readFileSync(p, 'utf-8')); } catch (e) { return []; } })(),
+  symbols: (() => { const p = path.join(ROOT, 'data', 'symbols.json');
+    try { return JSON.parse(fs.readFileSync(p, 'utf-8')); } catch (e) { return null; } })(),
+  config: (() => { const p = path.join(ROOT, 'data', 'config.json');
+    try { return JSON.parse(fs.readFileSync(p, 'utf-8')); } catch (e) { return null; } })(),
 };
 const klines = {};
 for (const o of data.opportunities) {
@@ -68,6 +73,7 @@ window.eval(chart);
 window.eval(live);
 window.eval(alerts);
 window.eval(watchlist);
+window.eval(engine);
 window.eval(app);
 window.document.dispatchEvent(new window.Event('DOMContentLoaded', { bubbles: true }));
 
@@ -254,6 +260,38 @@ const assert = (cond, msg) => {
   }
   assert(window.document.getElementById('health-grid').textContent.length > 0, 'pipeline health grid rendered');
   assert(window.document.getElementById('update-log').textContent.length > 0, 'update log rendered');
+
+  // 7d2. coin analyzer: engine parity helpers + UI error path + autocomplete
+  assert(typeof window.Engine === 'object' && typeof window.Engine.analyze === 'function', 'Engine module loaded (UMD)');
+  // golden-style parity on embedded klines (offline, same math as golden test)
+  if (data.opportunities.length) {
+    const sym0 = data.opportunities[0].symbol;
+    const k4 = klines[sym0 + '_4h'];
+    if (k4 && k4.candles && k4.candles.length > 120) {
+      const bars = k4.candles.map(c => ({ t: c[0], o: c[1], h: c[2], l: c[3], c: c[4], v: c[5] }));
+      const st = window.Engine.tfState(bars, 3, { period: 10, multiplier: 3.0 });
+      assert(st.close > 0 && st.ema20 > 0 && st.atr > 0 && [1, -1].includes(st.st_dir), 'engine computes tfState from embedded klines');
+      assert(Math.abs(st.ema20 - k4.ema20[k4.ema20.length - 1]) / k4.ema20[k4.ema20.length - 1] < 0.01, 'engine EMA20 matches backend cache');
+    }
+  }
+  window.document.querySelector('[data-tab="analyzer"]').click();
+  await wait(80);
+  assert(window.document.getElementById('ana-input') && window.document.getElementById('ana-run'), 'analyzer input + button exist');
+  const anaInput = window.document.getElementById('ana-input');
+  anaInput.value = 'SOL';
+  anaInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+  await wait(40);
+  const sugg = window.document.getElementById('ana-suggest');
+  if (data.symbols && data.symbols.symbols) {
+    assert(!sugg.classList.contains('hidden'), 'autocomplete suggestions shown');
+    assert(sugg.textContent.includes('SOLUSDT'), 'suggestion includes SOLUSDT');
+  }
+  anaInput.value = 'FAKENOTREAL123';
+  window.document.getElementById('ana-run').click();
+  await wait(120);
+  const anaStatus = window.document.getElementById('ana-status');
+  assert(!anaStatus.classList.contains('hidden') && anaStatus.textContent.length > 5, 'analyzer shows error when data unreachable (offline harness)');
+  window.document.querySelector('[data-tab="opportunities"]').click();
 
   // 7e. settings panel: open + min-score filter + live pause + reset
   const setBtn = window.document.getElementById('settings-btn');

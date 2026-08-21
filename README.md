@@ -56,6 +56,7 @@ The engine is **100% deterministic**: every indicator, entry, stop and target is
 - ⚙️ In-page settings panel (theme, language, live prices on/off, display min-score and card limits, alert toggles) — persisted locally
 - 📱 Installable PWA (manifest + service worker with honest network-first caching — stale data is never served as live), works offline
 - 🩺 Health monitoring: [UptimeRobot guide](docs/HEALTH_MONITORING.md) + optional Telegram notification when the pipeline fails
+- 🔬 **Coin Analyzer tab**: type any Binance spot symbol and get an instant, on-demand analysis computed **in your browser** from live public Binance data — verdict (setup or not), full trade plan, 4-timeframe indicator table (EMA/RSI/MACD/ATR/VWAP/SuperTrend/volume), a checklist of why no setup exists, a 4H chart, and one-tap add-to-watchlist. The JavaScript engine is a faithful mirror of the Python analyzer, locked in parity by a **golden test** (`tests/golden_js.test.js`) that runs in CI on every push — the two engines cannot drift apart.
 - 🔍 Search, filters (direction/status/high-score) and sorting
 - 📱 Responsive dark UI, English/Arabic (RTL), 4H candlestick charts with levels drawn
 - 🔔 Full lifecycle alerts: Telegram notifications for every transition (READY / TRIGGERED / TP hits / STOPPED / EXPIRED / INVALIDATED — per-event toggles), plus optional in-browser notifications and distinctive sounds for each event while the dashboard is open
@@ -197,7 +198,7 @@ Each event type has its own toggle under `telegram.notify` in the config. Tokens
 
 ## 🧪 Quality checks in CI
 
-The workflow runs `pytest` before every analysis. The test suite verifies indicator math (EMA/RSI known values), plan invariants (entry > SL, TP ordering, R:R minimums, ATR-bounded stops), scoring bounds (weights sum to 100), tracker state transitions (TRIGGERED → TP / STOPPED / EXPIRED) and storage round-trips.
+The workflow runs `pytest` plus the golden parity test (`node tests/golden_js.test.js` — fetches the same historical bars and asserts the JS Coin-Analyzer engine matches Python reference outputs within tight tolerances) before every analysis. The test suite verifies indicator math (EMA/RSI known values), plan invariants (entry > SL, TP ordering, R:R minimums, ATR-bounded stops), scoring bounds (weights sum to 100), tracker state transitions (TRIGGERED → TP / STOPPED / EXPIRED) and storage round-trips.
 
 ## 🗄️ Storage choice
 
