@@ -434,3 +434,18 @@ def test_parse_tolerant_formats():
     assert _parse(None) is None and _parse("garbage") is None
     d = _parse("2026-08-21 18:00:00Z")
     assert d.tzinfo is not None and d.hour == 18
+
+
+def test_history_dedupe_by_id():
+    from analyzer.scanner import _dedupe_history
+    hist = [
+        {'id': 'A', 'pair': 'X/USDT', 'result': 'WIN', 'closed_at': '2026-01-01T00:00:00Z'},
+        {'id': 'B', 'pair': 'Y/USDT', 'result': 'LOSS', 'closed_at': '2026-01-01T00:00:00Z'},
+        {'id': 'A', 'pair': 'X/USDT', 'result': 'WIN', 'closed_at': '2026-01-01T01:00:00Z'},  # duplicate
+    ]
+    closed = [{'id': 'A', 'pair': 'X/USDT', 'result': 'WIN', 'closed_at': '2026-01-01T02:00:00Z'},
+              {'id': 'C', 'pair': 'Z/USDT', 'result': 'WIN', 'closed_at': '2026-01-01T02:00:00Z'}]
+    out = _dedupe_history(hist, closed)
+    ids = [r['id'] for r in out]
+    assert ids == ['A', 'B', 'C'], f'got {ids}'
+    assert out[0]['closed_at'] == '2026-01-01T00:00:00Z', 'earliest record kept'

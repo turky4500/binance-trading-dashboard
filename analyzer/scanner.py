@@ -267,8 +267,9 @@ def scan(cfg, now_iso=None, verbose=True):
     _write_chart_cache(merged, intraday, daily, now_iso, stp)
 
     save_json(data_path('opportunities.json'), merged)
-    hist = load_json(data_path('history.json'), [])
-    hist = (hist + closed)[-500:]
+    # history: dedupe by opportunity id (concurrent runs can double-record the
+    # same closure), then append this cycle's closures and cap the file
+    hist = _dedupe_history(load_json(data_path('history.json'), []), closed)
     save_json(data_path('history.json'), hist)
     save_json(data_path('market.json'), market)
     save_json(data_path('performance.json'), performance_stats(hist))
@@ -307,6 +308,19 @@ def scan(cfg, now_iso=None, verbose=True):
     if verbose:
         print(f"[6/6] Saved. Source: {bc.source_host()} | runtime {time.time()-t0:.1f}s")
     return merged, market, {'new': new_ops, 'transitions': transitions}
+
+
+def _dedupe_history(hist, closed):
+    """Keep the earliest record per opportunity id, then append new closures."""
+    seen = set()
+    deduped = []
+    for rec in hist:
+        rid = rec.get('id')
+        if rid in seen:
+            continue
+        seen.add(rid)
+        deduped.append(rec)
+    return (deduped + [c for c in closed if c.get('id') not in seen])[-500:]
 
 
 def _extract_transitions(before_status, opps):
