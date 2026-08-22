@@ -44,6 +44,7 @@ The engine is **100% deterministic**: every indicator, entry, stop and target is
 - 🎯 Complete trade plans: entry zone, SL (ATR + structure based), TP1/TP2/TP3, R:R, invalidation level
 - 🏆 Configurable 100-point scoring with per-component breakdown
 - 🔁 Automatic refresh every 15 minutes via GitHub Actions (no manual re-runs)
+- 🛡️ **Publish-time freshness guard**: a plan is never published if the live price already reached its TP1 (stale-on-arrival recommendations are impossible), and READY setups that ran away from their entry zone are downgraded to WAITING. Every card and analysis shows the live **distance to TP1** (updated each second from the WebSocket price) — you always know how fresh a setup is
 - ⏱ Live countdown to the next data cycle + fully automatic in-page refresh — new data renders without any manual reload, with a visible toast and a LIVE/STALE indicator
 - 🧪 Historical backtest (last 6 months, same deterministic rules) with score calibration and per-setup-type statistics — refreshed daily and shown transparently on the Performance page
 - 🌗 Dark / Light theme toggle (persisted across visits)
@@ -153,6 +154,7 @@ Everything is tunable in one file:
 | `universe.exclude_assets` | list | Extra symbols to ignore |
 | `scoring.*` | 20/15/15/15/10/10/10/5 | Per-component weights (must sum to 100) |
 | `risk.atr_sl_min` / `atr_sl_max` | `0.8` / `2.0` | Stop-loss distance bounds in ATR multiples |
+| `risk.min_tp1_distance_atr` | `1.2` | Minimum TP1 distance from entry (4H ATRs) — kills trivially-close targets that would look "late" |
 | `strategy.allow_shorts` | `false` | SHORT setups disabled (spot trading — sell signals only make sense if you hold the asset) |
 | `backtest.months` / `backtest.top_symbols` | `6` / `12` | Historical simulation depth (runs daily via `backtest.yml`) |
 | `supertrend.period` / `supertrend.multiplier` | `10` / `3.0` | SuperTrend parameters (per timeframe, on charts, in scoring) |

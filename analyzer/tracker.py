@@ -24,10 +24,15 @@ OPEN_AFTER_TRIGGER = {'TP1_HIT', 'TP2_HIT'}
 
 
 def _parse(ts):
-    try:
-        return datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-    except Exception:
+    if not ts:
         return None
+    for fmt in ("%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%d %H:%M:%SZ",
+                "%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%d %H:%M:%S+00:00"):
+        try:
+            return datetime.strptime(ts, fmt).replace(tzinfo=timezone.utc)
+        except (ValueError, TypeError):
+            continue
+    return None
 
 
 def _ev(opp, at, frm, to, note=None):
@@ -136,7 +141,7 @@ def track(opportunities, klines_15m, expiry_hours, now_iso):
             if has_touch:
                 _ev(opp, now_iso, st, 'TRIGGERED', note=f"entry zone {zone_lo}–{zone_hi} touched")
                 opp['status'] = 'TRIGGERED'
-                opp['triggered_at'] = str(recent.loc[touched[0], 't'])[:19] + 'Z'
+                opp['triggered_at'] = str(recent.loc[touched[0], 't'])[:19].replace(' ', 'T') + 'Z'
             else:
                 continue
 

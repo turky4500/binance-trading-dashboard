@@ -21,6 +21,7 @@ from .indicators import klines_to_df, enrich
 from .signal import tf_state, detect_breakout, generate_plans
 from .scoring import score_plan
 from .run import load_config
+from .scanner import _freshness_guard
 
 SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'TRXUSDT', 'AAVEUSDT', 'SUIUSDT']
 TFS = {'15m': (500, 2), '1h': (400, 2), '4h': (400, 3), '1d': (400, 3)}
@@ -92,9 +93,13 @@ def generate():
             'spread': (float(b['askPrice']) - float(b['bidPrice'])) / last * 100,
             'trades': int(t['count']),
             'chg24': float(t['priceChangePercent']),
+            'currentPrice': last,
         }
         plan_ref = None
         if plans:
+            # mirror the pipeline publish-time freshness guard exactly
+            atr4h = tf['4h']['atr']
+            plans = [p for p in (_freshness_guard(p, last, atr4h) for p in plans) if p]
             scored = []
             for p in plans:
                 score, parts = score_plan(tf, p, meta24, weights)

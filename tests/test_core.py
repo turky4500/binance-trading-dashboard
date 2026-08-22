@@ -377,3 +377,60 @@ def test_record_market_history_never_raises(tmp_path, monkeypatch):
     # even with a poisoned market payload, recording must not raise
     sc._record_market_history({'breadth_pct_above_ema50': None, 'status': None, 'btc': None}, 'x', None)
     assert True  # no exception = pass
+
+
+# ---------------- publish-time freshness guards ----------------
+def test_freshness_guard_suppresses_reached_tp1():
+    from analyzer.scanner import _freshness_guard
+    plan = {'direction': 'LONG', 'tp1': 100.0, 'status': 'READY', 'entry_zone': [95.0, 96.0]}
+    assert _freshness_guard(plan, 100.5, 1.0) is None  # live >= TP1 -> suppress
+    assert _freshness_guard(plan, 100.0, 1.0) is None  # exactly at TP1 -> suppress
+    assert _freshness_guard(plan, 99.0, 1.0) is plan   # below TP1 -> keep
+
+
+def test_freshness_guard_downgrades_runaway_ready():
+    from analyzer.scanner import _freshness_guard
+    plan = {'direction': 'LONG', 'tp1': 100.0, 'status': 'READY', 'entry_zone': [95.0, 96.0]}
+    # live price far beyond the zone (96 + 1.2*atr) but below TP1 -> WAITING
+    p = _freshness_guard(plan, 98.5, 1.5)
+    assert p is plan and p['status'] == 'WAITING_CONFIRMATION'
+    assert 'retest' in p['confirmation']
+    # short side: below zone -> downgrade
+    plan2 = {'direction': 'SHORT', 'tp1': 90.0, 'status': 'READY', 'entry_zone': [94.0, 95.0]}
+    p2 = _freshness_guard(plan2, 91.5, 1.5)
+    assert p2['status'] == 'WAITING_CONFIRMATION'
+
+
+def test_freshness_guard_keeps_in_zone_ready():
+    from analyzer.scanner import _freshness_guard
+    plan = {'direction': 'LONG', 'tp1': 100.0, 'status': 'READY', 'entry_zone': [95.0, 96.0]}
+    assert _freshness_guard(plan, 95.5, 1.0)['status'] == 'READY'
+
+
+def test_min_tp1_distance_enforced():
+    from analyzer import signal as sig
+    t4 = {'last_high': 105, 'hi20': 106, 'hi50': 108}
+    td = {'last_high': 110}
+    cfg = {'min_tp1_distance_atr': 1.2, 'tp_snap_tolerance': 0.25}
+    entry, R, atr = 100.0, 1.0, 1.0
+    tp1, tp2, tp3 = sig._targets(entry, R, t4, td, 'LONG', atr, cfg)
+    assert tp1 >= entry + 1.2 * atr, f'tp1 too close: {tp1}'
+    assert tp1 < tp2 < tp3, f'ordering broken: {tp1}, {tp2}, {tp3}'
+    # short side
+    t4s = {'last_low': 95, 'lo20': 94, 'lo50': 92}
+    tds = {'last_low': 90}
+    tp1s, tp2s, tp3s = sig._targets(entry, R, t4s, tds, 'SHORT', atr, cfg)
+    assert entry - tp1s >= 1.2 * atr
+    assert tp1s > tp2s > tp3s
+
+
+def test_parse_tolerant_formats():
+    from analyzer.tracker import _parse
+    from datetime import timezone
+    assert _parse("2026-08-21T18:00:00Z") is not None
+    assert _parse("2026-08-21 18:00:00Z") is not None, 'space separator must parse'
+    assert _parse("2026-08-21T18:00:00.123Z") is not None
+    assert _parse("2026-08-21 18:00:00+00:00") is not None
+    assert _parse(None) is None and _parse("garbage") is None
+    d = _parse("2026-08-21 18:00:00Z")
+    assert d.tzinfo is not None and d.hour == 18

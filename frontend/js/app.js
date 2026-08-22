@@ -139,6 +139,12 @@ function fmtPrice(p) {
 function pct(x) { return (x >= 0 ? '+' : '') + Number(x).toFixed(2) + '%'; }
 function scoreClass(s) { return s >= 90 ? 's90' : s >= 80 ? 's80' : s >= 70 ? 's70' : 's0'; }
 function langText(o) { return LANG === 'ar' ? (o?.ar || o?.en) : (o?.en || o?.ar); }
+/* freshness: distance from the (pipeline) current price to TP1 */
+function distToTp1(o) {
+  if (!o || o.tp1 == null || o.current_price == null || !(o.current_price > 0)) return null;
+  const d = o.direction === 'LONG' ? (o.tp1 - o.current_price) : (o.current_price - o.tp1);
+  return { pct: d / o.current_price * 100, reached: d <= 0 };
+}
 function fmtQty(q) {
   if (q >= 1000) return q.toLocaleString('en-US', { maximumFractionDigits: 2 });
   if (q >= 1) return q.toFixed(3).replace(/\.?0+$/, '');
@@ -298,6 +304,19 @@ function tick() {
   // runs every second: data age, live badge, countdown ring + trigger refresh at zero
   if (state.meta) document.getElementById('data-age').textContent = relTime(state.meta.data_timestamp);
   updateNextStat();
+  // live freshness: recompute "distance to TP1" from the WebSocket price
+  document.querySelectorAll('[data-tp1-dist]').forEach(el => {
+    const sym = el.dataset.tp1Dist;
+    const live = window.LivePrices ? window.LivePrices.currentPrice(sym) : null;
+    if (live == null || !(live > 0)) return; // WS off — keep the pipeline value
+    const tp1 = parseFloat(el.dataset.tp1);
+    if (!isFinite(tp1)) return;
+    const d = el.dataset.dir === 'LONG' ? tp1 - live : live - tp1;
+    const pv = d / live * 100;
+    el.textContent = d <= 0 ? '✓ ' + t('tp1_reached') : pv.toFixed(2) + '%';
+    el.classList.toggle('pos', d <= 0);
+    el.classList.toggle('mut', d > 0);
+  });
   const staleMin = (state.meta && state.meta.config && state.meta.config.stale_after_minutes) || 45;
   const ageMs = state.meta ? Date.now() - new Date(state.meta.data_timestamp).getTime() : Infinity;
   if (!state.meta) setLive('stale');
@@ -407,6 +426,9 @@ function filteredOpps() {
 
 function cardHTML(o, rank) {
   const d = o.direction;
+  const dtp = distToTp1(o);
+  const dtpLabel = dtp ? (dtp.reached ? '✓ ' + t('tp1_reached') : dtp.pct.toFixed(2) + '%') : '—';
+  const dtpCls = dtp && dtp.reached ? 'pos' : 'mut';
   return `
   <article class="card ${d.toLowerCase()}" data-sym="${esc(o.symbol)}">
     <div class="card-head">
@@ -432,6 +454,7 @@ function cardHTML(o, rank) {
       <div class="kv"><span class="k">${t('rr')} (TP1/TP2)</span><span class="v mut">1:${o.rr_tp1} / 1:${o.rr_tp2}</span></div>
       <div class="kv"><span class="k">${t('profit_potential')}</span><span class="v pos">${pct(o.profit_pct_tp1)} / ${pct(o.profit_pct_tp2)} / ${pct(o.profit_pct_tp3)}</span></div>
       <div class="kv"><span class="k">${t('sl_distance')}</span><span class="v mut">${o.sl_distance_pct}%</span></div>
+      <div class="kv"><span class="k">${t('to_tp1')}</span><span class="v ${dtpCls}" data-tp1-dist="${esc(o.symbol)}" data-tp1="${o.tp1}" data-dir="${d}">${dtpLabel}</span></div>
       <div class="kv"><span class="k">${t('live_price')}</span><span class="v"><span class="lp-dot"></span><span data-live-sym="${esc(o.symbol)}">${fmtPrice(o.current_price)}</span> <small data-live-chg="${esc(o.symbol)}" style="color:${o.change_24h >= 0 ? 'var(--green)' : 'var(--red)'}">${pct(o.change_24h)}</small></span></div>
     </div>
     <div class="card-foot">
@@ -513,6 +536,9 @@ async function openModal(id) {
   }).join('');
   const lv = (arr, cls) => (arr || []).map(([p, name]) =>
     `<div class="level ${cls}"><b>${fmtPrice(p)}</b><span>${esc(name)}</span></div>`).join('');
+  const dtpM = distToTp1(o);
+  const dtpMLabel = dtpM ? (dtpM.reached ? '✓ ' + t('tp1_reached') : dtpM.pct.toFixed(2) + '%') : '—';
+  const dtpMCls = dtpM && dtpM.reached ? 'pos' : 'mut';
   const sbs = Object.entries(o.score_breakdown || {}).map(([k, v]) => {
     const label = (o.score_breakdown_labels && o.score_breakdown_labels[k]) || k;
     return `<div class="sb-row"><span class="sb-label">${esc(label)}</span>
@@ -534,6 +560,7 @@ async function openModal(id) {
         <div class="m-cell"><div class="k">TP3</div><div class="v pos">${fmtPrice(o.tp3)}</div></div>
         <div class="m-cell"><div class="k">${t('rr')} TP1/TP2/TP3</div><div class="v">1:${o.rr_tp1} / 1:${o.rr_tp2} / 1:${o.rr_tp3}</div></div>
         <div class="m-cell"><div class="k">${t('sl_distance')}</div><div class="v">${o.sl_distance_pct}%</div></div>
+        <div class="m-cell"><div class="k">${t('to_tp1')}</div><div class="v ${dtpMCls}" data-tp1-dist="${esc(o.symbol)}" data-tp1="${o.tp1}" data-dir="${o.direction}">${dtpMLabel}</div></div>
         <div class="m-cell"><div class="k">${t('invalidation')}</div><div class="v" style="color:var(--purple)">${fmtPrice(o.invalidation_level)}</div></div>
         <div class="m-cell"><div class="k">${t('change_24h')}</div><div class="v ${dirClass(o.change_24h >= 0 ? 'LONG' : 'SHORT')}">${pct(o.change_24h)}</div></div>
         <div class="m-cell"><div class="k">${t('volume_24h')}</div><div class="v">$${(o.quote_volume_24h / 1e6).toFixed(1)}M</div></div>
@@ -958,6 +985,7 @@ async function runAnalyzer(rawSymbol) {
       spread: last > 0 ? (parseFloat(book.askPrice) - parseFloat(book.bidPrice)) / last * 100 : 0,
       trades: parseInt(tick.count, 10),
       chg24: parseFloat(tick.priceChangePercent),
+      currentPrice: last, // freshness guard compares live price vs TP1
     };
     const res = window.Engine.analyze({ symbol: sym, klines: { '15m': k15, '1h': k1h, '4h': k4h, '1d': k1d }, meta24, cfg });
     if (res.error) throw new Error(res.error === 'insufficient_data' ? 'insufficient' : res.error);

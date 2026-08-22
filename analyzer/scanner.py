@@ -181,6 +181,11 @@ def scan(cfg, now_iso=None, verbose=True):
             if not cfg.get('strategy', {}).get('allow_shorts', True):
                 plans = [p for p in plans if p['direction'] == 'LONG']
             for plan in plans:
+                # publish-time freshness guard: never publish a plan whose
+                # TP1 is already reached by the LIVE price (stale on arrival)
+                plan = _freshness_guard(plan, meta['last'], tf['4h']['atr'])
+                if plan is None:
+                    continue
                 # post-pump cooldown: never chase a coin that pumped hard intraday
                 if meta['chg24'] > 12 and plan['status'] == 'READY':
                     plan['status'] = 'WAITING_CONFIRMATION'
@@ -232,6 +237,14 @@ def scan(cfg, now_iso=None, verbose=True):
             if cur:
                 o['current_price'] = cur['last']
                 o['change_24h'] = cur['chg24']
+            # backfill fields introduced in later engine versions
+            if o.get('triggered_at') and ' ' in o['triggered_at']:
+                o['triggered_at'] = o['triggered_at'].replace(' ', 'T')
+            if 'distance_to_tp1_pct' not in o:
+                sgn = 1 if o.get('direction') == 'LONG' else -1
+                cp = o.get('current_price') or 0
+                if cp > 0:
+                    o['distance_to_tp1_pct'] = round(sgn * (o['tp1'] - cp) / cp * 100, 2)
             active_by_key[f"{o['symbol']}|{o['direction']}"] = o
             continue
         # terminal opportunities were moved to history by the tracker
@@ -304,6 +317,30 @@ def _extract_transitions(before_status, opps):
         if b is not None and b != o.get('status'):
             out.append({'opp': o, 'from': b, 'to': o['status']})
     return out
+
+
+def _freshness_guard(plan, live_price, atr):
+    """Suppress plans whose first target is already reached by the live price,
+    and downgrade READY plans that moved beyond the entry zone before publication.
+
+    Returns the (possibly adjusted) plan or None when it must not be published.
+    """
+    if not plan or not live_price or live_price <= 0 or not atr or atr <= 0:
+        return plan
+    tp1 = plan['tp1']
+    if plan['direction'] == 'LONG':
+        if live_price >= tp1:
+            return None  # TP1 already reached — publishing it would be misleading
+        if plan['status'] == 'READY' and live_price > plan['entry_zone'][1] + 1.2 * atr:
+            plan['status'] = 'WAITING_CONFIRMATION'
+            plan['confirmation'] = 'price moved beyond the entry zone before publication — wait for a retest'
+    else:
+        if live_price <= tp1:
+            return None
+        if plan['status'] == 'READY' and live_price < plan['entry_zone'][0] - 1.2 * atr:
+            plan['status'] = 'WAITING_CONFIRMATION'
+            plan['confirmation'] = 'price moved beyond the entry zone before publication — wait for a retest'
+    return plan
 
 
 def _carry_over_fresh(active_by_key, fresh, now_iso, frozen):
@@ -415,6 +452,8 @@ def _build_opportunity(sym, meta, tf, plan, score, parts, R, now_iso):
         'change_24h': meta['chg24'],
         'quote_volume_24h': meta['quoteVol'],
         'spread_pct': meta['spread'],
+        # freshness transparency: how far the live price was from TP1 at publish
+        'distance_to_tp1_pct': round(sgn * (plan['tp1'] - meta['last']) / meta['last'] * 100, 2),
         'created_at': now_iso,
         'updated_at': now_iso,
         'data_timestamp': now_iso,

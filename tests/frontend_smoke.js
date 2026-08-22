@@ -100,6 +100,8 @@ const assert = (cond, msg) => {
     assert(cards[0].textContent.includes('Stop'), 'card contains Stop');
     assert(cards[0].textContent.includes('TP1') && cards[0].textContent.includes('TP3'), 'card contains TPs');
     assert(cards[0].textContent.includes('R:R'), 'card contains R:R');
+    const dtpEl = cards[0].querySelector('[data-tp1-dist]');
+    assert(!!dtpEl && dtpEl.dataset.tp1 && parseFloat(dtpEl.dataset.tp1) > 0, 'card shows live distance-to-TP1 element');
   }
 
   // 3. modal + chart

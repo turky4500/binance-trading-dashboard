@@ -229,11 +229,11 @@
   }
 
   /* ================= plans (mirror analyzer/signal.py) ================= */
-  function targets(entry, R, t4, td, direction, tol) {
-    tol = tol || 0.08;
+  function targets(entry, R, t4, td, direction, risk) {
     const struct = direction === 'LONG'
       ? [t4.last_high, t4.hi20, t4.hi50, td.last_high]
       : [t4.last_low, t4.lo20, t4.lo50, td.last_low];
+    const tol = (risk && risk.tp_snap_tolerance) || 0.08;
     function target(mult) {
       const raw = direction === 'LONG' ? entry + mult * R : entry - mult * R;
       let best = raw;
@@ -246,7 +246,37 @@
         ? Math.max(best, entry + (mult - 0.2) * R)
         : Math.min(best, entry - (mult - 0.2) * R);
     }
-    return [target(1.5), target(2.5), target(4.0)];
+    let tp1 = target(1.5), tp2 = target(2.5), tp3 = target(4.0);
+    // freshness: TP1 at least min_tp1_distance_atr * ATR away (mirrors signal.py)
+    const minD = ((risk && risk.min_tp1_distance_atr != null) ? risk.min_tp1_distance_atr : 1.2) * (t4.atr || 0);
+    if (direction === 'LONG') {
+      if (tp1 - entry < minD) tp1 = entry + minD;
+      tp2 = Math.max(tp2, tp1 + 0.6 * R);
+      tp3 = Math.max(tp3, tp2 + 1.0 * R);
+    } else {
+      if (entry - tp1 < minD) tp1 = entry - minD;
+      tp2 = Math.min(tp2, tp1 - 0.6 * R);
+      tp3 = Math.min(tp3, tp2 - 1.0 * R);
+    }
+    return [tp1, tp2, tp3];
+  }
+
+  function freshnessGuard(plan, livePrice, atr) {
+    if (!plan || !livePrice || livePrice <= 0 || !atr || atr <= 0) return plan;
+    if (plan.direction === 'LONG') {
+      if (livePrice >= plan.tp1) return null;
+      if (plan.status === 'READY' && livePrice > plan.entry_zone[1] + 1.2 * atr) {
+        plan.status = 'WAITING_CONFIRMATION';
+        plan.confirmation = 'price moved beyond the entry zone before publication — wait for a retest';
+      }
+    } else {
+      if (livePrice <= plan.tp1) return null;
+      if (plan.status === 'READY' && livePrice < plan.entry_zone[0] - 1.2 * atr) {
+        plan.status = 'WAITING_CONFIRMATION';
+        plan.confirmation = 'price moved beyond the entry zone before publication — wait for a retest';
+      }
+    }
+    return plan;
   }
 
   function slClamp(entry, rawSl, atr, direction, risk) {
@@ -278,7 +308,7 @@
     let sl = slClamp(entryMid, rawSl, atr, 'LONG', risk);
     if (sl >= zone[0]) sl = entryMid - 1.2 * atr;
     const R = entryMid - sl;
-    const [tp1, tp2, tp3] = targets(entryMid, R, t4, td, 'LONG');
+    const [tp1, tp2, tp3] = targets(entryMid, R, t4, td, 'LONG', risk);
     if ((tp1 - entryMid) / R < minRR) return null;
     const confluences = ['4H EMA20'];
     if (isFinite(t4.vwap) && Math.abs(t4.vwap - anchor) < 0.6 * atr) confluences.push('Session VWAP');
@@ -315,7 +345,7 @@
     let sl = slClamp(entryMid, rawSl, atr, 'LONG', risk);
     if (sl >= zone[0]) sl = entryMid - 1.3 * atr;
     const R = entryMid - sl;
-    const [tp1, tp2, tp3] = targets(entryMid, R, t4, td, 'LONG');
+    const [tp1, tp2, tp3] = targets(entryMid, R, t4, td, 'LONG', risk);
     if ((tp1 - entryMid) / R < minRR) return null;
     const confluences = ['Session VWAP', '4H EMA20 (below)'];
     if (t1.sw_lows.length && Math.abs(t1.sw_lows[t1.sw_lows.length - 1].p - zone[0]) < 0.9 * atr) confluences.push('1H swing low');
@@ -347,7 +377,7 @@
     const rawSl = Math.min(R - 1.0 * atr, t4.lo6 - 0.25 * atr);
     const sl = slClamp(entryMid, rawSl, atr, 'LONG', risk);
     const Rr = entryMid - sl;
-    const [tp1, tp2, tp3] = targets(entryMid, Rr, t4, td, 'LONG');
+    const [tp1, tp2, tp3] = targets(entryMid, Rr, t4, td, 'LONG', risk);
     if ((tp1 - entryMid) / Rr < minRR) return null;
     const status = (inZone && t4.rsi <= 80) ? 'READY' : 'WAITING_CONFIRMATION';
     const confluences = ['Breakout level ' + R];
@@ -380,7 +410,7 @@
     const rawSl = Math.max(S + 1.0 * atr, t4.hi6 + 0.25 * atr);
     const sl = slClamp(entryMid, rawSl, atr, 'SHORT', risk);
     const Rr = sl - entryMid;
-    const [tp1, tp2, tp3] = targets(entryMid, Rr, t4, td, 'SHORT');
+    const [tp1, tp2, tp3] = targets(entryMid, Rr, t4, td, 'SHORT', risk);
     if ((entryMid - tp1) / Rr < minRR) return null;
     const status = (inZone && t4.rsi >= 20) ? 'READY' : 'WAITING_CONFIRMATION';
     return {
@@ -411,7 +441,7 @@
     let sl = slClamp(entryMid, rawSl, atr, 'SHORT', risk);
     if (sl <= zone[1]) sl = entryMid + 1.2 * atr;
     const Rr = sl - entryMid;
-    const [tp1, tp2, tp3] = targets(entryMid, Rr, t4, td, 'SHORT');
+    const [tp1, tp2, tp3] = targets(entryMid, Rr, t4, td, 'SHORT', risk);
     if ((entryMid - tp1) / Rr < minRR) return null;
     return {
       direction: 'SHORT', setup_type: 'TREND_SHORT', setup_label: 'Trend-follow short at EMA20 (4H)',
@@ -613,7 +643,11 @@
       '1d': tfState(frames['1d'], 3, stp),
     };
     const brk = detectBreakout(frames['4h']);
-    const plans = generatePlans(tf, brk, risk, minRR, allowShorts);
+    const livePrice = opts.meta24 && opts.meta24.currentPrice;
+    const rawPlans = generatePlans(tf, brk, risk, minRR, allowShorts);
+    const plans = rawPlans
+      .map(p => freshnessGuard(p, livePrice, tf['4h'].atr))
+      .filter(p => p != null);
     const results = plans.map(p => {
       const s = scorePlan(tf, p, opts.meta24 || {}, weights);
       const R = Math.abs(p.entry_mid - p.stop_loss);
@@ -640,5 +674,5 @@
   }
 
   return { analyze, tfState, supertrend, emaLast, emaArr, rsiArr, macdLast, atrLast, vwapLast,
-           detectBreakout, generatePlans, scorePlan };
+           detectBreakout, generatePlans, scorePlan, freshnessGuard, targets };
 }));

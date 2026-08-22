@@ -93,14 +93,28 @@ def _target(entry, mult, R, struct_levels, direction, tp_snap_tol=0.08):
     return min(best, entry - (mult - 0.2) * R)
 
 
-def _targets(entry, R, t4, td, direction):
+def _targets(entry, R, t4, td, direction, atr, cfg):
     if direction == 'LONG':
         struct = [t4['last_high'], t4['hi20'], t4['hi50'], td['last_high']]
     else:
         struct = [t4['last_low'], t4['lo20'], t4['lo50'], td['last_low']]
-    return (_target(entry, 1.5, R, struct, direction),
-            _target(entry, 2.5, R, struct, direction),
-            _target(entry, 4.0, R, struct, direction))
+    tp1 = _target(entry, 1.5, R, struct, direction)
+    tp2 = _target(entry, 2.5, R, struct, direction)
+    tp3 = _target(entry, 4.0, R, struct, direction)
+    # freshness: TP1 must be at least min_tp1_distance_atr * ATR away from entry,
+    # otherwise the plan arrives already "late" for slow publishers (15-min cycles)
+    min_d = cfg.get('min_tp1_distance_atr', 1.2) * atr
+    if direction == 'LONG':
+        if tp1 - entry < min_d:
+            tp1 = entry + min_d
+        tp2 = max(tp2, tp1 + 0.6 * R)
+        tp3 = max(tp3, tp2 + 1.0 * R)
+    else:
+        if entry - tp1 < min_d:
+            tp1 = entry - min_d
+        tp2 = min(tp2, tp1 - 0.6 * R)
+        tp3 = min(tp3, tp2 - 1.0 * R)
+    return tp1, tp2, tp3
 
 
 def _sl_clamp(entry, raw_sl, atr, direction, cfg):
@@ -142,7 +156,7 @@ def pullback_long(tf, cfg):
     if sl >= zone[0]:
         sl = entry_mid - 1.2 * atr
     R = entry_mid - sl
-    tp1, tp2, tp3 = _targets(entry_mid, R, t4, td, 'LONG')
+    tp1, tp2, tp3 = _targets(entry_mid, R, t4, td, 'LONG', atr, cfg)
     if (tp1 - entry_mid) / R < cfg['min_rr_tp1']:
         return None
     confluences = ['4H EMA20']
@@ -200,7 +214,7 @@ def vwap_hold_long(tf, cfg):
     if sl >= zone[0]:
         sl = entry_mid - 1.3 * atr
     R = entry_mid - sl
-    tp1, tp2, tp3 = _targets(entry_mid, R, t4, td, 'LONG')
+    tp1, tp2, tp3 = _targets(entry_mid, R, t4, td, 'LONG', atr, cfg)
     if (tp1 - entry_mid) / R < cfg['min_rr_tp1']:
         return None
     confluences = ['Session VWAP', '4H EMA20 (below)']
@@ -254,7 +268,7 @@ def breakout_long(tf, brk, cfg):
     raw_sl = min(R - 1.0 * atr, t4['lo6'] - 0.25 * atr)
     sl = _sl_clamp(entry_mid, raw_sl, atr, 'LONG', cfg)
     Rr = entry_mid - sl
-    tp1, tp2, tp3 = _targets(entry_mid, Rr, t4, td, 'LONG')
+    tp1, tp2, tp3 = _targets(entry_mid, Rr, t4, td, 'LONG', atr, cfg)
     if (tp1 - entry_mid) / Rr < cfg['min_rr_tp1']:
         return None
     status = 'READY' if (in_zone and t4['rsi'] <= 80) else 'WAITING_CONFIRMATION'
@@ -310,7 +324,7 @@ def breakdown_short(tf, brk, cfg):
     raw_sl = max(S + 1.0 * atr, t4['hi6'] + 0.25 * atr)
     sl = _sl_clamp(entry_mid, raw_sl, atr, 'SHORT', cfg)
     Rr = sl - entry_mid
-    tp1, tp2, tp3 = _targets(entry_mid, Rr, t4, td, 'SHORT')
+    tp1, tp2, tp3 = _targets(entry_mid, Rr, t4, td, 'SHORT', atr, cfg)
     if (entry_mid - tp1) / Rr < cfg['min_rr_tp1']:
         return None
     status = 'READY' if (in_zone and t4['rsi'] >= 20) else 'WAITING_CONFIRMATION'
@@ -355,7 +369,7 @@ def trend_short(tf, cfg):
     if sl <= zone[1]:
         sl = entry_mid + 1.2 * atr
     Rr = sl - entry_mid
-    tp1, tp2, tp3 = _targets(entry_mid, Rr, t4, td, 'SHORT')
+    tp1, tp2, tp3 = _targets(entry_mid, Rr, t4, td, 'SHORT', atr, cfg)
     if (entry_mid - tp1) / Rr < cfg['min_rr_tp1']:
         return None
     return {
