@@ -429,6 +429,10 @@ function cardHTML(o, rank) {
   const dtp = distToTp1(o);
   const dtpLabel = dtp ? (dtp.reached ? '✓ ' + t('tp1_reached') : dtp.pct.toFixed(2) + '%') : '—';
   const dtpCls = dtp && dtp.reached ? 'pos' : 'mut';
+  const st4 = o.analysis && o.analysis['4h'] && o.analysis['4h'].supertrend;
+  const st1d = o.analysis && o.analysis['1d'] && o.analysis['1d'].supertrend;
+  const stUp = st4 === 'UP' || st1d === 'UP';
+  const stBadge = (st4 || st1d) ? `<span class="badge ${stUp ? 'st-up' : 'st-down'}" title="${esc(t('st_badge_tip'))}">ST ${st4 === 'UP' ? '↑' : st4 === 'DOWN' ? '↓' : '·'}4h ${st1d === 'UP' ? '↑' : st1d === 'DOWN' ? '↓' : '·'}1d</span>` : '';
   return `
   <article class="card ${d.toLowerCase()}" data-sym="${esc(o.symbol)}">
     <div class="card-head">
@@ -443,7 +447,7 @@ function cardHTML(o, rank) {
       <span class="badge setup">${esc(o.setup_label)}</span>
       <span class="badge tf">${esc(o.primary_timeframe)}</span>
       <span class="badge status-${statusKey(o.status)}">${statusLabel(o.status)}</span>
-      ${o.analysis && o.analysis['4h'] && o.analysis['4h'].supertrend ? `<span class="badge ${o.analysis['4h'].supertrend === 'UP' ? 'st-up' : 'st-down'}" title="${t('st')} (4H)">ST ${o.analysis['4h'].supertrend === 'UP' ? '↑' : '↓'}</span>` : ''}
+      ${stBadge}
     </div>
     <div class="card-body">
       <div class="kv"><span class="k">${t('entry_zone')}</span><span class="v">${fmtPrice(o.entry_zone[0])} – ${fmtPrice(o.entry_zone[1])}</span></div>
@@ -576,6 +580,7 @@ async function openModal(id) {
       <div class="table-wrap"><table class="tf-table">
         <thead><tr><th>${t('tf')}</th><th>${t('trend')}</th><th>RSI</th><th>MACD</th><th>EMA</th><th>${t('st')}</th><th>${t('atr_pct')}</th><th>${t('vol')}</th></tr></thead>
         <tbody>${tfRows}</tbody></table></div>
+      <p class="alert-note" style="margin-top:8px">${t('st_note')}</p>
     </div>
     <div class="m-section">
       <h3>${t('chart_title')}</h3>
@@ -1058,7 +1063,8 @@ function renderAnalyzer(res) {
     <div class="m-section"><h3>${t('ana_indicators')}</h3>
       <div class="table-wrap"><table class="tf-table">
         <thead><tr><th>${t('tf')}</th><th>${t('trend')}</th><th>RSI</th><th>MACD</th><th>EMA20/50</th><th>${t('st')}</th><th>${t('atr_pct')}</th><th>${t('vol')}</th><th>VWAP</th></tr></thead>
-        <tbody>${tfTable}</tbody></table></div></div>
+        <tbody>${tfTable}</tbody></table></div>
+      <p class="alert-note" style="margin-top:8px">${t('st_note')}</p></div>
     ${planGrid}
     <div class="m-section"><h3>${t('ana_why')}</h3><div class="ana-diag">${diag}</div></div>
     <div class="m-section"><h3>${t('support')} / ${t('resistance')}</h3><div class="level-list">${plan ? (plan.supports || []).map(([p, n]) => `<div class="level s"><b>${fmtPrice(p)}</b><span>${esc(n)}</span></div>`).join('') + (plan.resistances || []).map(([p, n]) => `<div class="level r"><b>${fmtPrice(p)}</b><span>${esc(n)}</span></div>`).join('') : '<span class="alert-note">—</span>'}</div></div>

@@ -115,6 +115,7 @@ const assert = (cond, msg) => {
     assert(mbody.textContent.includes('Score Breakdown'), 'modal: score breakdown');
     assert(mbody.textContent.includes('Timeframe Analysis'), 'modal: timeframe analysis');
     assert(mbody.textContent.includes('SuperTrend') || mbody.textContent.includes('سوبر ترند'), 'modal: SuperTrend column');
+    assert(mbody.textContent.includes('TradingView'), 'modal: data-source alignment note (TradingView comparison caveat)');
     assert(mbody.textContent.includes('Support'), 'modal: support/resistance');
     const cvs = window.document.getElementById('m-chart');
     assert(!!cvs && cvs.width > 0, 'modal: chart canvas drawn');
@@ -208,8 +209,10 @@ const assert = (cond, msg) => {
   assert(typeof window.LivePrices === 'object' && typeof window.LivePrices.subscribe === 'function',
          'LivePrices module loaded');
   assert(window.document.querySelectorAll('[data-live-sym]').length >= 1, 'live price elements rendered');
-  if (window.document.querySelector('.badge.st-up, .badge.st-down')) {
-    assert(true, 'SuperTrend badge on card');
+  const stBadge = window.document.querySelector('.badge.st-up, .badge.st-down');
+  if (stBadge) {
+    assert(stBadge.textContent.includes('4h') && stBadge.textContent.includes('1d'), 'SuperTrend badge shows 4H + 1D directions');
+    assert(stBadge.getAttribute('title') && stBadge.getAttribute('title').includes('TradingView'), 'SuperTrend badge has comparison tooltip');
   } else {
     assert(data.opportunities.every(o => !o.analysis || !o.analysis['4h']), 'no ST badge only when no 4h analysis');
   }
