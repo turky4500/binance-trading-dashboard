@@ -330,3 +330,22 @@ body.ws-on .lp-dot{background:var(--green);animation:pulse 1.8s infinite}
 .ana-plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
 .ana-chart{margin-top:8px}
 @media (max-width:720px){.ana-verdict .score{font-size:26px}}
+
+/* ---------- recommendation time + validity ---------- */
+.rec-time{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;margin:4px 0 7px;font-size:12px}
+.rec-time .rt-label{color:var(--text3);font-weight:600;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase}
+.rec-time .rt-value{font-family:var(--mono);font-weight:700;font-size:12.5px}
+.rec-time .rt-age{margin-inline-start:auto;font-weight:800;font-size:10.5px;padding:1px 9px;border-radius:999px}
+.rec-time.fresh{border-inline-start:3px solid var(--green)}
+.rec-time.fresh .rt-age{background:var(--green-bg);color:var(--green)}
+.rec-time.aging{border-inline-start:3px solid var(--yellow)}
+.rec-time.aging .rt-age{background:var(--yellow-bg);color:var(--yellow)}
+.rec-time.old{border-inline-start:3px solid var(--red)}
+.rec-time.old .rt-age{background:var(--red-bg);color:var(--red)}
+.validity{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.validity-bar{flex:1;height:5px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.validity-fill{height:100%;border-radius:4px;transition:width 1s linear}
+.validity-fill.fresh{background:var(--green)}
+.validity-fill.aging{background:var(--yellow)}
+.validity-fill.old{background:var(--red)}
+.validity-label{font-size:10.5px;color:var(--text3);white-space:nowrap;font-weight:600}

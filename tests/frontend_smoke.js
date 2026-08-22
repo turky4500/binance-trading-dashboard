@@ -102,6 +102,19 @@ const assert = (cond, msg) => {
     assert(cards[0].textContent.includes('R:R'), 'card contains R:R');
     const dtpEl = cards[0].querySelector('[data-tp1-dist]');
     assert(!!dtpEl && dtpEl.dataset.tp1 && parseFloat(dtpEl.dataset.tp1) > 0, 'card shows live distance-to-TP1 element');
+    // recommendation time (12-hour + date) and validity bar
+    const rt = cards[0].querySelector('.rec-time');
+    assert(!!rt && rt.textContent.length > 8, 'card shows recommendation time row');
+    assert(/(AM|PM)/.test(rt.textContent), 'recommendation time uses 12-hour format');
+    assert(rt.querySelector('.rt-age'), 'recommendation age badge present');
+    const vf = window.document.querySelector('#opps-grid .validity-fill');
+    assert(!!vf && parseFloat(vf.style.width) > 0, 'validity bar rendered for enterable setups');
+    // helper functions are deterministic
+    const threeHAgo = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
+    assert(window.ageShort(threeHAgo) === '3h', 'ageShort formats hours');
+    assert(/(AM|PM)/.test(window.fmtRecTime(threeHAgo)), 'fmtRecTime uses 12-hour clock');
+    const vi = window.validityInfo(threeHAgo);
+    assert(vi.pct > 0 && vi.pct < 100 && vi.label.length > 0, 'validityInfo computes remaining window');
   }
 
   // 3. modal + chart

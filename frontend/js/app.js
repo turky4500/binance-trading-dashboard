@@ -152,6 +152,45 @@ function fmtQty(q) {
   return q.toFixed(8).replace(/\.?0+$/, '');
 }
 
+/* recommendation time: 12-hour clock + date, in the user's local timezone */
+function fmtRecTime(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  const loc = LANG === 'ar' ? 'ar-SA' : 'en-US';
+  return d.toLocaleString(loc, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+/* compact age: 3h / 12m / 2d */
+function ageShort(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 60) return t('now');
+  if (diff < 3600) return Math.floor(diff / 60) + t('m_short');
+  if (diff < 86400) return Math.floor(diff / 3600) + t('h_short');
+  return Math.floor(diff / 86400) + t('d_short');
+}
+
+/* age bracket: fresh <6h, aging 6-18h, old >18h (within the 48h expiry window) */
+function ageInfo(iso) {
+  const ageH = (Date.now() - new Date(iso).getTime()) / 3600000;
+  if (!isFinite(ageH)) return { cls: 'old', label: t('old'), ageH: 0 };
+  const cls = ageH < 6 ? 'fresh' : ageH < 18 ? 'aging' : 'old';
+  return { cls, label: t(cls), ageH };
+}
+
+/* remaining validity of the setup (engine auto-expires after expiry_hours) */
+function validityInfo(iso) {
+  const expiryH = (state.meta && state.meta.config && state.meta.config.expiry_hours) || 48;
+  const remainH = expiryH - (Date.now() - new Date(iso).getTime()) / 3600000;
+  const pct = Math.max(0, Math.min(100, remainH / expiryH * 100));
+  const cls = pct > 60 ? 'fresh' : pct > 25 ? 'aging' : 'old';
+  const label = remainH >= 1
+    ? Math.round(remainH) + t('h_short')
+    : Math.max(0, Math.round(remainH * 60)) + t('m_short');
+  return { pct, cls, label };
+}
+
 /* Risk-based position sizing — deterministic, no leverage (spot only) */
 function calcPosition(capital, riskPct, entry, sl, tps) {
   const cap = parseFloat(capital), rp = parseFloat(riskPct);
@@ -433,6 +472,19 @@ function cardHTML(o, rank) {
   const st1d = o.analysis && o.analysis['1d'] && o.analysis['1d'].supertrend;
   const stUp = st4 === 'UP' || st1d === 'UP';
   const stBadge = (st4 || st1d) ? `<span class="badge ${stUp ? 'st-up' : 'st-down'}" title="${esc(t('st_badge_tip'))}">ST ${st4 === 'UP' ? '↑' : st4 === 'DOWN' ? '↓' : '·'}4h ${st1d === 'UP' ? '↑' : st1d === 'DOWN' ? '↓' : '·'}1d</span>` : '';
+  const ai = ageInfo(o.created_at);
+  const canEnter = o.status === 'READY' || o.status === 'WAITING_CONFIRMATION';
+  const val = validityInfo(o.created_at);
+  const recBlock = `
+    <div class="rec-time ${ai.cls}" title="${t('rec_time_tip')}">
+      <span class="rt-label">⏱ ${t('rec_time')}</span>
+      <span class="rt-value">${fmtRecTime(o.created_at)}</span>
+      <span class="rt-age">${ai.label} · ${ageShort(o.created_at)}</span>
+    </div>
+    ${canEnter ? `<div class="validity">
+      <div class="validity-bar"><div class="validity-fill ${val.cls}" style="width:${val.pct.toFixed(0)}%"></div></div>
+      <span class="validity-label">${t('validity_left')} ${val.label}</span>
+    </div>` : ''}`;
   return `
   <article class="card ${d.toLowerCase()}" data-sym="${esc(o.symbol)}">
     <div class="card-head">
@@ -450,6 +502,7 @@ function cardHTML(o, rank) {
       ${stBadge}
     </div>
     <div class="card-body">
+      ${recBlock}
       <div class="kv"><span class="k">${t('entry_zone')}</span><span class="v">${fmtPrice(o.entry_zone[0])} – ${fmtPrice(o.entry_zone[1])}</span></div>
       <div class="kv"><span class="k">${t('stop')}</span><span class="v neg">${fmtPrice(o.stop_loss)}</span></div>
       <div class="kv"><span class="k">TP1</span><span class="v pos">${fmtPrice(o.tp1)}</span></div>
@@ -568,7 +621,10 @@ async function openModal(id) {
         <div class="m-cell"><div class="k">${t('invalidation')}</div><div class="v" style="color:var(--purple)">${fmtPrice(o.invalidation_level)}</div></div>
         <div class="m-cell"><div class="k">${t('change_24h')}</div><div class="v ${dirClass(o.change_24h >= 0 ? 'LONG' : 'SHORT')}">${pct(o.change_24h)}</div></div>
         <div class="m-cell"><div class="k">${t('volume_24h')}</div><div class="v">$${(o.quote_volume_24h / 1e6).toFixed(1)}M</div></div>
-        <div class="m-cell"><div class="k">${t('created')}</div><div class="v" style="font-size:12px">${locTime(o.created_at)}</div></div>
+        <div class="m-cell"><div class="k">${t('rec_time')}</div><div class="v" style="font-size:13px">${fmtRecTime(o.created_at)}</div></div>
+        <div class="m-cell"><div class="k">${t('age_word')}</div><div class="v">${ageShort(o.created_at)}</div></div>
+        ${(o.status === 'READY' || o.status === 'WAITING_CONFIRMATION') ? `<div class="m-cell"><div class="k">${t('validity_left')}</div><div class="v">${validityInfo(o.created_at).label}</div></div>` : ''}
+        <div class="m-cell"><div class="k">${t('updated')}</div><div class="v" style="font-size:12px">${locTime(o.updated_at)}</div></div>
       </div>
     </div>
     <div class="m-section">
@@ -1113,6 +1169,10 @@ window.renderAll = function () {
 /* explicit exports for cross-module use (alerts, live prices) */
 window.toast = toast;
 window.fmtPrice = fmtPrice;
+window.fmtRecTime = fmtRecTime;
+window.ageShort = ageShort;
+window.ageInfo = ageInfo;
+window.validityInfo = validityInfo;
 
 async function init() {
   if (window.__dashInit) return; // guard against double initialization

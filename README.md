@@ -45,6 +45,7 @@ The engine is **100% deterministic**: every indicator, entry, stop and target is
 - 🏆 Configurable 100-point scoring with per-component breakdown
 - 🔁 Automatic refresh every 15 minutes via GitHub Actions (no manual re-runs)
 - 🛡️ **Publish-time freshness guard**: a plan is never published if the live price already reached its TP1 (stale-on-arrival recommendations are impossible), and READY setups that ran away from their entry zone are downgraded to WAITING. Every card and analysis shows the live **distance to TP1** (updated each second from the WebSocket price) — you always know how fresh a setup is
+- ⏱ **Recommendation timestamp on every card**: publication time in your local 12-hour clock with the date, a color-coded age badge (Fresh <6h / Aging 6-18h / Old >18h) and a validity bar showing how much of the 48-hour window remains — so you can judge instantly whether a setup is still worth entering
 - ⏱ Live countdown to the next data cycle + fully automatic in-page refresh — new data renders without any manual reload, with a visible toast and a LIVE/STALE indicator
 - 🧪 Historical backtest (last 6 months, same deterministic rules) with score calibration and per-setup-type statistics — refreshed daily and shown transparently on the Performance page
 - 🌗 Dark / Light theme toggle (persisted across visits)
