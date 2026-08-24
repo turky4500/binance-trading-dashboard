@@ -2,7 +2,7 @@
 'use strict';
 
 const state = {
-  meta: null, market: null, opps: [], perf: null, history: [], bt: null,
+  meta: null, market: null, opps: [], agent: null, perf: null, history: [], bt: null,
   bh: null, ul: null, symbols: [], engineCfg: null,
   filter: { q: '', dir: 'ALL', status: 'ALL', sort: 'score', high: false, watch: false },
   prefs: loadPrefs(),
@@ -42,10 +42,11 @@ async function loadAll() {
   // embedded snapshot unless there is no data at all.
   const hadMeta = !!state.meta;
   const prevOpps = window.__dashDataSeeded ? state.opps.slice() : null;
-  const [m, mk, o, p, h, bt, bh, ul, syms, ecfg] = await Promise.allSettled([
+  const [m, mk, o, qa, p, h, bt, bh, ul, syms, ecfg] = await Promise.allSettled([
     fetchJSON('data/meta.json'),
     fetchJSON('data/market.json'),
     fetchJSON('data/opportunities.json'),
+    fetchJSON('data/agent_scan.json'),
     fetchJSON('data/performance.json'),
     fetchJSON('data/history.json'),
     fetchJSON('data/performance_backtest.json'),
@@ -60,6 +61,7 @@ async function loadAll() {
   } else if (!hadMeta && window.__EMBEDDED__) {
     const em = window.__EMBEDDED__;
     state.meta = em.meta; state.market = em.market; state.opps = em.opportunities;
+    state.agent = em.agent_scan || null;
     state.perf = em.performance; state.history = em.history || [];
     state.bt = em.backtest || null;
     state.bh = em.breadth_history || null;
@@ -72,6 +74,7 @@ async function loadAll() {
   }
   if (mk.status === 'fulfilled') state.market = mk.value;
   if (o.status === 'fulfilled') state.opps = o.value;
+  if (qa.status === 'fulfilled') state.agent = qa.value;
   if (p.status === 'fulfilled') state.perf = p.value;
   if (h.status === 'fulfilled') state.history = h.value;
   if (bt.status === 'fulfilled') state.bt = bt.value;
@@ -87,7 +90,10 @@ async function loadAll() {
   renderAll();
   syncDirectionFilter();
   // (re)subscribe the live price feed to the currently displayed symbols
-  if (window.LivePrices) LivePrices.subscribe(state.opps.map(o => o.symbol).concat(window.Watchlist ? window.Watchlist.list() : []));
+  if (window.LivePrices) {
+    const agentSymbols = state.agent && Array.isArray(state.agent.signals) ? state.agent.signals.map(s => s.symbol) : [];
+    LivePrices.subscribe(state.opps.map(o => o.symbol).concat(agentSymbols, window.Watchlist ? window.Watchlist.list() : []));
+  }
 }
 
 function syncDirectionFilter() {
@@ -541,6 +547,82 @@ function renderCards() {
       if (state.filter.watch) renderCards();
     });
   });
+}
+
+/* ---------------- deterministic quantitative agent ---------------- */
+function agentText(value) {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  return LANG === 'ar' ? (value.ar || value.en || '') : (value.en || value.ar || '');
+}
+
+function agentCardHTML(s, rank) {
+  const risksObj = s.risk_notes || {};
+  const risks = LANG === 'ar' ? (risksObj.ar || risksObj.en || []) : (risksObj.en || risksObj.ar || []);
+  const riskItems = (Array.isArray(risks) ? risks : [risks]).filter(Boolean)
+    .map(x => `<li>${esc(x)}</li>`).join('');
+  const st = s.supertrend_status || {};
+  return `<article class="card long agent-card">
+    <div class="card-head">
+      <div><div class="rank">#${rank} · QUANT</div><div class="pair-name">${esc(s.pair || s.symbol)}</div></div>
+      <div class="score-badge"><span class="score-num ${scoreClass(s.score)}">${Number(s.score || 0)}</span><span class="score-label">/100</span></div>
+    </div>
+    <div class="badge-row">
+      <span class="badge dir-long">LONG</span>
+      <span class="badge setup">${esc(s.setup_label || 'SCALP_SUPERTREND')}</span>
+      <span class="badge tf">15m</span>
+      <span class="badge status-ready">${t('agent_ready')}</span>
+      <span class="badge st-up">ST ${st['15m'] === 'UP' ? '↑' : '·'}15m ${st['1h'] === 'UP' ? '↑' : '·'}1h ${st['4h'] === 'UP' ? '↑' : '·'}4h</span>
+    </div>
+    <div class="card-body">
+      <div class="kv"><span class="k">${t('live_price')}</span><span class="v"><span class="lp-dot"></span><span data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</span></span></div>
+      <div class="kv"><span class="k">${t('entry_zone')}</span><span class="v">${fmtPrice(s.entry_zone && s.entry_zone[0])} – ${fmtPrice(s.entry_zone && s.entry_zone[1])}</span></div>
+      <div class="kv"><span class="k">${t('stop')}</span><span class="v neg">${fmtPrice(s.stop_loss)} (${Number(s.sl_distance_pct || 0).toFixed(2)}%)</span></div>
+      <div class="kv"><span class="k">TP1</span><span class="v pos">${fmtPrice(s.tp1)} (+${Number(s.profit_pct_tp1 || 0).toFixed(2)}%)</span></div>
+      <div class="kv"><span class="k">TP2</span><span class="v pos">${fmtPrice(s.tp2)} (+${Number(s.profit_pct_tp2 || 0).toFixed(2)}%)</span></div>
+      <div class="kv"><span class="k">TP3</span><span class="v pos">${fmtPrice(s.tp3)} (+${Number(s.profit_pct_tp3 || 0).toFixed(2)}%)</span></div>
+      <div class="kv"><span class="k">${t('rr')}</span><span class="v mut">1:${Number(s.rr_tp1 || 0).toFixed(2)} / 1:${Number(s.rr_tp2 || 0).toFixed(2)} / 1:${Number(s.rr_tp3 || 0).toFixed(2)}</span></div>
+      <div class="agent-copy"><b>${esc(t('agent_reason'))}</b><p>${esc(agentText(s.reason))}</p></div>
+      ${riskItems ? `<div class="agent-copy risk"><b>${esc(t('agent_risks'))}</b><ul>${riskItems}</ul></div>` : ''}
+      <div class="agent-copy"><b>${esc(t('agent_exec'))}</b><p>${esc(agentText(s.execution_note))}</p></div>
+    </div>
+    <div class="card-foot"><span class="card-updated">${t('updated')}: ${locTime(s.data_timestamp)}</span><span class="badge tf">${esc(s.decision || 'FAVORABLE')}</span></div>
+  </article>`;
+}
+
+function renderQuantAgent() {
+  const doc = state.agent;
+  const grid = document.getElementById('agent-grid');
+  const empty = document.getElementById('agent-empty');
+  const count = document.getElementById('agent-count');
+  const status = document.getElementById('agent-status');
+  const summary = document.getElementById('agent-summary');
+  if (!grid || !empty || !count || !status || !summary) return;
+  const signals = doc && Array.isArray(doc.signals) ? doc.signals : [];
+  count.textContent = signals.length;
+  grid.innerHTML = signals.map((s, i) => agentCardHTML(s, i + 1)).join('');
+  empty.classList.toggle('hidden', signals.length > 0);
+
+  const sourceTime = doc && doc.source_data_timestamp;
+  const stale = !!(sourceTime && state.meta && state.meta.data_timestamp && sourceTime !== state.meta.data_timestamp);
+  status.className = 'agent-status ' + (!sourceTime || stale || (doc && doc.status === 'error') ? 'bad' : 'good');
+  status.textContent = !sourceTime ? 'NO DATA' : (stale ? t('agent_data_stale') : String(doc.status || 'ok').toUpperCase());
+  summary.innerHTML = `
+    <div class="perf"><div class="k">${esc(t('agent_scanned'))}</div><div class="v">${Number(doc && doc.total_scanned || 0)}</div></div>
+    <div class="perf"><div class="k">${esc(t('agent_signals'))}</div><div class="v good">${signals.length}</div></div>
+    <div class="perf"><div class="k">${esc(t('agent_updated'))}</div><div class="v agent-time">${sourceTime ? esc(locTime(sourceTime)) : '—'}</div></div>`;
+
+  const reasonEl = document.getElementById('agent-empty-reason');
+  const noReason = doc && doc.no_opportunity_reason ? agentText(doc.no_opportunity_reason) : t('agent_no_signals_sub');
+  if (reasonEl) reasonEl.textContent = noReason || t('agent_no_signals_sub');
+
+  const details = document.getElementById('agent-rejections');
+  const list = document.getElementById('agent-rejection-list');
+  const rejections = doc && Array.isArray(doc.rejections) ? doc.rejections : [];
+  if (details && list) {
+    details.classList.toggle('hidden', rejections.length === 0);
+    list.innerHTML = rejections.slice(0, 50).map(r => `<div class="agent-rejection-row"><b>${esc(r.symbol || '—')}</b><span>${esc((r.codes || []).join(', '))}</span><small>${esc(LANG === 'ar' ? r.reason_ar : r.reason_en)}</small></div>`).join('');
+  }
 }
 
 function renderWatchBar() {
@@ -1130,7 +1212,10 @@ function renderAnalyzer(res) {
     window.Watchlist.toggle(res.symbol);
     renderAnalyzer(res);
     renderWatchBar();
-    if (window.LivePrices) window.LivePrices.subscribe(state.opps.map(o => o.symbol).concat(window.Watchlist.list()));
+    if (window.LivePrices) {
+      const agentSymbols = state.agent && Array.isArray(state.agent.signals) ? state.agent.signals.map(s => s.symbol) : [];
+      window.LivePrices.subscribe(state.opps.map(o => o.symbol).concat(agentSymbols, window.Watchlist.list()));
+    }
   });
   // chart (4H with volume + RSI panels and plan levels)
   renderAnalyzerChart();
@@ -1159,6 +1244,7 @@ function bindAnalyzer() {
 window.renderAll = function () {
   renderHeader();
   renderCards();
+  renderQuantAgent();
   renderWatchBar();
   renderMarketTab();
   renderPerformance();

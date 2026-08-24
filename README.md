@@ -59,6 +59,7 @@ The engine is **100% deterministic**: every indicator, entry, stop and target is
 - 📱 Installable PWA (manifest + service worker with honest network-first caching — stale data is never served as live), works offline
 - 🩺 Health monitoring: [UptimeRobot guide](docs/HEALTH_MONITORING.md) + optional Telegram notification when the pipeline fails
 - 🔬 **Coin Analyzer tab**: type any Binance spot symbol and get an instant, on-demand analysis computed **in your browser** from live public Binance data — verdict (setup or not), full trade plan, 4-timeframe indicator table (EMA/RSI/MACD/ATR/VWAP/SuperTrend/volume), a checklist of why no setup exists, a 4H chart, and one-tap add-to-watchlist. The JavaScript engine is a faithful mirror of the Python analyzer, locked in parity by a **golden test** (`tests/golden_js.test.js`) that runs in CI on every push — the two engines cannot drift apart.
+- ⚡ **Quant Agent tab**: a separate deterministic 15-minute scalp validator fed by the server-side pipeline (never by the browser). It requires price above EMA200, bullish SuperTrend (10,3) on 15m/1h/4h, no three-candle chop, no upper-wick rejection or descending swing highs, a held breakout/SuperTrend bounce, score ≥82 and TP1 R:R ≥1.5. Results and standardized rejection reasons are published as strict JSON in `data/agent_scan.json`.
 - 🔍 Search, filters (direction/status/high-score) and sorting
 - 📱 Responsive dark UI, English/Arabic (RTL), 4H candlestick charts with levels drawn
 - 🔔 Full lifecycle alerts: Telegram notifications for every transition (READY / TRIGGERED / TP hits / STOPPED / EXPIRED / INVALIDATED — per-event toggles), plus optional in-browser notifications and distinctive sounds for each event while the dashboard is open
@@ -163,6 +164,13 @@ Everything is tunable in one file:
 | `market_filter.min_breadth_pct` | `40` | Breadth gate: % of top-30 coins above their daily EMA50 required to publish new setups |
 | `backtest.months` / `backtest.top_symbols` | `6` / `12` | Historical simulation depth (runs daily via `backtest.yml`) |
 | `supertrend.period` / `supertrend.multiplier` | `10` / `3.0` | SuperTrend parameters (per timeframe, on charts, in scoring) |
+| `quant_agent.enabled` | `true` | Enable the deterministic 15m SuperTrend scalp scan and `agent_scan.json` output |
+| `quant_agent.min_score` / `min_rr_tp1` | `82` / `1.5` | Minimum agent quality score and TP1 reward/risk |
+| `quant_agent.max_ema200_extension_pct` | `5.0` | Reject vertical moves too far above the 15m EMA200 |
+| `quant_agent.max_live_chase_atr` | `0.75` | Reject a live price that ran too far beyond the last closed 15m candle |
+| `quant_agent.max_upper_wick_body_ratio` | `1.5` | Reject long upper wicks testing recent resistance |
+| `quant_agent.max_stop_distance_pct` | `3.0` | Absolute stop-distance ceiling (the R:R gate is normally stricter) |
+| `quant_agent.tp1_pct` / `tp2_pct` / `tp3_pct` | `1.2` / `2.25` / `4.25` | Scalp target percentages; TP2/TP3 prefer nearby structure inside their bands |
 | `risk.pullback_zone_atr` | `0.6` | Entry-zone width (pullback setups) |
 | `telegram.enabled` | `false` | Enable Telegram alerts |
 | `telegram.min_score_alert` | `85` | Alert threshold for new setups |

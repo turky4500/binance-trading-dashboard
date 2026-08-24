@@ -39,6 +39,7 @@ def load_data():
                 klines[fn[:-5]] = j(os.path.join('klines', fn))
     return {
         'opportunities': j('opportunities.json', []),
+        'agent_scan': j('agent_scan.json'),
         'meta': j('meta.json'),
         'market': j('market.json'),
         'performance': j('performance.json'),

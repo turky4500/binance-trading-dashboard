@@ -4,7 +4,7 @@
    offline use. Static assets use stale-while-revalidate. */
 'use strict';
 
-const CACHE = 'dash-shell-v1.6.0';
+const CACHE = 'dash-shell-v1.9.0';
 const SHELL = [
   './',
   './css/style.css',
@@ -14,6 +14,7 @@ const SHELL = [
   './js/live.js',
   './js/alerts.js',
   './js/watchlist.js',
+  './js/engine.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',

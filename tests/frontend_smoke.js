@@ -15,6 +15,8 @@ const engine = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'engine.js'), '
 const app = fs.readFileSync(path.join(ROOT, 'frontend', 'js', 'app.js'), 'utf-8');
 const data = {
   opportunities: JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf-8')),
+  agent_scan: (() => { const p = path.join(ROOT, 'data', 'agent_scan.json');
+    try { return JSON.parse(fs.readFileSync(p, 'utf-8')); } catch (e) { return null; } })(),
   meta: JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'meta.json'), 'utf-8')),
   market: JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'market.json'), 'utf-8')),
   performance: JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'performance.json'), 'utf-8')),
@@ -108,7 +110,9 @@ const assert = (cond, msg) => {
     assert(/(AM|PM)/.test(rt.textContent), 'recommendation time uses 12-hour format');
     assert(rt.querySelector('.rt-age'), 'recommendation age badge present');
     const vf = window.document.querySelector('#opps-grid .validity-fill');
-    assert(!!vf && parseFloat(vf.style.width) > 0, 'validity bar rendered for enterable setups');
+    const hasEnterable = data.opportunities.some(o => o.status === 'READY' || o.status === 'WAITING_CONFIRMATION');
+    assert(hasEnterable ? (!!vf && parseFloat(vf.style.width) > 0) : !vf,
+           hasEnterable ? 'validity bar rendered for enterable setups' : 'validity bar omitted for non-enterable setups');
     // helper functions are deterministic
     const threeHAgo = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
     assert(window.ageShort(threeHAgo) === '3h', 'ageShort formats hours');
@@ -116,6 +120,22 @@ const assert = (cond, msg) => {
     const vi = window.validityInfo(threeHAgo);
     assert(vi.pct > 0 && vi.pct < 100 && vi.label.length > 0, 'validityInfo computes remaining window');
   }
+
+  // 2b. deterministic quantitative-agent tab
+  const agentTab = window.document.querySelector('[data-tab="agent"]');
+  assert(!!agentTab, 'quant-agent tab exists');
+  agentTab.click();
+  await wait(50);
+  assert(window.document.getElementById('agent-summary').textContent.length > 0, 'quant-agent summary renders');
+  assert(window.document.getElementById('agent-count').textContent === String((data.agent_scan && data.agent_scan.signals || []).length),
+         'quant-agent signal count matches JSON');
+  if (data.agent_scan && data.agent_scan.signals && data.agent_scan.signals.length) {
+    const ac = window.document.querySelector('#agent-grid .agent-card');
+    assert(!!ac && ac.textContent.includes('TP1') && ac.textContent.includes('R:R'), 'quant-agent card renders plan levels');
+  } else {
+    assert(!window.document.getElementById('agent-empty').classList.contains('hidden'), 'quant-agent empty state renders honestly');
+  }
+  window.document.querySelector('[data-tab="opportunities"]').click();
 
   // 3. modal + chart
   const btn = window.document.querySelector('[data-open]');

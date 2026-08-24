@@ -92,6 +92,7 @@
 
 <div class="tabs" id="tabs">
   <button class="tab active" data-tab="opportunities"><span data-i18n="tab_opps">Opportunities</span><span class="tab-count" id="opp-count">0</span></button>
+  <button class="tab" data-tab="agent"><span data-i18n="tab_agent">Quant Agent</span><span class="tab-count" id="agent-count">0</span></button>
   <button class="tab" data-tab="analyzer"><span data-i18n="tab_analyzer">Analyzer</span></button>
   <button class="tab" data-tab="market"><span data-i18n="tab_market">Market</span></button>
   <button class="tab" data-tab="performance"><span data-i18n="tab_perf">Performance</span></button>
@@ -137,6 +138,27 @@
       <h2 data-i18n="no_setups">No High-Quality Setup Found</h2>
       <p data-i18n="no_setups_sub">The scanner intentionally shows nothing when no opportunity scores above the quality threshold.</p>
     </div>
+  </section>
+
+  <section id="tab-agent" class="tab-panel">
+    <div class="agent-head">
+      <div>
+        <h2 data-i18n="agent_title">SuperTrend Quant Agent</h2>
+        <p data-i18n="agent_subtitle">Deterministic 15m scalp validation: EMA200, SuperTrend (10,3), price action and strict risk/reward.</p>
+      </div>
+      <div class="agent-status" id="agent-status">—</div>
+    </div>
+    <div id="agent-summary" class="market-stats"></div>
+    <div id="agent-grid" class="grid"></div>
+    <div id="agent-empty" class="empty hidden">
+      <div class="empty-icon">∅</div>
+      <h2 data-i18n="agent_no_signals">No qualifying scalp signal</h2>
+      <p id="agent-empty-reason" data-i18n="agent_no_signals_sub">The agent publishes nothing unless every mechanical filter passes.</p>
+    </div>
+    <details id="agent-rejections" class="agent-rejections hidden">
+      <summary data-i18n="agent_rejections">Rejection summary</summary>
+      <div id="agent-rejection-list"></div>
+    </details>
   </section>
 
   <section id="tab-analyzer" class="tab-panel">

@@ -19,6 +19,7 @@ from .explain import (reason_entry, reason_sl, reason_tp, reason_invalidation,
                       volume_note, momentum_note)
 from .tracker import track, performance_stats, TERMINAL
 from .storage import load_json, save_json, data_path, iso
+from .quant_agent import run_quant_agent
 
 TFS = ['15m', '1h', '4h', '1d']
 SKIP_BASE = {
@@ -270,17 +271,44 @@ def scan(cfg, now_iso=None, verbose=True):
     if verbose:
         print(f"[5/6] Plans: {len(fresh)} fresh | {len(new_ops)} new | {len(closed)} closed | {len(merged)} active displayed")
 
-    # ---------- 6. market status + persist
+    # ---------- 6. market status + deterministic quantitative agent + persist
     market = market_early
     market['new_setups_gated'] = gate_active
     if gate_active:
         market['gate_reason'] = f"breadth {market['breadth_pct_above_ema50']}% below min {gate_min_breadth}%"
+
+    # The scalp agent reuses the candles already fetched above. It is a strict,
+    # deterministic validator (EMA200 + SuperTrend + price action + R:R), not an
+    # LLM and not a second market-data client. A failure here never blocks the
+    # primary opportunity scanner.
+    try:
+        agent_scan = run_quant_agent(cand, intraday, daily, market, cfg, now_iso)
+    except Exception as e:
+        agent_scan = {
+            'schema_version': 'scalp-supertrend-1.0',
+            'scan_timestamp': now_iso,
+            'source_data_timestamp': now_iso,
+            'status': 'error',
+            'market': market,
+            'total_scanned': len(cand),
+            'opportunities_found': 0,
+            'signals': [],
+            'rejections': [],
+            'no_opportunity_reason': {
+                'ar': 'تعذر تشغيل الوكيل الكمي في هذه الدورة.',
+                'en': 'The quantitative agent could not run in this cycle.',
+            },
+            'errors': [f"{type(e).__name__}: {e}"],
+        }
+        errors.append(f"quant_agent: {type(e).__name__} {e}")
+
     runtime = round(time.time() - t0, 1)
     _record_market_history(market, now_iso, runtime)
     # chart data for displayed symbols
     _write_chart_cache(merged, intraday, daily, now_iso, stp)
 
     save_json(data_path('opportunities.json'), merged)
+    save_json(data_path('agent_scan.json'), agent_scan)
     # history: dedupe by opportunity id (concurrent runs can double-record the
     # same closure), then append this cycle's closures and cap the file
     hist = _dedupe_history(load_json(data_path('history.json'), []), closed)
@@ -296,6 +324,7 @@ def scan(cfg, now_iso=None, verbose=True):
         'scoring': cfg['scoring'],
         'risk': cfg['risk'],
         'supertrend': cfg.get('supertrend', {'period': 10, 'multiplier': 3.0}),
+        'quant_agent': cfg.get('quant_agent', {}),
         'universe': {'exclude_assets': cfg['universe'].get('exclude_assets', [])},
         'engine_version': cfg.get('engine_version', '1.0.0'),
     })
@@ -319,6 +348,11 @@ def scan(cfg, now_iso=None, verbose=True):
             'market_filter': {'enabled': bool(mfilter.get('enabled', False)),
                               'min_breadth_pct': gate_min_breadth,
                               'gated_this_cycle': gate_active},
+            'quant_agent': {
+                'enabled': bool(cfg.get('quant_agent', {}).get('enabled', True)),
+                'signals': agent_scan.get('opportunities_found', 0),
+                'status': agent_scan.get('status', 'error'),
+            },
         },
         'errors': errors[-10:],
         'runtime_seconds': runtime,

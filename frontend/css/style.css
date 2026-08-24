@@ -331,6 +331,28 @@ body.ws-on .lp-dot{background:var(--green);animation:pulse 1.8s infinite}
 .ana-chart{margin-top:8px}
 @media (max-width:720px){.ana-verdict .score{font-size:26px}}
 
+/* ---------- deterministic quantitative agent ---------- */
+.agent-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.agent-head h2{font-size:19px;margin-bottom:4px}
+.agent-head p{font-size:12.5px;color:var(--text3);max-width:720px}
+.agent-status{font:800 11px var(--mono);letter-spacing:.08em;padding:6px 11px;border:1px solid var(--border);border-radius:999px;background:var(--bg2)}
+.agent-status.good{color:var(--green);border-color:var(--level-s);background:var(--green-bg)}
+.agent-status.bad{color:var(--red);border-color:var(--level-r);background:var(--red-bg)}
+.agent-card{border-top-color:var(--accent)!important}
+.agent-copy{background:var(--bg2);border:1px solid var(--border);border-inline-start:3px solid var(--blue);border-radius:8px;padding:9px 11px;margin-top:3px}
+.agent-copy.risk{border-inline-start-color:var(--yellow)}
+.agent-copy b{display:block;color:var(--text3);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.agent-copy p,.agent-copy li{color:var(--text2);font-size:12px;line-height:1.55}
+.agent-copy ul{padding-inline-start:18px}
+.agent-time{font-size:14px!important}
+.agent-rejections{margin-top:18px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text2)}
+.agent-rejections summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--text)}
+.agent-rejection-row{display:grid;grid-template-columns:minmax(90px,130px) minmax(140px,220px) 1fr;gap:10px;padding:8px 4px;border-bottom:1px dashed var(--divider);font-size:11.5px;align-items:start}
+.agent-rejection-row b{font-family:var(--mono);color:var(--text)}
+.agent-rejection-row span{font-family:var(--mono);color:var(--red)}
+.agent-rejection-row small{color:var(--text3);font-size:11.5px}
+@media (max-width:720px){.agent-rejection-row{grid-template-columns:1fr}.agent-rejection-row small{margin-bottom:4px}}
+
 /* ---------- recommendation time + validity ---------- */
 .rec-time{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;margin:4px 0 7px;font-size:12px}
 .rec-time .rt-label{color:var(--text3);font-weight:600;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase}
