@@ -129,6 +129,18 @@ const assert = (cond, msg) => {
   assert(window.document.getElementById('agent-summary').textContent.length > 0, 'quant-agent summary renders');
   assert(window.document.getElementById('agent-count').textContent === String((data.agent_scan && data.agent_scan.signals || []).length),
          'quant-agent signal count matches JSON');
+  assert(typeof window.agentCardHTML === 'function', 'quant-agent card renderer is available');
+  const tfCard = window.agentCardHTML({
+    symbol: 'TESTUSDT', pair: 'TEST/USDT', score: 88, primary_timeframe: '4h',
+    timeframes: ['4h', '1d'], supertrend_status: { '4h': 'UP', '1d': 'UP' },
+    current_price: 100, entry_zone: [99.9, 100.1], stop_loss: 99.2,
+    tp1: 101.2, tp2: 102.25, tp3: 104.25, rr_tp1: 1.5, rr_tp2: 2.8, rr_tp3: 5.3,
+    sl_distance_pct: 0.8, profit_pct_tp1: 1.2, profit_pct_tp2: 2.25, profit_pct_tp3: 4.25,
+    reason: { en: '4h reason', ar: 'سبب 4 ساعات' }, execution_note: { en: 'note', ar: 'ملاحظة' },
+    risk_notes: { en: [], ar: [] }, data_timestamp: new Date().toISOString(), decision: 'FAVORABLE',
+  }, 1);
+  assert(tfCard.includes('>4h<') && tfCard.includes('↑4h') && tfCard.includes('↑1d'),
+         'quant-agent card uses its dynamic execution + confirmation timeframes');
   if (data.agent_scan && data.agent_scan.signals && data.agent_scan.signals.length) {
     const ac = window.document.querySelector('#agent-grid .agent-card');
     assert(!!ac && ac.textContent.includes('TP1') && ac.textContent.includes('R:R'), 'quant-agent card renders plan levels');

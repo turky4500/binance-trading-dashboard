@@ -1,5 +1,5 @@
 {
-  "engine_version": "1.9.0",
+  "engine_version": "1.9.1",
   "update_interval_minutes": 15,
   "stale_after_minutes": 45,
   "expiry_hours": 48,
@@ -85,8 +85,14 @@
   },
   "quant_agent": {
     "enabled": true,
+    "timeframes": [
+      "15m",
+      "1h",
+      "4h"
+    ],
     "min_score": 82,
-    "max_signals": 8,
+    "max_signals": 12,
+    "max_signals_per_timeframe": 4,
     "max_ema200_extension_pct": 5.0,
     "max_live_chase_atr": 0.75,
     "max_upper_wick_body_ratio": 1.5,

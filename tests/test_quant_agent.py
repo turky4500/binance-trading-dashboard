@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Tests for the deterministic SuperTrend scalp agent."""
+"""Tests for the deterministic multi-timeframe SuperTrend agent."""
 import numpy as np
 import pandas as pd
+import pytest
 
 from analyzer.quant_agent import (
     SCHEMA_VERSION,
+    TIMEFRAME_CHAINS,
     _flip_count,
     _upper_wick_rejection,
     evaluate_candidate,
@@ -26,7 +28,13 @@ def trend_frame(n=260):
 
 
 def settings(**overrides):
-    qa = {'min_score': 82, 'min_rr_tp1': 1.5}
+    qa = {
+        'timeframes': ['15m', '1h', '4h'],
+        'min_score': 82,
+        'min_rr_tp1': 1.5,
+        'max_signals': 12,
+        'max_signals_per_timeframe': 4,
+    }
     qa.update(overrides)
     return {
         'supertrend': {'period': 10, 'multiplier': 3.0},
@@ -40,47 +48,52 @@ def ticker():
             'trades': 100000, 'chg24': 2.0}
 
 
+def frames():
+    df = trend_frame()
+    return {tf: df.copy() for tf in ('15m', '1h', '4h', '1d')}
+
+
 def test_flip_counter_detects_chop():
     assert _flip_count([1, 1, 1]) == 0
     assert _flip_count([1, -1, 1]) == 2
     assert _flip_count([-1, -1, 1]) == 1
 
 
-def test_valid_supertrend_scalp_emits_strict_plan():
-    df = trend_frame()
-    frames = {tf: df.copy() for tf in ('15m', '1h', '4h', '1d')}
+@pytest.mark.parametrize('primary', ['15m', '1h', '4h'])
+def test_each_requested_timeframe_can_emit_a_strict_plan(primary):
     signal, rejection, diagnostics = evaluate_candidate(
-        'TESTUSDT', ticker(), frames, settings(), '2026-01-01T12:00:00Z')
+        'TESTUSDT', ticker(), frames(), settings(), '2026-01-01T12:00:00Z',
+        primary_timeframe=primary)
     assert rejection is None
     assert signal is not None
     assert signal['setup_type'] == 'SCALP_SUPERTREND'
     assert signal['direction'] == 'LONG' and signal['status'] == 'READY'
+    assert signal['primary_timeframe'] == primary
+    assert signal['timeframes'] == list(TIMEFRAME_CHAINS[primary])
     assert signal['score'] >= 82
     assert signal['stop_loss'] < signal['entry_mid'] < signal['tp1'] < signal['tp2'] < signal['tp3']
     assert signal['rr_tp1'] >= 1.5
     assert signal['entry_zone'][0] <= signal['current_price'] <= signal['entry_zone'][1]
     assert diagnostics['entry_trigger'] == 'BREAKOUT_HOLD'
+    assert diagnostics['primary_timeframe'] == primary
     assert signal['reason']['ar'] and signal['reason']['en']
 
 
 def test_overextended_price_is_rejected():
-    df = trend_frame()
-    frames = {tf: df.copy() for tf in ('15m', '1h', '4h', '1d')}
     hot = ticker()
     hot['last'] = 125.0
     signal, rejection, _ = evaluate_candidate(
-        'HOTUSDT', hot, frames, settings(), '2026-01-01T12:00:00Z')
+        'HOTUSDT', hot, frames(), settings(), '2026-01-01T12:00:00Z')
     assert signal is None
     assert rejection['codes'] == ['EMA200_OVEREXTENDED']
+    assert rejection['primary_timeframe'] == '15m'
 
 
 def test_live_price_chase_is_rejected():
-    df = trend_frame()
-    frames = {tf: df.copy() for tf in ('15m', '1h', '4h', '1d')}
     chased = ticker()
-    chased['last'] = 109.8  # below the EMA extension ceiling, but far beyond the closed bar in ATR units
+    chased['last'] = 109.8  # below EMA extension ceiling, but too far from the closed bar in ATR units
     signal, rejection, diagnostics = evaluate_candidate(
-        'CHASEUSDT', chased, frames, settings(), '2026-01-01T12:00:00Z')
+        'CHASEUSDT', chased, frames(), settings(), '2026-01-01T12:00:00Z')
     assert signal is None
     assert rejection['codes'] == ['LIVE_PRICE_CHASE']
     assert diagnostics['live_chase_atr'] > 0.75
@@ -88,7 +101,6 @@ def test_live_price_chase_is_rejected():
 
 def test_upper_wick_filter_at_resistance():
     df = trend_frame(80)
-    # Put a large rejection wick on the latest inspected candle at resistance.
     i = len(df) - 2
     df.loc[i, 'o'] = 108.9
     df.loc[i, 'c'] = 109.0
@@ -99,22 +111,43 @@ def test_upper_wick_filter_at_resistance():
     }) is True
 
 
-def test_market_gate_returns_valid_empty_document():
+def test_run_scans_all_three_timeframes_independently():
+    raw = frames()
+    market = {'status': 'BULLISH', 'breadth_pct_above_ema50': 75.0, 'new_setups_gated': False}
+    doc = run_quant_agent(
+        [('TESTUSDT', ticker())],
+        {'TESTUSDT': {k: raw[k] for k in ('15m', '1h', '4h')}},
+        {'TESTUSDT': raw['1d']}, market, settings(), '2026-01-01T12:00:00Z')
+    assert doc['schema_version'] == SCHEMA_VERSION
+    assert doc['timeframes_scanned'] == ['15m', '1h', '4h']
+    assert doc['symbols_scanned'] == 1
+    assert doc['total_scanned'] == 3
+    assert doc['opportunities_found'] == 3
+    assert doc['opportunities_by_timeframe'] == {'15m': 1, '1h': 1, '4h': 1}
+    assert {s['primary_timeframe'] for s in doc['signals']} == {'15m', '1h', '4h'}
+
+
+def test_market_gate_returns_one_rejection_per_timeframe():
     market = {'status': 'BEARISH', 'breadth_pct_above_ema50': 25.0, 'new_setups_gated': True}
     doc = run_quant_agent(
         [('TESTUSDT', ticker())], {}, {}, market, settings(), '2026-01-01T12:00:00Z')
     assert doc['schema_version'] == SCHEMA_VERSION
-    assert doc['total_scanned'] == 1
+    assert doc['symbols_scanned'] == 1
+    assert doc['total_scanned'] == 3
     assert doc['opportunities_found'] == 0
     assert doc['signals'] == []
-    assert doc['rejections'][0]['codes'] == ['MARKET_BREADTH_GATE']
+    assert len(doc['rejections']) == 3
+    assert {r['primary_timeframe'] for r in doc['rejections']} == {'15m', '1h', '4h'}
+    assert all(r['codes'] == ['MARKET_BREADTH_GATE'] for r in doc['rejections'])
     assert doc['no_opportunity_reason']['ar']
 
 
-def test_missing_frames_do_not_break_scan():
+def test_missing_frames_do_not_break_any_timeframe_scan():
     market = {'status': 'BULLISH', 'breadth_pct_above_ema50': 75.0, 'new_setups_gated': False}
     doc = run_quant_agent(
         [('TESTUSDT', ticker())], {}, {}, market, settings(), '2026-01-01T12:00:00Z')
     assert doc['status'] == 'ok'
     assert doc['opportunities_found'] == len(doc['signals']) == 0
-    assert doc['rejections'][0]['codes'] == ['MISSING_DATA']
+    assert len(doc['rejections']) == 3
+    assert {r['primary_timeframe'] for r in doc['rejections']} == {'15m', '1h', '4h'}
+    assert all(r['codes'] == ['MISSING_DATA'] for r in doc['rejections'])

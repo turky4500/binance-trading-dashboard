@@ -562,6 +562,9 @@ function agentCardHTML(s, rank) {
   const riskItems = (Array.isArray(risks) ? risks : [risks]).filter(Boolean)
     .map(x => `<li>${esc(x)}</li>`).join('');
   const st = s.supertrend_status || {};
+  const primaryTf = s.primary_timeframe || '15m';
+  const tfOrder = Array.isArray(s.timeframes) && s.timeframes.length ? s.timeframes : [primaryTf];
+  const stText = tfOrder.map(tf => `${st[tf] === 'UP' ? '↑' : '·'}${tf}`).join(' ');
   return `<article class="card long agent-card">
     <div class="card-head">
       <div><div class="rank">#${rank} · QUANT</div><div class="pair-name">${esc(s.pair || s.symbol)}</div></div>
@@ -570,9 +573,9 @@ function agentCardHTML(s, rank) {
     <div class="badge-row">
       <span class="badge dir-long">LONG</span>
       <span class="badge setup">${esc(s.setup_label || 'SCALP_SUPERTREND')}</span>
-      <span class="badge tf">15m</span>
+      <span class="badge tf">${esc(primaryTf)}</span>
       <span class="badge status-ready">${t('agent_ready')}</span>
-      <span class="badge st-up">ST ${st['15m'] === 'UP' ? '↑' : '·'}15m ${st['1h'] === 'UP' ? '↑' : '·'}1h ${st['4h'] === 'UP' ? '↑' : '·'}4h</span>
+      <span class="badge st-up">ST ${esc(stText)}</span>
     </div>
     <div class="card-body">
       <div class="kv"><span class="k">${t('live_price')}</span><span class="v"><span class="lp-dot"></span><span data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</span></span></div>
@@ -607,9 +610,12 @@ function renderQuantAgent() {
   const stale = !!(sourceTime && state.meta && state.meta.data_timestamp && sourceTime !== state.meta.data_timestamp);
   status.className = 'agent-status ' + (!sourceTime || stale || (doc && doc.status === 'error') ? 'bad' : 'good');
   status.textContent = !sourceTime ? 'NO DATA' : (stale ? t('agent_data_stale') : String(doc.status || 'ok').toUpperCase());
+  const byTf = doc && doc.opportunities_by_timeframe || {};
   summary.innerHTML = `
+    <div class="perf"><div class="k">${esc(t('agent_symbols'))}</div><div class="v">${Number(doc && doc.symbols_scanned || 0)}</div></div>
     <div class="perf"><div class="k">${esc(t('agent_scanned'))}</div><div class="v">${Number(doc && doc.total_scanned || 0)}</div></div>
     <div class="perf"><div class="k">${esc(t('agent_signals'))}</div><div class="v good">${signals.length}</div></div>
+    <div class="perf"><div class="k">15m / 1h / 4h</div><div class="v agent-time">${Number(byTf['15m'] || 0)} / ${Number(byTf['1h'] || 0)} / ${Number(byTf['4h'] || 0)}</div></div>
     <div class="perf"><div class="k">${esc(t('agent_updated'))}</div><div class="v agent-time">${sourceTime ? esc(locTime(sourceTime)) : '—'}</div></div>`;
 
   const reasonEl = document.getElementById('agent-empty-reason');
@@ -621,7 +627,7 @@ function renderQuantAgent() {
   const rejections = doc && Array.isArray(doc.rejections) ? doc.rejections : [];
   if (details && list) {
     details.classList.toggle('hidden', rejections.length === 0);
-    list.innerHTML = rejections.slice(0, 50).map(r => `<div class="agent-rejection-row"><b>${esc(r.symbol || '—')}</b><span>${esc((r.codes || []).join(', '))}</span><small>${esc(LANG === 'ar' ? r.reason_ar : r.reason_en)}</small></div>`).join('');
+    list.innerHTML = rejections.slice(0, 100).map(r => `<div class="agent-rejection-row"><b>${esc(r.symbol || '—')} <i>${esc(r.primary_timeframe || '')}</i></b><span>${esc((r.codes || []).join(', '))}</span><small>${esc(LANG === 'ar' ? r.reason_ar : r.reason_en)}</small></div>`).join('');
   }
 }
 
@@ -1254,6 +1260,7 @@ window.renderAll = function () {
 /* ---------------- boot ---------------- */
 /* explicit exports for cross-module use (alerts, live prices) */
 window.toast = toast;
+window.agentCardHTML = agentCardHTML;
 window.fmtPrice = fmtPrice;
 window.fmtRecTime = fmtRecTime;
 window.ageShort = ageShort;

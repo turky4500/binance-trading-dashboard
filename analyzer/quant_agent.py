@@ -1,17 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Deterministic SuperTrend scalp agent.
+"""Deterministic multi-timeframe SuperTrend opportunity agent.
 
-The module is deliberately not an LLM.  It receives the same Binance candles
-already fetched by the pipeline, evaluates mechanical filters, and emits a
-strict JSON-serialisable payload for the static dashboard.  Prices and levels
-are computed only from market data; no browser or secret-bearing API is
-involved.
+The agent reuses candles already fetched by the Python pipeline.  Each symbol
+is evaluated independently on 15m, 1h and 4h, with confirmation from higher
+timeframes.  It emits strict JSON for the static dashboard and never contacts a
+secret-bearing service or places an order.
 """
 from collections import Counter
 
 from .indicators import enrich, swings
 from .scoring import grade
 from .signal import tf_state
+
+SCHEMA_VERSION = "scalp-supertrend-1.1"
+
+TIMEFRAME_CHAINS = {
+    # execution frame -> confirmation frame(s)
+    '15m': ('15m', '1h', '4h'),
+    '1h': ('1h', '4h', '1d'),
+    '4h': ('4h', '1d'),
+}
+TIMEFRAME_AR = {'15m': '15 دقيقة', '1h': 'ساعة', '4h': '4 ساعات', '1d': 'يومي'}
 
 AGENT_SCORE_LABELS = {
     'trend_alignment': 'Trend & SuperTrend Alignment',
@@ -23,16 +32,14 @@ AGENT_SCORE_LABELS = {
     'liquidity': 'Liquidity',
 }
 
-SCHEMA_VERSION = "scalp-supertrend-1.0"
-
 REJECTION_TEXT = {
     "MISSING_DATA": ("بيانات الشموع أو المؤشرات غير مكتملة.", "Candle or indicator data is incomplete."),
     "MARKET_BREADTH_GATE": ("اتساع السوق دون الحد المطلوب لنشر فرصة جديدة.", "Market breadth is below the new-signal gate."),
-    "EMA200_NOT_CONFIRMED": ("السعر غير ثابت فوق EMA200 على أطر التنفيذ والتأكيد.", "Price is not confirmed above EMA200 on the execution and confirmation frames."),
+    "EMA200_NOT_CONFIRMED": ("السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.", "Price is not confirmed above EMA200 on the execution and confirmation frames."),
     "EMA200_OVEREXTENDED": ("السعر مبتعد أكثر من المسموح عن EMA200.", "Price is overextended from EMA200."),
     "LIVE_PRICE_CHASE": ("السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.", "Live price ran too far beyond the last closed candle; do not chase it."),
-    "HTF_TREND_CONFLICT": ("اتجاه 4 ساعات يتعارض مع صفقة LONG.", "The 4-hour trend conflicts with a LONG setup."),
-    "SUPERTREND_BEARISH": ("SuperTrend ليس صاعدًا على جميع أطر التأكيد المطلوبة.", "SuperTrend is not bullish on every required confirmation frame."),
+    "HTF_TREND_CONFLICT": ("اتجاه الإطار الأعلى يتعارض مع صفقة LONG.", "The higher-timeframe trend conflicts with a LONG setup."),
+    "SUPERTREND_BEARISH": ("SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.", "SuperTrend is not bullish on the execution and required confirmation frames."),
     "SUPERTREND_CHOP": ("SuperTrend بدّل اتجاهه مرارًا خلال آخر ثلاث شموع.", "SuperTrend flipped repeatedly during the last three closed candles."),
     "UPPER_WICK_REJECTION": ("ظهر ذيل علوي طويل قرب مقاومة.", "A long upper rejection wick appeared near resistance."),
     "LOWER_HIGHS": ("آخر القمم الهيكلية هابطة.", "Recent structural highs are descending."),
@@ -45,8 +52,10 @@ REJECTION_TEXT = {
 
 DEFAULTS = {
     "enabled": True,
+    "timeframes": ["15m", "1h", "4h"],
     "min_score": 82,
-    "max_signals": 8,
+    "max_signals": 12,
+    "max_signals_per_timeframe": 4,
     "max_ema200_extension_pct": 5.0,
     "max_live_chase_atr": 0.75,
     "max_upper_wick_body_ratio": 1.5,
@@ -65,6 +74,9 @@ DEFAULTS = {
 def _cfg(settings):
     out = dict(DEFAULTS)
     out.update(settings.get("quant_agent") or {})
+    out['timeframes'] = [tf for tf in out.get('timeframes', []) if tf in TIMEFRAME_CHAINS]
+    if not out['timeframes']:
+        out['timeframes'] = list(DEFAULTS['timeframes'])
     return out
 
 
@@ -87,6 +99,17 @@ def _closed_enriched(df, stp):
     if len(raw) < 200:
         return None
     return enrich(raw, st_period=stp['period'], st_mult=stp['multiplier'])
+
+
+def _prepare_frames(frames, settings):
+    """Calculate each timeframe once, even though it can feed several scans."""
+    stp = settings.get('supertrend', {'period': 10, 'multiplier': 3.0})
+    enriched = {name: _closed_enriched(frames.get(name), stp) for name in ('15m', '1h', '4h', '1d')}
+    states = {}
+    for name, df in enriched.items():
+        if df is not None:
+            states[name] = tf_state(df, k=2 if name in ('15m', '1h') else 3)
+    return enriched, states
 
 
 def _flip_count(values):
@@ -141,7 +164,7 @@ def _entry_trigger(df, cfg):
 
 
 def _pick_target(entry, pct, levels, lo_pct, hi_pct):
-    """Prefer a structural level inside the target band; otherwise use the band midpoint."""
+    """Prefer a structural level inside the target band; otherwise use its midpoint."""
     lo = entry * (1.0 + lo_pct / 100.0)
     hi = entry * (1.0 + hi_pct / 100.0)
     raw = entry * (1.0 + pct / 100.0)
@@ -149,31 +172,30 @@ def _pick_target(entry, pct, levels, lo_pct, hi_pct):
     return min(valid, key=lambda v: abs(v - raw)) if valid else raw
 
 
-def _rejection(symbol, code):
+def _rejection(symbol, code, primary_timeframe=None):
     ar, en = REJECTION_TEXT[code]
-    return {"symbol": symbol, "codes": [code], "reason_ar": ar, "reason_en": en}
+    result = {"symbol": symbol, "codes": [code], "reason_ar": ar, "reason_en": en}
+    if primary_timeframe:
+        result['primary_timeframe'] = primary_timeframe
+    return result
 
 
-def _agent_score(state, ticker, extension, trigger, rr1):
-    """100-point score calibrated to the scalp filters (not the 4H swing score)."""
-    # Mandatory filters already guarantee the core alignment; this score ranks
-    # the quality inside that valid set instead of scoring unrelated 4H setups.
-    trend = 0
-    trend += sum(4 for tf in ('15m', '1h', '4h') if state[tf]['st_dir'] == 1)
-    trend += sum(3 for tf in ('15m', '1h', '4h') if state[tf]['above200'])
-    trend += 4 if state['1d']['above200'] else 0
-
+def _agent_score(states, ticker, extension, trigger, rr1, primary, confirmation):
+    """100-point score calibrated to the selected execution timeframe."""
+    # Alignment is mandatory before scoring, so a fully aligned chain receives
+    # the 25 trend points. Remaining components rank valid candidates.
+    trend = 25
     price_action = 20 if trigger == 'BREAKOUT_HOLD' else 18
     entry_quality = 15 if extension <= 2.0 else (12 if extension <= 3.5 else 8)
     risk_reward = 15 if rr1 >= 2.0 else (13 if rr1 >= 1.75 else 11)
 
     momentum = 0
-    momentum += 4 if 45 <= state['15m']['rsi'] <= 72 else 0
-    momentum += 3 if 45 <= state['1h']['rsi'] <= 72 else 0
-    momentum += 1.5 if state['15m']['macd_h'] > 0 else 0
-    momentum += 1.5 if state['1h']['macd_h'] > 0 else 0
+    momentum += 4 if 45 <= states[primary]['rsi'] <= 72 else 0
+    momentum += 3 if 45 <= states[confirmation]['rsi'] <= 72 else 0
+    momentum += 1.5 if states[primary]['macd_h'] > 0 else 0
+    momentum += 1.5 if states[confirmation]['macd_h'] > 0 else 0
 
-    vr = state['15m']['vol_ratio3']
+    vr = states[primary]['vol_ratio3']
     volume = 10 if vr >= 1.5 else (8 if vr >= 1.2 else (6 if vr >= 1.0 else 3))
     spread = float(ticker.get('spread') or 99)
     trades = int(ticker.get('trades') or 0)
@@ -192,113 +214,120 @@ def _agent_score(state, ticker, extension, trigger, rr1):
     return round(sum(parts.values())), parts
 
 
-def evaluate_candidate(symbol, ticker, frames, settings, now_iso):
-    """Evaluate one symbol. Returns (signal, rejection, diagnostics)."""
-    cfg = _cfg(settings)
-    stp = settings.get('supertrend', {'period': 10, 'multiplier': 3.0})
-    enriched = {name: _closed_enriched(df, stp) for name, df in frames.items()}
-    if not all(enriched.get(tf) is not None for tf in ('15m', '1h', '4h', '1d')):
-        return None, _rejection(symbol, 'MISSING_DATA'), None
+def evaluate_candidate(symbol, ticker, frames, settings, now_iso,
+                       primary_timeframe='15m', prepared=None):
+    """Evaluate one symbol on one execution timeframe.
 
-    state = {
-        '15m': tf_state(enriched['15m'], k=2),
-        '1h': tf_state(enriched['1h'], k=2),
-        '4h': tf_state(enriched['4h'], k=3),
-        '1d': tf_state(enriched['1d'], k=3),
-    }
-    current = float(ticker.get('last') or state['15m']['close'])
-    e15, e1, e4 = state['15m']['ema200'], state['1h']['ema200'], state['4h']['ema200']
-    extension = (current - e15) / e15 * 100 if e15 > 0 else 999.0
-    live_chase_atr = ((current - state['15m']['close']) / state['15m']['atr']
-                      if state['15m']['atr'] > 0 else 999.0)
+    ``primary_timeframe`` is one of 15m/1h/4h.  Each scan uses the next higher
+    frame(s) from ``TIMEFRAME_CHAINS`` for trend confirmation.
+    """
+    cfg = _cfg(settings)
+    if primary_timeframe not in TIMEFRAME_CHAINS:
+        return None, _rejection(symbol, 'MISSING_DATA', primary_timeframe), None
+    chain = TIMEFRAME_CHAINS[primary_timeframe]
+    primary, confirmation = chain[0], chain[1]
+    context = chain[2] if len(chain) > 2 else None
+    enriched, states = prepared if prepared is not None else _prepare_frames(frames, settings)
+    if not all(enriched.get(tf) is not None and tf in states for tf in chain):
+        return None, _rejection(symbol, 'MISSING_DATA', primary), None
+
+    p_df = enriched[primary]
+    p_state = states[primary]
+    current = float(ticker.get('last') or p_state['close'])
+    ema200 = p_state['ema200']
+    extension = (current - ema200) / ema200 * 100 if ema200 > 0 else 999.0
+    live_chase_atr = ((current - p_state['close']) / p_state['atr'] if p_state['atr'] > 0 else 999.0)
     diagnostics = {
+        'primary_timeframe': primary,
+        'confirmation_timeframes': list(chain[1:]),
         'ema200_distance_pct': round(extension, 3),
         'live_chase_atr': round(live_chase_atr, 3),
-        'supertrend_last_3': ['UP' if int(v) == 1 else 'DOWN' for v in enriched['15m']['st_dir'].iloc[-3:]],
-        'upper_wick_rejection': _upper_wick_rejection(enriched['15m'], cfg),
-        'lower_highs_detected': _lower_highs(enriched['15m']),
+        'supertrend_last_3': ['UP' if int(v) == 1 else 'DOWN' for v in p_df['st_dir'].iloc[-3:]],
+        'upper_wick_rejection': _upper_wick_rejection(p_df, cfg),
+        'lower_highs_detected': _lower_highs(p_df),
     }
 
-    if not (current > e15 and state['1h']['close'] > e1):
-        return None, _rejection(symbol, 'EMA200_NOT_CONFIRMED'), diagnostics
+    # EMA200 must hold on execution + immediate confirmation.  An optional
+    # third context frame must also remain bullish to avoid countertrend trades.
+    if not (current > states[primary]['ema200'] and
+            states[confirmation]['close'] > states[confirmation]['ema200']):
+        return None, _rejection(symbol, 'EMA200_NOT_CONFIRMED', primary), diagnostics
     if extension > float(cfg['max_ema200_extension_pct']):
-        return None, _rejection(symbol, 'EMA200_OVEREXTENDED'), diagnostics
+        return None, _rejection(symbol, 'EMA200_OVEREXTENDED', primary), diagnostics
     if live_chase_atr > float(cfg['max_live_chase_atr']):
-        return None, _rejection(symbol, 'LIVE_PRICE_CHASE'), diagnostics
-    if not (state['4h']['close'] > e4 and state['4h']['st_dir'] == 1):
-        return None, _rejection(symbol, 'HTF_TREND_CONFLICT'), diagnostics
-    if not (state['15m']['st_dir'] == state['1h']['st_dir'] == state['4h']['st_dir'] == 1
-            and current > state['15m']['st_line']):
-        return None, _rejection(symbol, 'SUPERTREND_BEARISH'), diagnostics
-    if _flip_count(enriched['15m']['st_dir'].iloc[-3:]) > 1:
-        return None, _rejection(symbol, 'SUPERTREND_CHOP'), diagnostics
+        return None, _rejection(symbol, 'LIVE_PRICE_CHASE', primary), diagnostics
+    if context and not (states[context]['close'] > states[context]['ema200'] and states[context]['st_dir'] == 1):
+        return None, _rejection(symbol, 'HTF_TREND_CONFLICT', primary), diagnostics
+    if not (all(states[tf]['st_dir'] == 1 for tf in chain) and current > states[primary]['st_line']):
+        return None, _rejection(symbol, 'SUPERTREND_BEARISH', primary), diagnostics
+    if _flip_count(p_df['st_dir'].iloc[-3:]) > 1:
+        return None, _rejection(symbol, 'SUPERTREND_CHOP', primary), diagnostics
     if diagnostics['upper_wick_rejection']:
-        return None, _rejection(symbol, 'UPPER_WICK_REJECTION'), diagnostics
+        return None, _rejection(symbol, 'UPPER_WICK_REJECTION', primary), diagnostics
     if diagnostics['lower_highs_detected']:
-        return None, _rejection(symbol, 'LOWER_HIGHS'), diagnostics
+        return None, _rejection(symbol, 'LOWER_HIGHS', primary), diagnostics
 
-    trigger_ok, trigger = _entry_trigger(enriched['15m'], cfg)
+    trigger_ok, trigger = _entry_trigger(p_df, cfg)
     diagnostics['entry_trigger'] = trigger
     if not trigger_ok:
-        return None, _rejection(symbol, 'BREAKOUT_NOT_HOLDING'), diagnostics
+        return None, _rejection(symbol, 'BREAKOUT_NOT_HOLDING', primary), diagnostics
 
-    # Protective stop: the tighter valid support of SuperTrend or the last two
-    # bullish-candle lows, with a small ATR buffer below it.
-    recent = enriched['15m'].tail(8)
+    recent = p_df.tail(8)
     bullish = recent[recent['c'] > recent['o']].tail(2)
     if len(bullish) < 2:
-        return None, _rejection(symbol, 'MISSING_DATA'), diagnostics
+        return None, _rejection(symbol, 'MISSING_DATA', primary), diagnostics
     structural_low = float(bullish['l'].min())
-    support_anchor = max(float(state['15m']['st_line']), structural_low)
-    stop = support_anchor - float(cfg['stop_buffer_atr']) * float(state['15m']['atr'])
+    support_anchor = max(float(states[primary]['st_line']), structural_low)
+    stop = support_anchor - float(cfg['stop_buffer_atr']) * float(states[primary]['atr'])
     if not 0 < stop < current:
-        return None, _rejection(symbol, 'INVALID_LEVEL_ORDER'), diagnostics
+        return None, _rejection(symbol, 'INVALID_LEVEL_ORDER', primary), diagnostics
     stop_pct = (current - stop) / current * 100
     if stop_pct > float(cfg['max_stop_distance_pct']):
-        return None, _rejection(symbol, 'STOP_TOO_WIDE'), diagnostics
+        return None, _rejection(symbol, 'STOP_TOO_WIDE', primary), diagnostics
 
     tp1 = current * (1.0 + float(cfg['tp1_pct']) / 100.0)
-    tp2_levels = [p for p, _ in state['15m']['sw_highs'][-8:]] + [state['15m']['hi20'], state['1h']['last_high']]
-    tp3_levels = [p for p, _ in state['1h']['sw_highs'][-8:]] + [state['1h']['hi50'], state['4h']['last_high']]
+    tp2_levels = ([p for p, _ in states[primary]['sw_highs'][-8:]] +
+                  [states[primary]['hi20'], states[confirmation]['last_high']])
+    tp3_levels = ([p for p, _ in states[confirmation]['sw_highs'][-8:]] +
+                  [states[confirmation]['hi50']])
+    if context:
+        tp3_levels.append(states[context]['last_high'])
     tp2 = _pick_target(current, float(cfg['tp2_pct']), tp2_levels, 2.0, 2.5)
     tp3 = _pick_target(current, float(cfg['tp3_pct']), tp3_levels, 3.5, 5.0)
     risk = current - stop
     rr1, rr2, rr3 = (tp1 - current) / risk, (tp2 - current) / risk, (tp3 - current) / risk
     if rr1 < float(cfg['min_rr_tp1']):
-        return None, _rejection(symbol, 'RR_BELOW_MINIMUM'), diagnostics
+        return None, _rejection(symbol, 'RR_BELOW_MINIMUM', primary), diagnostics
     if not stop < current < tp1 < tp2 < tp3:
-        return None, _rejection(symbol, 'INVALID_LEVEL_ORDER'), diagnostics
+        return None, _rejection(symbol, 'INVALID_LEVEL_ORDER', primary), diagnostics
+
+    score, parts = _agent_score(states, ticker, extension, trigger, rr1, primary, confirmation)
+    if score < int(cfg['min_score']):
+        rejection = _rejection(symbol, 'SCORE_BELOW_MINIMUM', primary)
+        rejection['score'] = score
+        return None, rejection, diagnostics
 
     half = float(cfg['entry_zone_half_width_pct']) / 100.0
-    plan = {
-        'direction': 'LONG', 'setup_type': 'SCALP_SUPERTREND',
-        'setup_label': 'SuperTrend scalp continuation (15m)',
-        'status': 'READY', 'entry_mid': current,
-        'entry_zone': [current * (1.0 - half), current * (1.0 + half)],
-        'stop_loss': stop, 'tp1': tp1, 'tp2': tp2, 'tp3': tp3,
-        'invalidation_level': stop,
-        'primary_timeframe': '15m',
-        'confluences': ['15m SuperTrend', '1H SuperTrend', '15m EMA200', trigger],
-    }
-    score, parts = _agent_score(state, ticker, extension, trigger, rr1)
-    if score < int(cfg['min_score']):
-        rej = _rejection(symbol, 'SCORE_BELOW_MINIMUM')
-        rej['score'] = score
-        return None, rej, diagnostics
-
+    entry_zone = [current * (1.0 - half), current * (1.0 + half)]
     pair = symbol[:-4] + '/USDT' if symbol.endswith('USDT') else symbol
     trigger_ar = 'ثبات أعلى الاختراق' if trigger == 'BREAKOUT_HOLD' else 'ارتداد مؤكد من خط SuperTrend'
     trigger_en = 'held breakout' if trigger == 'BREAKOUT_HOLD' else 'confirmed SuperTrend bounce'
+    chain_en = ', '.join(chain)
+    chain_ar = ' و'.join(TIMEFRAME_AR[tf] for tf in chain)
+    tf_tag = primary.upper()
+    supertrend_status = {tf: 'UP' for tf in chain}
+    ema200_status = {tf: 'ABOVE' for tf in chain}
+
     signal = {
-        'opportunity_id': f"{symbol}_LONG_SCALP_SUPERTREND_{now_iso[:16].replace(':', '')}",
+        'opportunity_id': f"{symbol}_LONG_SUPERTREND_{tf_tag}_{now_iso[:16].replace(':', '')}",
         'symbol': symbol, 'pair': pair, 'direction': 'LONG',
         'setup_type': 'SCALP_SUPERTREND',
-        'setup_label': 'SuperTrend scalp continuation (15m)',
+        'setup_label': f"SuperTrend opportunity ({primary})",
         'status': 'READY', 'decision': 'FAVORABLE',
         'score': score, 'grade': grade(score),
         'current_price': _round_price(current),
         'entry_mid': _round_price(current),
-        'entry_zone': [_round_price(plan['entry_zone'][0]), _round_price(plan['entry_zone'][1])],
+        'entry_zone': [_round_price(entry_zone[0]), _round_price(entry_zone[1])],
         'stop_loss': _round_price(stop),
         'tp1': _round_price(tp1), 'tp2': _round_price(tp2), 'tp3': _round_price(tp3),
         'rr_tp1': round(rr1, 2), 'rr_tp2': round(rr2, 2), 'rr_tp3': round(rr3, 2),
@@ -306,34 +335,36 @@ def evaluate_candidate(symbol, ticker, frames, settings, now_iso):
         'profit_pct_tp1': round((tp1 - current) / current * 100, 2),
         'profit_pct_tp2': round((tp2 - current) / current * 100, 2),
         'profit_pct_tp3': round((tp3 - current) / current * 100, 2),
-        'primary_timeframe': '15m', 'timeframes': ['15m', '1h', '4h', '1d'],
-        'supertrend_status': {'15m': 'UP', '1h': 'UP', '4h': 'UP'},
-        'ema200_status': {'15m': 'ABOVE', '1h': 'ABOVE', '4h': 'ABOVE'},
+        'primary_timeframe': primary,
+        'confirmation_timeframes': list(chain[1:]),
+        'timeframes': list(chain),
+        'supertrend_status': supertrend_status,
+        'ema200_status': ema200_status,
         'score_breakdown': parts, 'score_breakdown_labels': AGENT_SCORE_LABELS,
         'reason': {
-            'ar': f"SuperTrend صاعد على 15د و1س و4س، والسعر فوق EMA200 مع {trigger_ar} دون مطاردة امتداد سعري.",
-            'en': f"SuperTrend is bullish on 15m, 1h and 4h; price is above EMA200 with a {trigger_en} and no excessive extension.",
+            'ar': f"فرصة على إطار {TIMEFRAME_AR[primary]}: SuperTrend صاعد على {chain_ar}، والسعر فوق EMA200 مع {trigger_ar} دون مطاردة سعرية.",
+            'en': f"{primary} opportunity: SuperTrend is bullish on {chain_en}; price is above EMA200 with a {trigger_en} and no excessive extension.",
         },
         'sl_reason': {
-            'ar': 'الوقف أسفل أقرب دعم صالح من خط SuperTrend وقيعان آخر شمعتين صاعدتين مع هامش ATR صغير.',
-            'en': 'The stop sits below the nearest valid SuperTrend/two-bullish-candle support with a small ATR buffer.',
+            'ar': f"الوقف أسفل أقرب دعم صالح على إطار {TIMEFRAME_AR[primary]} من خط SuperTrend وقيعان آخر شمعتين صاعدتين مع هامش ATR صغير.",
+            'en': f"The stop sits below the nearest valid {primary} SuperTrend/two-bullish-candle support with a small ATR buffer.",
         },
         'tp_reason': {
-            'ar': 'الأهداف سريعة ضمن نطاقات الاستراتيجية، مع تفضيل مقاومة هيكلية عندما تقع داخل النطاق المحدد.',
-            'en': 'Targets use the configured scalp bands, preferring a structural resistance when it falls inside the band.',
+            'ar': 'الأهداف ضمن نطاقات الاستراتيجية، مع تفضيل مقاومة هيكلية عندما تقع داخل النطاق المحدد.',
+            'en': 'Targets use the configured bands, preferring a structural resistance when it falls inside the band.',
         },
         'risk_notes': {
-            'ar': ['إشارة مضاربة قصيرة الأجل؛ ألغِ الفكرة عند كسر الوقف.', 'الدرجة ليست احتمالًا مضمونًا للربح.'],
-            'en': ['Short-term scalp signal; invalidate it if the stop breaks.', 'The score is not a guaranteed probability of profit.'],
+            'ar': [f"إشارة على إطار {TIMEFRAME_AR[primary]}؛ ألغِ الفكرة عند كسر الوقف.", 'الدرجة ليست احتمالًا مضمونًا للربح.'],
+            'en': [f"{primary} signal; invalidate it if the stop breaks.", 'The score is not a guaranteed probability of profit.'],
         },
         'invalidation_level': _round_price(stop),
         'invalidation_reason': {
-            'ar': f"تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل {_round_price(stop)}.",
-            'en': f"The idea is invalidated by a 15-minute close below {_round_price(stop)}.",
+            'ar': f"تُلغى الفكرة عند إغلاق شمعة {TIMEFRAME_AR[primary]} أسفل {_round_price(stop)}.",
+            'en': f"The idea is invalidated by a {primary} close below {_round_price(stop)}.",
         },
         'confirmation': {
-            'ar': 'الشروط الميكانيكية مكتملة والسعر داخل منطقة الدخول وقت المسح.',
-            'en': 'Mechanical conditions pass and price is inside the entry zone at scan time.',
+            'ar': f"شروط إطار {TIMEFRAME_AR[primary]} وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
+            'en': f"The {primary} conditions and higher-frame confirmations pass; price is inside the entry zone at scan time.",
         },
         'execution_note': {
             'ar': 'الفرصة مستوفية للشروط حاليًا؛ التزم بالوقف ولا تطارد السعر إذا غادر منطقة الدخول.',
@@ -359,13 +390,30 @@ def _no_opportunity(rejections, market):
         return {'ar': 'لا توجد مرشحات مكتملة البيانات في هذه الدورة.', 'en': 'No complete candidates were available in this cycle.'}
     code, _ = counts.most_common(1)[0]
     ar, en = REJECTION_TEXT.get(code, REJECTION_TEXT['MISSING_DATA'])
-    return {'ar': f"لا توجد فرصة مطابقة حاليًا. السبب الأبرز: {ar}",
-            'en': f"No qualifying opportunity now. Main reason: {en}"}
+    return {'ar': f"لا توجد فرصة مطابقة حاليًا على أطر 15 دقيقة والساعة و4 ساعات. السبب الأبرز: {ar}",
+            'en': f"No qualifying 15m, 1h or 4h opportunity now. Main reason: {en}"}
+
+
+def _limit_signals(signals, cfg):
+    """Keep top signals while reserving room for every requested timeframe."""
+    ordered = sorted(signals, key=lambda s: (-s['score'], -s['rr_tp1']))
+    per_limit = int(cfg['max_signals_per_timeframe'])
+    total_limit = int(cfg['max_signals'])
+    counts = Counter()
+    selected = []
+    for signal in ordered:
+        tf = signal['primary_timeframe']
+        if counts[tf] >= per_limit or len(selected) >= total_limit:
+            continue
+        selected.append(signal)
+        counts[tf] += 1
+    return selected
 
 
 def run_quant_agent(candidates, intraday, daily, market, settings, now_iso):
-    """Evaluate pipeline candidates and return the strict dashboard document."""
+    """Evaluate every candidate independently on 15m, 1h and 4h."""
     cfg = _cfg(settings)
+    scan_timeframes = list(cfg['timeframes'])
     signals, rejections, errors = [], [], []
     candidate_rows = list(candidates)
     gate_min = float(settings.get('market_filter', {}).get('min_breadth_pct', 0))
@@ -373,32 +421,46 @@ def run_quant_agent(candidates, intraday, daily, market, settings, now_iso):
         settings.get('market_filter', {}).get('enabled') and
         float(market.get('breadth_pct_above_ema50') or 0) < gate_min
     )
+    total_evaluations = len(candidate_rows) * len(scan_timeframes)
 
     if not cfg.get('enabled', True):
         status = 'ok'
         no_reason = {'ar': 'الوكيل الكمي معطل من الإعدادات.', 'en': 'The quantitative agent is disabled in settings.'}
     elif gated:
         for symbol, _ in candidate_rows:
-            rejections.append(_rejection(symbol, 'MARKET_BREADTH_GATE'))
+            for primary in scan_timeframes:
+                rejections.append(_rejection(symbol, 'MARKET_BREADTH_GATE', primary))
         status = 'ok'
         no_reason = _no_opportunity(rejections, market)
     else:
         for symbol, ticker in candidate_rows:
+            raw = intraday.get(symbol) or {}
+            frames = {'15m': raw.get('15m'), '1h': raw.get('1h'),
+                      '4h': raw.get('4h'), '1d': daily.get(symbol)}
             try:
-                raw = intraday.get(symbol) or {}
-                frames = {'15m': raw.get('15m'), '1h': raw.get('1h'), '4h': raw.get('4h'), '1d': daily.get(symbol)}
-                signal, rejection, _ = evaluate_candidate(symbol, ticker, frames, settings, now_iso)
-                if signal:
-                    signals.append(signal)
-                elif rejection:
-                    rejections.append(rejection)
-            except Exception as exc:  # one bad symbol must never break the cycle
-                errors.append(f"{symbol}: {type(exc).__name__}: {exc}")
-        signals.sort(key=lambda s: (-s['score'], -s['rr_tp1']))
-        signals = signals[:int(cfg['max_signals'])]
+                prepared = _prepare_frames(frames, settings)
+            except Exception as exc:
+                errors.append(f"{symbol}: prepare: {type(exc).__name__}: {exc}")
+                for primary in scan_timeframes:
+                    rejections.append(_rejection(symbol, 'MISSING_DATA', primary))
+                continue
+            for primary in scan_timeframes:
+                try:
+                    signal, rejection, _ = evaluate_candidate(
+                        symbol, ticker, frames, settings, now_iso,
+                        primary_timeframe=primary, prepared=prepared)
+                    if signal:
+                        signals.append(signal)
+                    elif rejection:
+                        rejections.append(rejection)
+                except Exception as exc:  # one symbol/timeframe must never break the cycle
+                    errors.append(f"{symbol} {primary}: {type(exc).__name__}: {exc}")
+        signals = _limit_signals(signals, cfg)
         status = 'degraded' if errors else 'ok'
         no_reason = None if signals else _no_opportunity(rejections, market)
 
+    by_timeframe = {tf: sum(1 for s in signals if s.get('primary_timeframe') == tf)
+                    for tf in scan_timeframes}
     return {
         'schema_version': SCHEMA_VERSION,
         'scan_timestamp': now_iso,
@@ -409,8 +471,11 @@ def run_quant_agent(candidates, intraday, daily, market, settings, now_iso):
             'breadth_pct_above_ema50': market.get('breadth_pct_above_ema50'),
             'new_setups_gated': gated,
         },
-        'total_scanned': len(candidate_rows),
+        'timeframes_scanned': scan_timeframes,
+        'symbols_scanned': len(candidate_rows),
+        'total_scanned': total_evaluations,
         'opportunities_found': len(signals),
+        'opportunities_by_timeframe': by_timeframe,
         'signals': signals,
         'rejections': rejections,
         'no_opportunity_reason': no_reason,

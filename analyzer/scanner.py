@@ -285,13 +285,16 @@ def scan(cfg, now_iso=None, verbose=True):
         agent_scan = run_quant_agent(cand, intraday, daily, market, cfg, now_iso)
     except Exception as e:
         agent_scan = {
-            'schema_version': 'scalp-supertrend-1.0',
+            'schema_version': 'scalp-supertrend-1.1',
             'scan_timestamp': now_iso,
             'source_data_timestamp': now_iso,
             'status': 'error',
             'market': market,
-            'total_scanned': len(cand),
+            'timeframes_scanned': ['15m', '1h', '4h'],
+            'symbols_scanned': len(cand),
+            'total_scanned': len(cand) * 3,
             'opportunities_found': 0,
+            'opportunities_by_timeframe': {'15m': 0, '1h': 0, '4h': 0},
             'signals': [],
             'rejections': [],
             'no_opportunity_reason': {
@@ -350,7 +353,9 @@ def scan(cfg, now_iso=None, verbose=True):
                               'gated_this_cycle': gate_active},
             'quant_agent': {
                 'enabled': bool(cfg.get('quant_agent', {}).get('enabled', True)),
+                'timeframes': agent_scan.get('timeframes_scanned', ['15m', '1h', '4h']),
                 'signals': agent_scan.get('opportunities_found', 0),
+                'signals_by_timeframe': agent_scan.get('opportunities_by_timeframe', {}),
                 'status': agent_scan.get('status', 'error'),
             },
         },
