@@ -169,6 +169,15 @@ def test_performance_stats():
     assert s['avg_score'] == pytest.approx(77.5, abs=0.1)
 
 
+# ---------------- universe selection ----------------
+def test_universe_zero_cap_keeps_every_qualified_pair():
+    from analyzer.scanner import _select_universe
+    rows = [{'sym': f'C{i}USDT', 'quoteVol': 100 - i} for i in range(7)]
+    assert _select_universe(rows, 0) == rows
+    assert _select_universe(rows, None) == rows
+    assert _select_universe(rows, 3) == rows[:3]
+
+
 # ---------------- storage ----------------
 def test_storage_roundtrip(tmp_path):
     p = os.path.join(str(tmp_path), 'x.json')

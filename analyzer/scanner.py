@@ -51,6 +51,16 @@ def _get_klines(sym, tf, limit):
         return sym, tf, None
 
 
+def _select_universe(rows, max_symbols):
+    """Return all qualified rows when max_symbols is 0/None, else cap them.
+
+    The primary swing scanner can still apply its own deep-candidate limit;
+    this universe is also the complete input set for the quantitative agent.
+    """
+    limit = int(max_symbols or 0)
+    return list(rows) if limit <= 0 else list(rows[:limit])
+
+
 def scan(cfg, now_iso=None, verbose=True):
     now_iso = now_iso or iso()
     errors = []
@@ -98,9 +108,11 @@ def scan(cfg, now_iso=None, verbose=True):
         rows.append({'sym': sym, 'quoteVol': qv, 'spread': spread, 'chg24': chg,
                      'trades': trades, 'last': last})
     rows.sort(key=lambda r: -r['quoteVol'])
-    universe = rows[:uni['max_symbols_to_screen']]
+    universe = _select_universe(rows, uni.get('max_symbols_to_screen', 0))
+    agent_universe = [(r['sym'], r) for r in universe]
     if verbose:
-        print(f"[1/6] Universe: {len(rows)} liquid symbols -> screening {len(universe)}")
+        scope = 'all qualified' if not uni.get('max_symbols_to_screen') else f"top {len(universe)}"
+        print(f"[1/6] Universe: {len(rows)} liquid symbols -> screening {scope}")
 
     # ---------- 2. daily klines for the universe
     daily = {}
@@ -133,10 +145,15 @@ def scan(cfg, now_iso=None, verbose=True):
     if verbose:
         print(f"[3/6] Candidates for deep analysis: {len(cand)}")
 
-    # ---------- 4. intraday klines for candidates (+ tracked symbols)
+    # ---------- 4. intraday klines for all qualified pairs (+ tracked symbols)
     tracked_prev = load_json(data_path('opportunities.json'), [])
     tracked_syms = [o['symbol'] for o in tracked_prev if o.get('status') not in TERMINAL]
-    need_syms = [s for s, _ in cand]
+    # The quantitative agent evaluates every qualified USDT pair. Fetch each
+    # execution timeframe once for the full universe; the primary scanner then
+    # reuses the same frames for its smaller daily-screened candidate set.
+    need_syms = [r['sym'] for r in universe]
+    need_set = set(need_syms)
+    tracked_only = [s for s in tracked_syms if s not in need_set]
     intraday = {}
     for sym, tf, k in _fetch_many(lambda s: _get_klines(s, '15m', 500), need_syms).values():
         if k is not None:
@@ -148,15 +165,15 @@ def scan(cfg, now_iso=None, verbose=True):
         if k is not None:
             intraday.setdefault(sym, {})['4h'] = klines_to_df(k)
     # 15m refresh for previously published (still open) setups
-    for sym, tf, k in _fetch_many(lambda s: _get_klines(s, '15m', 500), tracked_syms).values():
+    for sym, tf, k in _fetch_many(lambda s: _get_klines(s, '15m', 500), tracked_only).values():
         if k is not None:
             intraday.setdefault(sym, {})['15m'] = klines_to_df(k)
     # also refresh 1h/4h for tracked (triggered) setups so their ANALYSIS
     # section stays current (levels remain frozen after trigger)
-    for sym, tf, k in _fetch_many(lambda s: _get_klines(s, '1h', 400), tracked_syms).values():
+    for sym, tf, k in _fetch_many(lambda s: _get_klines(s, '1h', 400), tracked_only).values():
         if k is not None:
             intraday.setdefault(sym, {})['1h'] = klines_to_df(k)
-    for sym, tf, k in _fetch_many(lambda s: _get_klines(s, '4h', 400), tracked_syms).values():
+    for sym, tf, k in _fetch_many(lambda s: _get_klines(s, '4h', 400), tracked_only).values():
         if k is not None:
             intraday.setdefault(sym, {})['4h'] = klines_to_df(k)
     if verbose:
@@ -282,7 +299,7 @@ def scan(cfg, now_iso=None, verbose=True):
     # LLM and not a second market-data client. A failure here never blocks the
     # primary opportunity scanner.
     try:
-        agent_scan = run_quant_agent(cand, intraday, daily, market, cfg, now_iso)
+        agent_scan = run_quant_agent(agent_universe, intraday, daily, market, cfg, now_iso)
     except Exception as e:
         agent_scan = {
             'schema_version': 'scalp-supertrend-1.1',
@@ -291,8 +308,8 @@ def scan(cfg, now_iso=None, verbose=True):
             'status': 'error',
             'market': market,
             'timeframes_scanned': ['15m', '1h', '4h'],
-            'symbols_scanned': len(cand),
-            'total_scanned': len(cand) * 3,
+            'symbols_scanned': len(agent_universe),
+            'total_scanned': len(agent_universe) * 3,
             'opportunities_found': 0,
             'opportunities_by_timeframe': {'15m': 0, '1h': 0, '4h': 0},
             'signals': [],

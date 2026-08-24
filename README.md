@@ -59,7 +59,7 @@ The engine is **100% deterministic**: every indicator, entry, stop and target is
 - 📱 Installable PWA (manifest + service worker with honest network-first caching — stale data is never served as live), works offline
 - 🩺 Health monitoring: [UptimeRobot guide](docs/HEALTH_MONITORING.md) + optional Telegram notification when the pipeline fails
 - 🔬 **Coin Analyzer tab**: type any Binance spot symbol and get an instant, on-demand analysis computed **in your browser** from live public Binance data — verdict (setup or not), full trade plan, 4-timeframe indicator table (EMA/RSI/MACD/ATR/VWAP/SuperTrend/volume), a checklist of why no setup exists, a 4H chart, and one-tap add-to-watchlist. The JavaScript engine is a faithful mirror of the Python analyzer, locked in parity by a **golden test** (`tests/golden_js.test.js`) that runs in CI on every push — the two engines cannot drift apart.
-- ⚡ **Quant Agent tab**: a separate deterministic opportunity scanner fed by the server-side pipeline (never by the browser). Every candidate is evaluated independently on **15m, 1h and 4h**, with confirmation from the next higher timeframe(s). It requires price above EMA200, bullish SuperTrend (10,3), no three-candle chop, no upper-wick rejection or descending swing highs, a held breakout/SuperTrend bounce, score ≥82 and TP1 R:R ≥1.5. Cards show the execution timeframe, while strict JSON in `data/agent_scan.json` includes per-timeframe signals and rejection reasons.
+- ⚡ **Quant Agent tab**: a separate deterministic opportunity scanner fed by the server-side pipeline (never by the browser). It walks **every qualified Binance Spot/USDT pair** (no top-N cap) and evaluates it independently on **15m, 1h and 4h**, with confirmation from the next higher timeframe(s). It requires price above EMA200, bullish SuperTrend (10,3), no three-candle chop, no upper-wick rejection or descending swing highs, a held breakout/SuperTrend bounce, score ≥82 and TP1 R:R ≥1.5. Cards show the execution timeframe, while strict JSON in `data/agent_scan.json` includes per-timeframe signals and rejection reasons.
 - 🔍 Search, filters (direction/status/high-score) and sorting
 - 📱 Responsive dark UI, English/Arabic (RTL), 4H candlestick charts with levels drawn
 - 🔔 Full lifecycle alerts: Telegram notifications for every transition (READY / TRIGGERED / TP hits / STOPPED / EXPIRED / INVALIDATED — per-event toggles), plus optional in-browser notifications and distinctive sounds for each event while the dashboard is open
@@ -150,8 +150,10 @@ Everything is tunable in one file:
 | `max_opportunities` | `8` | Maximum number of displayed opportunities |
 | `expiry_hours` | `48` | Setup expires if not triggered within this time |
 | `stale_after_minutes` | `45` | Dashboard flags data as stale (DATA SOURCE ERROR) after this |
-| `universe.min_quote_volume_24h` | `8e6` | Minimum 24h quote volume (USDT) for a pair to be analyzed |
-| `universe.max_spread_pct` | `0.15` | Maximum bid/ask spread |
+| `universe.max_symbols_to_screen` | `0` | `0` means scan every qualified Binance Spot/USDT pair (no top-N cap) |
+| `universe.min_quote_volume_24h` | `5e6` | Minimum 24h quote volume (USDT) for a pair to enter the full agent scan |
+| `universe.min_trades_24h` | `1000` | Minimum 24h trade count for basic market quality |
+| `universe.max_spread_pct` | `0.20` | Maximum bid/ask spread |
 | `min_rr_tp1` | `1.5` | Minimum R:R to TP1 for a plan to exist at all (kills marginal setups) |
 | `universe.exclude_24h_change_gt` | `12` | Skip coins that pumped more than this % in 24h (no chasing) |
 | `universe.exclude_assets` | list | Extra symbols to ignore |
