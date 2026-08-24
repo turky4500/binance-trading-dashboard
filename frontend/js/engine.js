@@ -454,14 +454,15 @@
     };
   }
 
-  function generatePlans(tf, brk, risk, minRR, allowShorts) {
+  function generatePlans(tf, brk, risk, minRR, allowShorts, disabledSetups) {
+    const disabled = Array.isArray(disabledSetups) ? disabledSetups : [];
     const plans = [];
-    const p = pullbackLong(tf, risk, minRR); if (p) plans.push(p);
-    const v = vwapHoldLong(tf, risk, minRR); if (v) plans.push(v);
-    const b = breakoutLong(tf, brk, risk, minRR); if (b) plans.push(b);
+    if (!disabled.includes('PULLBACK')) { const p = pullbackLong(tf, risk, minRR); if (p) plans.push(p); }
+    if (!disabled.includes('VWAP_HOLD')) { const v = vwapHoldLong(tf, risk, minRR); if (v) plans.push(v); }
+    if (!disabled.includes('BREAKOUT_RETEST')) { const b = breakoutLong(tf, brk, risk, minRR); if (b) plans.push(b); }
     if (allowShorts) {
-      const bs = breakdownShort(tf, brk, risk, minRR); if (bs) plans.push(bs);
-      const ts = trendShort(tf, risk, minRR); if (ts) plans.push(ts);
+      if (!disabled.includes('BREAKDOWN_RETEST')) { const bs = breakdownShort(tf, brk, risk, minRR); if (bs) plans.push(bs); }
+      if (!disabled.includes('TREND_SHORT')) { const ts = trendShort(tf, risk, minRR); if (ts) plans.push(ts); }
     }
     const best = {};
     for (const pl of plans) {
@@ -626,6 +627,7 @@
     const minScore = cfg.min_score_to_show != null ? cfg.min_score_to_show : 70;
     const minRR = cfg.min_rr_tp1 != null ? cfg.min_rr_tp1 : 1.0;
     const allowShorts = cfg.allow_shorts !== false;
+    const disabledSetups = Array.isArray(cfg.disabled_setups) ? cfg.disabled_setups : [];
     const stp = cfg.supertrend || { period: 10, multiplier: 3.0 };
 
     const toBars = rows => rows.map(r => ({ t: +r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4], v: +r[5] }));
@@ -644,7 +646,7 @@
     };
     const brk = detectBreakout(frames['4h']);
     const livePrice = opts.meta24 && opts.meta24.currentPrice;
-    const rawPlans = generatePlans(tf, brk, risk, minRR, allowShorts);
+    const rawPlans = generatePlans(tf, brk, risk, minRR, allowShorts, disabledSetups);
     const plans = rawPlans
       .map(p => freshnessGuard(p, livePrice, tf['4h'].atr))
       .filter(p => p != null);

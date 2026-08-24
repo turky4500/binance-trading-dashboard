@@ -56,6 +56,7 @@ def generate():
     cfg = load_config()
     risk = dict(cfg['risk'])
     risk['min_rr_tp1'] = cfg.get('min_rr_tp1', 1.0)
+    risk['disabled_setups'] = list(cfg.get('strategy', {}).get('disabled_setups', []))
     stp = cfg.get('supertrend', {'period': 10, 'multiplier': 3.0})
     weights = cfg['scoring']
 
@@ -66,6 +67,7 @@ def generate():
                       'min_score_to_show': cfg['min_score_to_show'],
                       'min_rr_tp1': cfg.get('min_rr_tp1', 1.0),
                       'allow_shorts': cfg.get('strategy', {}).get('allow_shorts', True),
+                      'disabled_setups': list(cfg.get('strategy', {}).get('disabled_setups', [])),
                       'supertrend': stp},
            'symbols': {}}
     for sym in SYMBOLS:

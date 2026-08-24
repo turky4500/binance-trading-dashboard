@@ -164,9 +164,20 @@ def scan(cfg, now_iso=None, verbose=True):
     # ---------- 5. build plans, score, track lifecycle
     cfg_risk = dict(cfg['risk'])
     cfg_risk['min_rr_tp1'] = cfg.get('min_rr_tp1', 1.0)
+    cfg_risk['disabled_setups'] = list(cfg.get('strategy', {}).get('disabled_setups', []))
+    # market-regime gate: suppress NEW setups when broad-market breadth is weak
+    mfilter = cfg.get('market_filter', {})
+    gate_min_breadth = float(mfilter.get('min_breadth_pct', 0)) if mfilter.get('enabled', False) else 0.0
+    market_early = _market_status(daily, meta_by_sym)  # same inputs as step 6 -> identical result
+    gate_active = gate_min_breadth > 0 and market_early['breadth_pct_above_ema50'] < gate_min_breadth
+    if verbose and gate_active:
+        print(f"[gate] breadth {market_early['breadth_pct_above_ema50']}% < {gate_min_breadth}% "
+              f"-> new setups suppressed this cycle (existing ones still tracked)")
     weights = cfg['scoring']
     fresh = []
     for sym, meta in cand:
+        if gate_active:
+            break
         frames = intraday.get(sym)
         if not frames or not all(t in frames for t in ('15m', '1h', '4h')):
             continue
@@ -260,7 +271,10 @@ def scan(cfg, now_iso=None, verbose=True):
         print(f"[5/6] Plans: {len(fresh)} fresh | {len(new_ops)} new | {len(closed)} closed | {len(merged)} active displayed")
 
     # ---------- 6. market status + persist
-    market = _market_status(daily, meta_by_sym)
+    market = market_early
+    market['new_setups_gated'] = gate_active
+    if gate_active:
+        market['gate_reason'] = f"breadth {market['breadth_pct_above_ema50']}% below min {gate_min_breadth}%"
     runtime = round(time.time() - t0, 1)
     _record_market_history(market, now_iso, runtime)
     # chart data for displayed symbols
@@ -278,6 +292,7 @@ def scan(cfg, now_iso=None, verbose=True):
         'min_score_to_show': cfg['min_score_to_show'],
         'min_rr_tp1': cfg.get('min_rr_tp1', 1.0),
         'allow_shorts': cfg.get('strategy', {}).get('allow_shorts', True),
+        'disabled_setups': cfg_risk['disabled_setups'],
         'scoring': cfg['scoring'],
         'risk': cfg['risk'],
         'supertrend': cfg.get('supertrend', {'period': 10, 'multiplier': 3.0}),
@@ -301,6 +316,9 @@ def scan(cfg, now_iso=None, verbose=True):
             'stale_after_minutes': cfg['stale_after_minutes'],
             'expiry_hours': cfg['expiry_hours'],
             'allow_shorts': cfg.get('strategy', {}).get('allow_shorts', True),
+            'market_filter': {'enabled': bool(mfilter.get('enabled', False)),
+                              'min_breadth_pct': gate_min_breadth,
+                              'gated_this_cycle': gate_active},
         },
         'errors': errors[-10:],
         'runtime_seconds': runtime,

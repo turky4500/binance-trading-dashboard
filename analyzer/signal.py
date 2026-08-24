@@ -390,10 +390,23 @@ def trend_short(tf, cfg):
     }
 
 
+SETUP_BY_FN = {
+    'pullback_long': 'PULLBACK',
+    'vwap_hold_long': 'VWAP_HOLD',
+    'breakout_long': 'BREAKOUT_RETEST',
+    'breakdown_short': 'BREAKDOWN_RETEST',
+    'trend_short': 'TREND_SHORT',
+}
+
+
 def generate_plans(tf, brk, cfg):
-    """Run all setup rules; return list of candidate plans (max one per direction)."""
+    """Run all setup rules; return list of candidate plans (max one per direction).
+    Setup types listed in cfg['disabled_setups'] are skipped entirely."""
     plans = []
+    disabled = set(cfg.get('disabled_setups') or [])
     for fn in (pullback_long, vwap_hold_long, breakout_long, breakdown_short, trend_short):
+        if SETUP_BY_FN.get(fn.__name__) in disabled:
+            continue
         try:
             p = fn(tf, brk, cfg) if fn in (breakout_long, breakdown_short) else fn(tf, cfg)
             if p:

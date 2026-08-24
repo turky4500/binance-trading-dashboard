@@ -25,7 +25,7 @@ Multi-timeframe technical analysis  (15m / 1h / 4h / 1d)
 Deterministic trade plans  (entry zone, SL, TP1/2/3, R:R, invalidation)
         │
         ▼
-100-point scoring  (configurable weights, threshold 70 by default)
+100-point scoring  (configurable weights, threshold 82 by default)
         │
         ▼
 Lifecycle tracking  (READY → TRIGGERED → TP1/TP2/TP3 HIT / STOPPED / EXPIRED)
@@ -145,18 +145,22 @@ Everything is tunable in one file:
 | Key | Default | Meaning |
 |---|---|---|
 | `update_interval_minutes` | `15` | How often GitHub Actions re-analyzes (also change the workflow cron) |
-| `min_score_to_show` | `70` | Minimum score for an opportunity to be displayed |
+| `min_score_to_show` | `82` | Minimum score for an opportunity to be displayed (calibrated from backtest: score ≥80 historically ~36% TP1 rate vs ~20% below) |
 | `max_opportunities` | `8` | Maximum number of displayed opportunities |
 | `expiry_hours` | `48` | Setup expires if not triggered within this time |
 | `stale_after_minutes` | `45` | Dashboard flags data as stale (DATA SOURCE ERROR) after this |
 | `universe.min_quote_volume_24h` | `8e6` | Minimum 24h quote volume (USDT) for a pair to be analyzed |
 | `universe.max_spread_pct` | `0.15` | Maximum bid/ask spread |
-| `universe.exclude_24h_change_gt` | `25` | Skip coins that pumped more than this % in 24h (no chasing) |
+| `min_rr_tp1` | `1.5` | Minimum R:R to TP1 for a plan to exist at all (kills marginal setups) |
+| `universe.exclude_24h_change_gt` | `12` | Skip coins that pumped more than this % in 24h (no chasing) |
 | `universe.exclude_assets` | list | Extra symbols to ignore |
 | `scoring.*` | 20/15/15/15/10/10/10/5 | Per-component weights (must sum to 100) |
 | `risk.atr_sl_min` / `atr_sl_max` | `0.8` / `2.0` | Stop-loss distance bounds in ATR multiples |
 | `risk.min_tp1_distance_atr` | `1.2` | Minimum TP1 distance from entry (4H ATRs) — kills trivially-close targets that would look "late" |
 | `strategy.allow_shorts` | `false` | SHORT setups disabled (spot trading — sell signals only make sense if you hold the asset) |
+| `strategy.disabled_setups` | `["PULLBACK"]` | Setup types to skip entirely (PULLBACK historically ~9% win rate in backtest vs ~44% for VWAP_HOLD) |
+| `market_filter.enabled` | `true` | When true, no NEW setups are published while broad-market breadth is below `min_breadth_pct` (existing ones keep being tracked) |
+| `market_filter.min_breadth_pct` | `40` | Breadth gate: % of top-30 coins above their daily EMA50 required to publish new setups |
 | `backtest.months` / `backtest.top_symbols` | `6` / `12` | Historical simulation depth (runs daily via `backtest.yml`) |
 | `supertrend.period` / `supertrend.multiplier` | `10` / `3.0` | SuperTrend parameters (per timeframe, on charts, in scoring) |
 | `risk.pullback_zone_atr` | `0.6` | Entry-zone width (pullback setups) |
@@ -182,7 +186,7 @@ Tracking is done with **closed candles only** and targets are evaluated **only f
 
 ## 📈 Scoring (100 points)
 
-Trend Alignment 20 · Market Structure 15 · Support/Resistance 15 · Volume 15 · Momentum 10 · Entry Quality 10 · Risk/Reward 10 · Liquidity 5. Breakdown per component is shown in every analysis modal. Grading: ≥90 Excellent · ≥80 Strong · ≥70 Good · <70 not shown (unless you lower the threshold).
+Trend Alignment 20 · Market Structure 15 · Support/Resistance 15 · Volume 15 · Momentum 10 · Entry Quality 10 · Risk/Reward 10 · Liquidity 5. Breakdown per component is shown in every analysis modal. Grading: ≥90 Excellent · ≥80 Strong · ≥70 Good · <82 not shown by default (threshold is configurable via `min_score_to_show`).
 
 ## 📊 Performance page
 

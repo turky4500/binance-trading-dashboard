@@ -3,9 +3,9 @@
   "update_interval_minutes": 15,
   "stale_after_minutes": 45,
   "expiry_hours": 48,
-  "min_score_to_show": 70,
+  "min_score_to_show": 82,
   "max_opportunities": 8,
-  "min_rr_tp1": 1.0,
+  "min_rr_tp1": 1.5,
   "universe": {
     "quote_asset": "USDT",
     "max_symbols_to_screen": 300,
@@ -28,8 +28,12 @@
       "CHEEMS",
       "DOGS"
     ],
-    "exclude_24h_change_gt": 25.0,
+    "exclude_24h_change_gt": 12.0,
     "exclude_24h_change_lt": -18.0
+  },
+  "market_filter": {
+    "enabled": true,
+    "min_breadth_pct": 40.0
   },
   "scoring": {
     "trend_alignment": 20,
@@ -69,7 +73,8 @@
     "multiplier": 3.0
   },
   "strategy": {
-    "allow_shorts": false
+    "allow_shorts": false,
+    "disabled_setups": ["PULLBACK"]
   },
   "backtest": {
     "months": 6,

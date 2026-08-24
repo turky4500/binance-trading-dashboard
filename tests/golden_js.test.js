@@ -82,7 +82,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       meta24: entry.meta24,
       cfg: Object.assign({}, cfg, { risk: cfg.risk, scoring: cfg.scoring,
         min_score_to_show: cfg.min_score_to_show, min_rr_tp1: cfg.min_rr_tp1,
-        allow_shorts: cfg.strategy.allow_shorts, supertrend: stp }),
+        allow_shorts: cfg.strategy.allow_shorts,
+        disabled_setups: (cfg.strategy && cfg.strategy.disabled_setups) || [],
+        supertrend: stp }),
     });
     const pyPlan = entry.plan;
     const jsPlan = result.best;

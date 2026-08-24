@@ -120,6 +120,7 @@ def backtest_symbol(symbol, meta_row, cfg, verbose=False):
 
     risk = dict(cfg['risk'])
     risk['min_rr_tp1'] = cfg.get('min_rr_tp1', 1.0)
+    risk['disabled_setups'] = list(cfg.get('strategy', {}).get('disabled_setups', []))
     weights = cfg['scoring']
     min_score = cfg.get('min_score_to_show', 70)
 

@@ -1027,7 +1027,7 @@ async function runAnalyzer(rawSymbol) {
   resultBox.innerHTML = '';
   try {
     const cfg = state.engineCfg || {
-      min_score_to_show: 70, min_rr_tp1: 1.0, allow_shorts: false,
+      min_score_to_show: 70, min_rr_tp1: 1.0, allow_shorts: false, disabled_setups: [],
       scoring: { trend_alignment: 20, structure: 15, support_resistance: 15, volume: 15, momentum: 10, entry_quality: 10, risk_reward: 10, liquidity: 5 },
       risk: { atr_sl_min: 0.8, atr_sl_max: 2.0, pullback_zone_atr: 0.6 },
       supertrend: { period: 10, multiplier: 3.0 },
