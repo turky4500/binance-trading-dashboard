@@ -1,7 +1,7 @@
 /* Lightweight i18n: English + Arabic with RTL support */
 const I18N = {
   en: {
-    title: "BINANCE TRADING DASHBOARD",
+    title: "مشروع التوصيات",
     subtitle: "Automated spot-market opportunity scanner — analysis only, no trading",
     last_update: "Last Market Update", next_update: "Next Update", data_age: "Data Age",
     btc_price: "BTC / USDT", breadth: "Breadth (top30 > EMA50)", source: "Data Source",
@@ -130,7 +130,7 @@ const I18N = {
     filters_min: "Min score", col_symbol: "Symbol", col_score: "Score",
   },
   ar: {
-    title: "لوحة تحكم تداول باينانس",
+    title: "لوحة التوصيات",
     subtitle: "ماسح تلقائي لفرص السوق الفوري — تحليل فقط بدون أي تداول",
     last_update: "آخر تحديث للسوق", next_update: "التحديث القادم", data_age: "عمر البيانات",
     btc_price: "BTC / USDT", breadth: "اتساع السوق (أعلى 30 فوق EMA50)", source: "مصدر البيانات",

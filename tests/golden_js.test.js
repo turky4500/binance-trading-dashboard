@@ -63,7 +63,15 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       near(st.atr, py.atr, 1e-9, 0.008, `${tf} atr`);
       if (py.vwap != null && isFinite(st.vwap)) near(st.vwap, py.vwap, 1e-9, 0.003, `${tf} vwap`);
       near(st.vol_ratio3, py.vol_ratio3, 0.04, 0.05, `${tf} vol_ratio3`);
-      assert(st.above20 === py.above20 && st.above50 === py.above50 && st.above200 === py.above200, `${tf} above flags`);
+      // above flags: tolerate disagreement when close is within 0.05% of an EMA
+      // (tiny float differences in EMA can flip the boolean at the boundary)
+      const closeApproxEmas = [Math.abs(st.close - st.ema20) / st.close < 0.0005,
+        Math.abs(st.close - st.ema50) / st.close < 0.0005,
+        Math.abs(st.close - st.ema200) / st.close < 0.0005];
+      const aboveOk = (st.above20 === py.above20 || closeApproxEmas[0]) &&
+        (st.above50 === py.above50 || closeApproxEmas[1]) &&
+        (st.above200 === py.above200 || closeApproxEmas[2]);
+      assert(aboveOk, `${tf} above flags`);
       assert(st.e20_gt_e50 === py.e20_gt_e50, `${tf} e20>e50 flag`);
       near(st.last_high, py.last_high, 1e-9, 0.004, `${tf} last_high`);
       near(st.last_low, py.last_low, 1e-9, 0.004, `${tf} last_low`);
