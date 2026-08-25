@@ -49,6 +49,7 @@ def load_data():
         'update_log': j('update_log.json'),
         'symbols': j('symbols.json'),
         'config': j('config.json'),
+        'st_signals': j('st_signals.json'),
         'klines': klines,
     }
 

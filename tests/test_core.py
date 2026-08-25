@@ -458,3 +458,63 @@ def test_history_dedupe_by_id():
     ids = [r['id'] for r in out]
     assert ids == ['A', 'B', 'C'], f'got {ids}'
     assert out[0]['closed_at'] == '2026-01-01T00:00:00Z', 'earliest record kept'
+
+
+# ---------------- supertrend board ----------------
+
+def _st_df(st_dirs, start='2026-05-01'):
+    n = len(st_dirs)
+    t = pd.date_range(start, periods=n, freq='1D', tz='UTC')
+    c = [100.0 + i for i in range(n)]
+    return pd.DataFrame({'t': t, 'c': c, 'st_dir': st_dirs,
+                         'rsi': [55.0] * n, 'ema50': [90.0] * n})
+
+
+def test_st_run_info_finds_run_start():
+    from analyzer.scanner import _st_run_info
+    df = _st_df([-1, -1, 1, 1, 1])
+    info = _st_run_info(df)
+    assert info is not None
+    assert info['bars_held'] == 3
+    assert info['price_at_signal'] == 102.0
+
+
+def test_st_run_info_none_when_bearish():
+    from analyzer.scanner import _st_run_info
+    assert _st_run_info(_st_df([1, 1, -1])) is None
+
+
+def test_st_board_build_and_removal():
+    from analyzer.scanner import _build_st_signals
+    daily = {
+        'AAAUSDT': _st_df([-1] * 30 + [1, 1, 1]),
+        'BBBUSDT': _st_df([1, 1] + [-1] * 32),
+    }
+    meta = {s: {'last': 100.0 + i} for i, s in enumerate(daily)}
+    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00')
+    assert out['count'] == 1
+    assert [s['symbol'] for s in out['signals']] == ['AAAUSDT']
+    rec = out['signals'][0]
+    assert rec['bars_held'] == 3
+    assert rec['change_pct'] is not None
+    assert 'T' in rec['signal_at']
+
+
+def test_st_board_newest_first():
+    from analyzer.scanner import _build_st_signals
+    daily = {
+        'OLDUSDT': _st_df([1] * 40, start='2026-04-01'),
+        'NEWUSDT': _st_df([-1] * 39 + [1], start='2026-04-01'),
+    }
+    meta = {s: {'last': 100.0} for s in daily}
+    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00')
+    syms = [s['symbol'] for s in out['signals']]
+    assert syms == ['NEWUSDT', 'OLDUSDT'], f'got {syms}'
+
+
+def test_st_board_skips_short_history():
+    from analyzer.scanner import _build_st_signals
+    daily = {'TINYUSDT': _st_df([1] * 5)}
+    meta = {'TINYUSDT': {'last': 100.0}}
+    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00')
+    assert out['count'] == 0

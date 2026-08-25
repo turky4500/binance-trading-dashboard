@@ -293,6 +293,9 @@ def scan(cfg, now_iso=None, verbose=True):
     market['new_setups_gated'] = gate_active
     if gate_active:
         market['gate_reason'] = f"breadth {market['breadth_pct_above_ema50']}% below min {gate_min_breadth}%"
+    st_board = _build_st_signals(daily, meta_by_sym, now_iso)
+    if verbose:
+        print(f"[ST] supertrend daily BUY signals: {st_board['count']}")
 
     # The scalp agent reuses the candles already fetched above. It is a strict,
     # deterministic validator (EMA200 + SuperTrend + price action + R:R), not an
@@ -334,6 +337,7 @@ def scan(cfg, now_iso=None, verbose=True):
     hist = _dedupe_history(load_json(data_path('history.json'), []), closed)
     save_json(data_path('history.json'), hist)
     save_json(data_path('market.json'), market)
+    save_json(data_path('st_signals.json'), st_board)
     save_json(data_path('performance.json'), performance_stats(hist))
     # engine config for the in-browser Coin Analyzer (JS mirror must match)
     save_json(data_path('config.json'), {
@@ -587,6 +591,64 @@ def _write_chart_cache(ops, intraday, daily, now_iso, stp):
                 os.remove(os.path.join(kdir, fn))
             except OSError:
                 pass
+
+
+def _st_run_info(df):
+    """Info about the current daily SuperTrend UP-run, or None if not UP.
+    Purely derived from closed candles (deterministic)."""
+    sd = [int(x) if x == x else 0 for x in df['st_dir'].tolist()]
+    if not sd or sd[-1] != 1:
+        return None
+    i = len(sd) - 1
+    while i > 0 and sd[i - 1] == 1:
+        i -= 1
+    return {
+        'bars_held': len(sd) - i,
+        'signal_at': df['t'].iloc[i].isoformat(),
+        'price_at_signal': round(float(df['c'].iloc[i]), 8),
+    }
+
+
+def _build_st_signals(daily, meta_by_sym, now_iso, cap=120):
+    """SuperTrend board: every screened symbol whose DAILY SuperTrend is
+    currently bullish. Listed from signal start until it flips to SELL.
+    Recomputed deterministically each cycle — no extra state file."""
+    signals = []
+    for sym, df in daily.items():
+        try:
+            if len(df) < 30:
+                continue
+            info = _st_run_info(df)
+            if info is None:
+                continue
+            c_now = float(df['c'].iloc[-1])
+            e50 = float(df['ema50'].iloc[-1])
+            rsi_v = float(df['rsi'].iloc[-1])
+            sig_p = info['price_at_signal']
+            if not (c_now == c_now) or not (sig_p == sig_p) or sig_p <= 0:
+                continue
+            m = meta_by_sym.get(sym)
+            cur = m['last'] if m else c_now
+            signals.append({
+                'symbol': sym,
+                'pair': sym.replace('USDT', '/USDT'),
+                'signal_at': info['signal_at'],
+                'bars_held': info['bars_held'],
+                'price_at_signal': sig_p,
+                'current_price': cur,
+                'change_pct': round((cur - sig_p) / sig_p * 100, 2),
+                'rsi': round(rsi_v, 1) if rsi_v == rsi_v else None,
+                'above_ema50': bool(c_now > e50),
+            })
+        except Exception:
+            continue
+    signals.sort(key=lambda s: s['signal_at'], reverse=True)
+    return {
+        'updated_at': now_iso,
+        'timeframe': '1d',
+        'count': len(signals),
+        'signals': signals[:cap],
+    }
 
 
 def _market_status(daily, meta_by_sym):

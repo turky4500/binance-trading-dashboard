@@ -3,7 +3,7 @@
 
 const state = {
   meta: null, market: null, opps: [], agent: null, perf: null, history: [], bt: null,
-  bh: null, ul: null, symbols: [], engineCfg: null,
+  bh: null, ul: null, symbols: [], engineCfg: null, st: null,
   filter: { q: '', dir: 'ALL', status: 'ALL', sort: 'score', high: false, watch: false },
   prefs: loadPrefs(),
   analyzer: { busy: false, result: null, frames4h: null },
@@ -42,7 +42,7 @@ async function loadAll() {
   // embedded snapshot unless there is no data at all.
   const hadMeta = !!state.meta;
   const prevOpps = window.__dashDataSeeded ? state.opps.slice() : null;
-  const [m, mk, o, qa, p, h, bt, bh, ul, syms, ecfg] = await Promise.allSettled([
+  const [m, mk, o, qa, p, h, bt, bh, ul, syms, ecfg, stb] = await Promise.allSettled([
     fetchJSON('data/meta.json'),
     fetchJSON('data/market.json'),
     fetchJSON('data/opportunities.json'),
@@ -54,6 +54,7 @@ async function loadAll() {
     fetchJSON('data/update_log.json'),
     fetchJSON('data/symbols.json'),
     fetchJSON('data/config.json'),
+    fetchJSON('data/st_signals.json'),
   ]);
   if (m.status === 'fulfilled') {
     state.meta = m.value;
@@ -82,6 +83,7 @@ async function loadAll() {
   if (ul.status === 'fulfilled') state.ul = ul.value;
   if (syms.status === 'fulfilled' && syms.value && syms.value.symbols) state.symbols = syms.value.symbols;
   if (ecfg.status === 'fulfilled' && ecfg.value) state.engineCfg = ecfg.value;
+  if (stb.status === 'fulfilled' && stb.value) state.st = stb.value;
   // lifecycle alerts: diff vs previously displayed data (skipped on first seed)
   if (window.Alerts && prevOpps && prevOpps.length && o.status === 'fulfilled') {
     window.Alerts.diffEvents(prevOpps, state.opps).forEach(ev => window.Alerts.emit(ev));
@@ -92,7 +94,8 @@ async function loadAll() {
   // (re)subscribe the live price feed to the currently displayed symbols
   if (window.LivePrices) {
     const agentSymbols = state.agent && Array.isArray(state.agent.signals) ? state.agent.signals.map(s => s.symbol) : [];
-    LivePrices.subscribe(state.opps.map(o => o.symbol).concat(agentSymbols, window.Watchlist ? window.Watchlist.list() : []));
+    const stSymbols = (state.st && Array.isArray(state.st.signals)) ? state.st.signals.map(s => s.symbol) : [];
+    LivePrices.subscribe(state.opps.map(o => o.symbol).concat(agentSymbols, stSymbols, window.Watchlist ? window.Watchlist.list() : []));
   }
 }
 
@@ -1246,11 +1249,49 @@ function bindAnalyzer() {
   btn.addEventListener('click', () => { document.getElementById('ana-suggest').classList.add('hidden'); runAnalyzer(input.value); });
 }
 
+/* ---------------- supertrend tab (daily BUY signals board) ---------------- */
+function renderStTab() {
+  const countEl = document.getElementById('st-count');
+  const body = document.getElementById('st-body');
+  const empty = document.getElementById('st-empty');
+  const wrap = document.getElementById('st-table-wrap');
+  const upd = document.getElementById('st-updated');
+  if (!body) return;
+  const data = state.st;
+  const sigs = (data && Array.isArray(data.signals)) ? data.signals : [];
+  if (countEl) countEl.textContent = sigs.length;
+  if (upd) upd.textContent = (data && data.updated_at) ? locTime(data.updated_at) : '—';
+  if (!sigs.length) {
+    body.innerHTML = '';
+    if (wrap) wrap.classList.add('hidden');
+    if (empty) empty.classList.remove('hidden');
+    return;
+  }
+  if (empty) empty.classList.add('hidden');
+  if (wrap) wrap.classList.remove('hidden');
+  body.innerHTML = sigs.map(s => {
+    const chg = s.change_pct;
+    const chgCls = chg == null ? '' : chg >= 0 ? 'pos' : 'neg';
+    const chgTxt = chg == null ? '—' : (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+    return `<tr class="st-row" onclick="openAnalyzerFor('${esc(s.symbol)}')" title="${t('stb_open_analyzer')}">
+      <td><b>${esc(s.pair)}</b></td>
+      <td>${locTime(s.signal_at)} · ${relTime(s.signal_at)}</td>
+      <td>${s.bars_held}</td>
+      <td>${fmtPrice(s.price_at_signal)}</td>
+      <td data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</td>
+      <td class="${chgCls}">${chgTxt}</td>
+      <td>${s.rsi != null ? s.rsi : '—'}</td>
+      <td>${s.above_ema50 ? '<span class="pos">' + t('above_e50') + '</span>' : '<span class="neg">' + t('below_e50') + '</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
 /* ---------------- render all ---------------- */
 window.renderAll = function () {
   renderHeader();
   renderCards();
   renderQuantAgent();
+  renderStTab();
   renderWatchBar();
   renderMarketTab();
   renderPerformance();

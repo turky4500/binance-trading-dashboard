@@ -93,6 +93,7 @@
 <div class="tabs" id="tabs">
   <button class="tab active" data-tab="opportunities"><span data-i18n="tab_opps">Opportunities</span><span class="tab-count" id="opp-count">0</span></button>
   <button class="tab" data-tab="agent"><span data-i18n="tab_agent">Quant Agent</span><span class="tab-count" id="agent-count">0</span></button>
+  <button class="tab" data-tab="supertrend"><span data-i18n="tab_st">SuperTrend</span><span class="tab-count" id="st-count">0</span></button>
   <button class="tab" data-tab="analyzer"><span data-i18n="tab_analyzer">Analyzer</span></button>
   <button class="tab" data-tab="market"><span data-i18n="tab_market">Market</span></button>
   <button class="tab" data-tab="performance"><span data-i18n="tab_perf">Performance</span></button>
@@ -159,6 +160,33 @@
       <summary data-i18n="agent_rejections">Rejection summary</summary>
       <div id="agent-rejection-list"></div>
     </details>
+  </section>
+
+  <section id="tab-supertrend" class="tab-panel">
+    <div class="mcell">
+      <div class="mcell-head"><span data-i18n="stb_head">SuperTrend BUY Signals (Daily)</span><b id="st-updated">—</b></div>
+      <p class="alert-note" data-i18n="stb_note"></p>
+      <div class="table-wrap" id="st-table-wrap">
+        <table id="st-table">
+          <thead><tr>
+            <th data-i18n="h_pair">Pair</th>
+            <th data-i18n="stb_since">Signal Since</th>
+            <th data-i18n="stb_days">Days</th>
+            <th data-i18n="stb_price_sig">Price @ Signal</th>
+            <th data-i18n="stb_price_now">Now</th>
+            <th data-i18n="stb_change">Since Signal</th>
+            <th>RSI</th>
+            <th data-i18n="stb_trend">Daily Trend</th>
+          </tr></thead>
+          <tbody id="st-body"></tbody>
+        </table>
+      </div>
+      <div id="st-empty" class="empty hidden">
+        <div class="empty-icon">∅</div>
+        <h2 data-i18n="stb_none_t">No Active BUY Signals</h2>
+        <p data-i18n="stb_none">No coin currently has an active Daily SuperTrend buy signal.</p>
+      </div>
+    </div>
   </section>
 
   <section id="tab-analyzer" class="tab-panel">
