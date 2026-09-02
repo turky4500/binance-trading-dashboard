@@ -26,8 +26,15 @@ const near = (a, b, tolAbs, tolRel, msg) => {
   return ok;
 };
 
-async function klines(symbol, interval, limit) {
-  const url = `${BASE}/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+const TF_MS = { '15m': 15 * 60e3, '1h': 60 * 60e3, '4h': 4 * 60 * 60e3, '1d': 24 * 60 * 60e3 };
+
+// endTime anchors the window to the reference snapshot. Without it the API
+// returns the newest `limit` bars, which slide forward in real time and stop
+// covering last_ts after a few days — making the golden reference expire.
+// Historical bars are immutable, so an anchored window is valid forever.
+async function klines(symbol, interval, limit, endTs) {
+  const url = `${BASE}/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}` +
+    (endTs ? `&endTime=${endTs}` : '');
   const r = await fetch(url);
   if (!r.ok) throw new Error(`fetch ${url}: ${r.status}`);
   return r.json();
@@ -43,7 +50,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     const frames = {};
     for (const tf of ['15m', '1h', '4h', '1d']) {
       const t = entry.tfs[tf];
-      const raw = await klines(symbol, tf, t.limit);
+      const raw = await klines(symbol, tf, t.limit, t.last_ts + TF_MS[tf]);
       const bars = raw
         .filter(r => r[0] <= t.last_ts)
         .map(r => ({ t: r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4], v: +r[5] }));
