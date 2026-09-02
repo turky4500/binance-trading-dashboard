@@ -94,6 +94,44 @@ def test_breakout_detection():
     assert brk is not None and brk['dir'] == 'UP'
 
 
+def _breakout_df(close_mult, high_mult, vol):
+    df = make_df(drift=0.05, noise=0.3)
+    base_hi = float(df['h'].iloc[-60:-8].max())
+    ci, hi, vi = (df.columns.get_loc(x) for x in ('c', 'h', 'v'))
+    df.iloc[-5, ci] = base_hi * close_mult
+    df.iloc[-5, hi] = base_hi * high_mult
+    df.iloc[-5, vi] = vol
+    return enrich(df)
+
+
+def test_breakout_close_position_filter_rejects_wick():
+    # closes just above the base high but leaves a long upper wick (weak close)
+    e = _breakout_df(close_mult=1.002, high_mult=1.06, vol=400)
+    assert detect_breakout(e, None, close_pos_min=0.0) is not None  # filter off
+    assert detect_breakout(e, None, close_pos_min=0.6) is None      # wick rejected
+
+
+def test_breakout_strong_close_passes_position_filter():
+    e = _breakout_df(close_mult=1.035, high_mult=1.04, vol=400)  # closes near the top
+    brk = detect_breakout(e, None, close_pos_min=0.6)
+    assert brk is not None and brk['dir'] == 'UP'
+
+
+def test_breakout_volume_threshold_from_cfg():
+    # modest volume burst: vol_ratio ~1.6 -> passes 1.5, rejected at 2.0
+    e = _breakout_df(close_mult=1.03, high_mult=1.035, vol=165)
+    assert detect_breakout(e, None, vol_min=1.5, close_pos_min=0.6) is not None
+    assert detect_breakout(e, None, vol_min=2.0, close_pos_min=0.6) is None
+
+
+def test_btc_regime_bullish_helper():
+    from analyzer.scanner import btc_regime_bullish
+    up = enrich(make_df(n=400, start=100.0, drift=0.5, noise=0.4))
+    down = enrich(make_df(n=400, start=400.0, drift=-0.5, noise=0.4))
+    assert btc_regime_bullish(up) is True
+    assert btc_regime_bullish(down) is False
+
+
 # ---------------- scoring ----------------
 def test_score_components_sum_to_100():
     weights = {'trend_alignment': 20, 'structure': 15, 'support_resistance': 15, 'volume': 15,

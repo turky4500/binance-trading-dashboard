@@ -146,7 +146,7 @@ Everything is tunable in one file:
 | Key | Default | Meaning |
 |---|---|---|
 | `update_interval_minutes` | `15` | How often GitHub Actions re-analyzes (also change the workflow cron) |
-| `min_score_to_show` | `82` | Minimum score for an opportunity to be displayed (calibrated from backtest: score ≥80 historically ~36% TP1 rate vs ~20% below) |
+| `min_score_to_show` | `84` | Minimum score for an opportunity to be displayed (calibrated from backtest: setups scored 84–86 won ~40% vs ~20% for 82–83) |
 | `max_opportunities` | `8` | Maximum number of displayed opportunities |
 | `expiry_hours` | `48` | Setup expires if not triggered within this time |
 | `stale_after_minutes` | `45` | Dashboard flags data as stale (DATA SOURCE ERROR) after this |
@@ -164,6 +164,9 @@ Everything is tunable in one file:
 | `strategy.disabled_setups` | `["PULLBACK"]` | Setup types to skip entirely (PULLBACK historically ~9% win rate in backtest vs ~44% for VWAP_HOLD) |
 | `market_filter.enabled` | `true` | When true, no NEW setups are published while broad-market breadth is below `min_breadth_pct` (existing ones keep being tracked) |
 | `market_filter.min_breadth_pct` | `40` | Breadth gate: % of top-30 coins above their daily EMA50 required to publish new setups |
+| `btc_filter.enabled` | `true` | Regime gate: no NEW long setups while BTC closes below its daily EMA200 (alts lose far more in BTC downtrends; fail-open if BTC data is missing) |
+| `risk.breakout_vol_ratio` | `2.0` | Minimum volume ratio (vs 20-bar average) of the 4H breakout candle — backtest: breakouts below this failed the retest far more often |
+| `risk.breakout_close_position_min` | `0.6` | Breakout candle must close in the top 60% of its range (rejects wick-only breakouts) |
 | `backtest.months` / `backtest.top_symbols` | `6` / `12` | Historical simulation depth (runs daily via `backtest.yml`) |
 | `supertrend.period` / `supertrend.multiplier` | `10` / `3.0` | SuperTrend parameters (per timeframe, on charts, in scoring) |
 | `quant_agent.enabled` | `true` | Enable the deterministic multi-timeframe SuperTrend scan and `agent_scan.json` output |

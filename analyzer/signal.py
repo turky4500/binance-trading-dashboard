@@ -58,10 +58,17 @@ def _breakout_cross(state, side='up'):
     return None  # breakout needs candle history -> computed by caller
 
 
-def detect_breakout(df, s=None, vol_min=1.5, lookback=8):
+def detect_breakout(df, s=None, vol_min=1.5, lookback=8, close_pos_min=0.0):
     """Look for a candle in the last `lookback` bars closing beyond the pre-window
     extreme. The base window ends before those bars so the breakout candle itself
-    never contaminates the base extreme."""
+    never contaminates the base extreme.
+
+    Quality filters (backtest-calibrated — BREAKOUT_RETEST won only ~20% without them):
+      * vol_min: breakout-candle volume ratio vs its 20-bar average
+      * close_pos_min: the close must sit in the favorable part of the candle
+        range (>= close_pos_min of the range for UP, <= 1-close_pos_min for DOWN),
+        which rejects wick-only breakouts that fail the retest. 0 disables it.
+    """
     n = len(df)
     if n < 78:
         return None
@@ -70,9 +77,13 @@ def detect_breakout(df, s=None, vol_min=1.5, lookback=8):
     recent = df.iloc[-lookback:]
     for i in range(len(recent)):
         row = recent.iloc[i]
-        if float(row['c']) > base_hi and float(row['vol_ratio']) >= vol_min:
+        rng = float(row['h']) - float(row['l'])
+        pos = (float(row['c']) - float(row['l'])) / rng if rng > 0 else 0.5
+        if (float(row['c']) > base_hi and float(row['vol_ratio']) >= vol_min
+                and pos >= close_pos_min):
             return {'level': base_hi, 'dir': 'UP', 'at': str(row['t'])}
-        if float(row['c']) < base_lo and float(row['vol_ratio']) >= vol_min:
+        if (float(row['c']) < base_lo and float(row['vol_ratio']) >= vol_min
+                and pos <= 1 - close_pos_min):
             return {'level': base_lo, 'dir': 'DOWN', 'at': str(row['t'])}
     return None
 

@@ -1,109 +1,113 @@
 {
-  "engine_version": "1.9.2",
-  "update_interval_minutes": 15,
-  "stale_after_minutes": 45,
-  "expiry_hours": 48,
-  "min_score_to_show": 82,
-  "max_opportunities": 8,
-  "min_rr_tp1": 1.5,
-  "universe": {
-    "quote_asset": "USDT",
-    "max_symbols_to_screen": 0,
-    "max_candidates_deep": 50,
-    "min_quote_volume_24h": 5000000,
-    "min_trades_24h": 1000,
-    "max_spread_pct": 0.2,
-    "min_daily_candles": 200,
-    "exclude_assets": [
-      "PUMP",
-      "PLUME",
-      "BOME",
-      "PEOPLE",
-      "NEIRO",
-      "TUT",
-      "ONG",
-      "ACE",
-      "ENA",
-      "WHY",
-      "CHEEMS",
-      "DOGS"
-    ],
-    "exclude_24h_change_gt": 12.0,
-    "exclude_24h_change_lt": -18.0
-  },
-  "market_filter": {
-    "enabled": true,
-    "min_breadth_pct": 40.0
-  },
-  "scoring": {
-    "trend_alignment": 20,
-    "structure": 15,
-    "support_resistance": 15,
-    "volume": 15,
-    "momentum": 10,
-    "entry_quality": 10,
-    "risk_reward": 10,
-    "liquidity": 5
-  },
-  "risk": {
-    "atr_sl_mult_default": 1.3,
-    "atr_sl_min": 0.8,
-    "atr_sl_max": 2.0,
-    "pullback_zone_atr": 0.6,
-    "retest_zone_atr": 0.5,
-    "breakout_vol_ratio": 1.5,
-    "tp_snap_tolerance": 0.25,
-    "min_tp1_distance_atr": 1.2
-  },
-  "telegram": {
-    "enabled": false,
-    "min_score_alert": 85,
-    "notify": {
-      "new_setup": true,
-      "ready": true,
-      "triggered": true,
-      "tp_hit": true,
-      "stopped": true,
-      "expired": false,
-      "invalidated": false
-    }
-  },
-  "supertrend": {
-    "period": 10,
-    "multiplier": 3.0
-  },
-  "strategy": {
-    "allow_shorts": false,
-    "disabled_setups": [
-      "PULLBACK"
-    ]
-  },
-  "backtest": {
-    "months": 6,
-    "top_symbols": 12,
-    "expiry_bars_4h": 12
-  },
-  "quant_agent": {
-    "enabled": true,
-    "timeframes": [
-      "15m",
-      "1h",
-      "4h"
-    ],
-    "min_score": 82,
-    "max_signals": 12,
-    "max_signals_per_timeframe": 4,
-    "max_ema200_extension_pct": 5.0,
-    "max_live_chase_atr": 0.75,
-    "max_upper_wick_body_ratio": 1.5,
-    "resistance_proximity_pct": 0.3,
-    "max_stop_distance_pct": 3.0,
-    "min_rr_tp1": 1.5,
-    "entry_zone_half_width_pct": 0.15,
-    "stop_buffer_atr": 0.1,
-    "supertrend_bounce_atr": 0.25,
-    "tp1_pct": 1.2,
-    "tp2_pct": 2.25,
-    "tp3_pct": 4.25
+ "engine_version": "1.9.3",
+ "update_interval_minutes": 15,
+ "stale_after_minutes": 45,
+ "expiry_hours": 48,
+ "min_score_to_show": 84,
+ "max_opportunities": 8,
+ "min_rr_tp1": 1.5,
+ "universe": {
+  "quote_asset": "USDT",
+  "max_symbols_to_screen": 0,
+  "max_candidates_deep": 50,
+  "min_quote_volume_24h": 5000000,
+  "min_trades_24h": 1000,
+  "max_spread_pct": 0.2,
+  "min_daily_candles": 200,
+  "exclude_assets": [
+   "PUMP",
+   "PLUME",
+   "BOME",
+   "PEOPLE",
+   "NEIRO",
+   "TUT",
+   "ONG",
+   "ACE",
+   "ENA",
+   "WHY",
+   "CHEEMS",
+   "DOGS"
+  ],
+  "exclude_24h_change_gt": 12.0,
+  "exclude_24h_change_lt": -18.0
+ },
+ "market_filter": {
+  "enabled": true,
+  "min_breadth_pct": 40.0
+ },
+ "scoring": {
+  "trend_alignment": 20,
+  "structure": 15,
+  "support_resistance": 15,
+  "volume": 15,
+  "momentum": 10,
+  "entry_quality": 10,
+  "risk_reward": 10,
+  "liquidity": 5
+ },
+ "risk": {
+  "atr_sl_mult_default": 1.3,
+  "atr_sl_min": 0.8,
+  "atr_sl_max": 2.0,
+  "pullback_zone_atr": 0.6,
+  "retest_zone_atr": 0.5,
+  "breakout_vol_ratio": 2.0,
+  "tp_snap_tolerance": 0.25,
+  "min_tp1_distance_atr": 1.2,
+  "breakout_close_position_min": 0.6
+ },
+ "telegram": {
+  "enabled": false,
+  "min_score_alert": 85,
+  "notify": {
+   "new_setup": true,
+   "ready": true,
+   "triggered": true,
+   "tp_hit": true,
+   "stopped": true,
+   "expired": false,
+   "invalidated": false
   }
+ },
+ "supertrend": {
+  "period": 10,
+  "multiplier": 3.0
+ },
+ "strategy": {
+  "allow_shorts": false,
+  "disabled_setups": [
+   "PULLBACK"
+  ]
+ },
+ "backtest": {
+  "months": 6,
+  "top_symbols": 12,
+  "expiry_bars_4h": 12
+ },
+ "quant_agent": {
+  "enabled": true,
+  "timeframes": [
+   "15m",
+   "1h",
+   "4h"
+  ],
+  "min_score": 82,
+  "max_signals": 12,
+  "max_signals_per_timeframe": 4,
+  "max_ema200_extension_pct": 5.0,
+  "max_live_chase_atr": 0.75,
+  "max_upper_wick_body_ratio": 1.5,
+  "resistance_proximity_pct": 0.3,
+  "max_stop_distance_pct": 3.0,
+  "min_rr_tp1": 1.5,
+  "entry_zone_half_width_pct": 0.15,
+  "stop_buffer_atr": 0.1,
+  "supertrend_bounce_atr": 0.25,
+  "tp1_pct": 1.2,
+  "tp2_pct": 2.25,
+  "tp3_pct": 4.25
+ },
+ "btc_filter": {
+  "enabled": true
+ }
 }

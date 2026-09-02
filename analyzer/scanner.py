@@ -61,6 +61,14 @@ def _select_universe(rows, max_symbols):
     return list(rows) if limit <= 0 else list(rows[:limit])
 
 
+def btc_regime_bullish(df):
+    """BTC daily regime used as a gate for NEW long setups on altcoins:
+    bullish only while BTC closes above its own daily EMA200. Altcoins lose
+    far more often when the market leader itself is in a downtrend."""
+    st = tf_state(df, k=3)
+    return bool(st['close'] > st['ema200'])
+
+
 def scan(cfg, now_iso=None, verbose=True):
     now_iso = now_iso or iso()
     errors = []
@@ -126,6 +134,29 @@ def scan(cfg, now_iso=None, verbose=True):
     if verbose:
         print(f"[2/6] Daily klines: {len(daily)} symbols")
 
+    # ---------- 2b. BTC daily regime gate (fail-open when data is missing)
+    btc_cfg = cfg.get('btc_filter', {})
+    btc_info = {'enabled': bool(btc_cfg.get('enabled', False)), 'bullish': True}
+    if btc_info['enabled']:
+        btc_df = daily.get('BTCUSDT')
+        if btc_df is None or len(btc_df) < 200:
+            try:
+                k = _get_klines('BTCUSDT', '1d', 400)
+                if k:
+                    btc_df = enrich(klines_to_df(k), st_period=stp['period'], st_mult=stp['multiplier'])
+            except Exception:
+                btc_df = None
+        if btc_df is not None and len(btc_df) >= 200:
+            try:
+                btc_info['bullish'] = btc_regime_bullish(btc_df)
+                btc_info['close'] = round(float(btc_df['c'].iloc[-1]), 2)
+                btc_info['ema200'] = round(float(btc_df['ema200'].iloc[-1]), 2)
+            except Exception:
+                btc_info['bullish'] = True  # fail-open on compute errors
+        if verbose and not btc_info['bullish']:
+            print(f"[btc-gate] BTC {btc_info.get('close')} below daily EMA200 "
+                  f"{btc_info.get('ema200')} -> new long setups suppressed this cycle")
+
     # ---------- 3. daily screen -> candidates
     cand = []
     meta_by_sym = {r['sym']: r for r in universe}
@@ -188,13 +219,14 @@ def scan(cfg, now_iso=None, verbose=True):
     gate_min_breadth = float(mfilter.get('min_breadth_pct', 0)) if mfilter.get('enabled', False) else 0.0
     market_early = _market_status(daily, meta_by_sym)  # same inputs as step 6 -> identical result
     gate_active = gate_min_breadth > 0 and market_early['breadth_pct_above_ema50'] < gate_min_breadth
+    btc_blocked = btc_info['enabled'] and not btc_info['bullish']
     if verbose and gate_active:
         print(f"[gate] breadth {market_early['breadth_pct_above_ema50']}% < {gate_min_breadth}% "
               f"-> new setups suppressed this cycle (existing ones still tracked)")
     weights = cfg['scoring']
     fresh = []
     for sym, meta in cand:
-        if gate_active:
+        if gate_active or btc_blocked:
             break
         frames = intraday.get(sym)
         if not frames or not all(t in frames for t in ('15m', '1h', '4h')):
@@ -205,7 +237,9 @@ def scan(cfg, now_iso=None, verbose=True):
             st_kw = dict(st_period=stp['period'], st_mult=stp['multiplier'])
             tf = {'15m': tf_state(enrich(d15, **st_kw), k=2), '1h': tf_state(enrich(d1h, **st_kw), k=2),
                   '4h': tf_state(enrich(d4h, **st_kw), k=3), '1d': tf_state(enrich(dd, **st_kw), k=3)}
-            brk = detect_breakout(enrich(d4h), tf['4h'])
+            brk = detect_breakout(enrich(d4h), tf['4h'],
+                                  vol_min=cfg_risk.get('breakout_vol_ratio', 1.5),
+                                  close_pos_min=cfg_risk.get('breakout_close_position_min', 0.0))
             plans = generate_plans(tf, brk, cfg_risk)
             if not cfg.get('strategy', {}).get('allow_shorts', True):
                 plans = [p for p in plans if p['direction'] == 'LONG']
@@ -290,9 +324,13 @@ def scan(cfg, now_iso=None, verbose=True):
 
     # ---------- 6. market status + deterministic quantitative agent + persist
     market = market_early
-    market['new_setups_gated'] = gate_active
+    market['new_setups_gated'] = gate_active or btc_blocked
     if gate_active:
         market['gate_reason'] = f"breadth {market['breadth_pct_above_ema50']}% below min {gate_min_breadth}%"
+    elif btc_blocked:
+        market['gate_reason'] = (f"BTC {btc_info.get('close')} below daily EMA200 "
+                                 f"{btc_info.get('ema200')} (btc_filter)")
+    market['btc_filter'] = btc_info
     st_board = _build_st_signals(daily, meta_by_sym, now_iso)
     if verbose:
         print(f"[ST] supertrend daily BUY signals: {st_board['count']}")
@@ -372,6 +410,9 @@ def scan(cfg, now_iso=None, verbose=True):
             'market_filter': {'enabled': bool(mfilter.get('enabled', False)),
                               'min_breadth_pct': gate_min_breadth,
                               'gated_this_cycle': gate_active},
+            'btc_filter': {'enabled': btc_info['enabled'],
+                           'bullish': btc_info['bullish'],
+                           'gated_this_cycle': btc_blocked},
             'quant_agent': {
                 'enabled': bool(cfg.get('quant_agent', {}).get('enabled', True)),
                 'timeframes': agent_scan.get('timeframes_scanned', ['15m', '1h', '4h']),

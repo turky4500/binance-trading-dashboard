@@ -100,7 +100,7 @@ def _search_index(ts_arr, target_ns):
     return int(np.searchsorted(ts_arr, target_ns, side='right')) - 1
 
 
-def backtest_symbol(symbol, meta_row, cfg, verbose=False):
+def backtest_symbol(symbol, meta_row, cfg, btc=None, verbose=False):
     months = cfg.get('backtest', {}).get('months', 6)
     bars_1d = int(months * 30.5) + 30
     bars_4h = int(months * 30.5 * 6) + 40
@@ -128,6 +128,11 @@ def backtest_symbol(symbol, meta_row, cfg, verbose=False):
     t1_ns = e1['t'].values.astype('int64')
     td_ns = ed['t'].values.astype('int64')
 
+    # BTC daily regime gate: mirrors the live scanner (fail-open when missing).
+    btc_on = cfg.get('btc_filter', {}).get('enabled', False) and btc is not None
+    btc_ns = btc['t'].values.astype('int64') if btc_on else None
+    btc_bull = (btc['c'] > btc['ema200']).values if btc_on else None
+
     records = []
     i = 160  # warmup: base window + breakout lookback
     n = len(e4)
@@ -142,11 +147,18 @@ def backtest_symbol(symbol, meta_row, cfg, verbose=False):
         if j1 < 120 or jd < 60:
             i += 1
             continue
+        if btc_on:
+            jb = _search_index(btc_ns, t4_ns[i])
+            if jb < 0 or not btc_bull[jb]:
+                i += 1
+                continue
         try:
             t1 = tf_state(e1.iloc[:j1 + 1], k=2)
             td = tf_state(ed.iloc[:jd + 1], k=3)
             tf = {'1h': t1, '4h': t4, '1d': td}
-            brk = detect_breakout(e4.iloc[:i + 1], None)
+            brk = detect_breakout(e4.iloc[:i + 1], None,
+                                  vol_min=risk.get('breakout_vol_ratio', 1.5),
+                                  close_pos_min=risk.get('breakout_close_position_min', 0.0))
             plans = generate_plans(tf, brk, risk)
             plans = [p for p in plans if p['direction'] == 'LONG']
             if not plans:
@@ -259,9 +271,23 @@ def run(cfg=None, verbose=True):
     if verbose:
         print(f"[backtest] symbols ({months} months): {[u['sym'] for u in universe]}")
 
+    # BTC daily series for the regime gate (same rule as the live scanner)
+    btc_df = None
+    if cfg.get('btc_filter', {}).get('enabled', False):
+        try:
+            raw_btc = _paged_klines('BTCUSDT', '1d', int(months * 30.5) + 230, max_pages=2)
+            if len(raw_btc) >= 200:
+                btc_df = enrich(klines_to_df(raw_btc),
+                                st_period=cfg.get('supertrend', {}).get('period', 10),
+                                st_mult=cfg.get('supertrend', {}).get('multiplier', 3.0))
+        except Exception:
+            btc_df = None
+        if verbose:
+            print(f"[backtest] BTC regime gate: {'loaded' if btc_df is not None else 'UNAVAILABLE (fail-open)'}")
+
     all_records = []
     with ThreadPoolExecutor(max_workers=4) as ex:
-        futs = {ex.submit(backtest_symbol, u['sym'], u, cfg): u['sym'] for u in universe}
+        futs = {ex.submit(backtest_symbol, u['sym'], u, cfg, btc_df): u['sym'] for u in universe}
         for f in as_completed(futs):
             sym = futs[f]
             try:
