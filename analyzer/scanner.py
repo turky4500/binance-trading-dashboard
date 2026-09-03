@@ -348,7 +348,7 @@ def scan(cfg, now_iso=None, verbose=True):
         heat_rows.append({'s': sym.replace('USDT', ''), 'c24': round(float(chg), 2),
                           'vol': round(meta.get('quoteVol', 0) / 1e6, 1)})
     market['heatmap'] = heat_rows[:36]
-    st_board = _build_st_signals(daily, meta_by_sym, now_iso)
+    st_board = _build_st_signals(daily, meta_by_sym, now_iso, max_age=stp.get('max_signal_age_days'))
     if verbose:
         print(f"[ST] supertrend daily BUY signals: {st_board['count']}")
 
@@ -683,7 +683,7 @@ def _st_run_info(df):
     }
 
 
-def _build_st_signals(daily, meta_by_sym, now_iso, cap=120):
+def _build_st_signals(daily, meta_by_sym, now_iso, cap=120, max_age=None):
     """SuperTrend board: every screened symbol whose DAILY SuperTrend is
     currently bullish. Listed from signal start until it flips to SELL.
     Recomputed deterministically each cycle — no extra state file.
@@ -704,6 +704,10 @@ def _build_st_signals(daily, meta_by_sym, now_iso, cap=120):
                 continue
             info = _st_run_info(df)
             if info is None:
+                continue
+            # drop signals older than the daily-entry window: an aged trend
+            # that has run for many days is no longer a fresh entry opportunity
+            if max_age is not None and info['bars_held'] > int(max_age):
                 continue
             # immediate removal: intraday flip DOWN on the open candle
             if live_dir == live_dir and live_dir is not None and int(live_dir) == -1:

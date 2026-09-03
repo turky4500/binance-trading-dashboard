@@ -558,6 +558,22 @@ def test_st_board_skips_short_history():
     assert out['count'] == 0
 
 
+def test_st_board_drops_signals_older_than_max_age():
+    from analyzer.scanner import _build_st_signals
+    # OLD ran UP for 40 days (aged trend, not a fresh entry), NEW is 1 day old
+    daily = {
+        'OLDUSDT': _st_df([1] * 40, start='2026-04-01'),
+        'NEWUSDT': _st_df([-1] * 39 + [1], start='2026-04-01'),
+    }
+    meta = {s: {'last': 100.0} for s in daily}
+    # no cap -> both listed
+    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00')
+    assert [s['symbol'] for s in out['signals']] == ['NEWUSDT', 'OLDUSDT']
+    # cap of 30 -> the 40-day-old run is dropped
+    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00', max_age=30)
+    assert [s['symbol'] for s in out['signals']] == ['NEWUSDT']
+
+
 # ---------------- SuperTrend daily board: closed-candles correctness -------
 def _daily_frame(n=150, start=100.0, drift=0.9, noise=0.35, end_offset_days=1, seed=11):
     """Daily candles ending `end_offset_days` days ago (1 = last closed day)."""
