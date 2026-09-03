@@ -529,7 +529,8 @@ def test_st_board_build_and_removal():
         'BBBUSDT': _st_df([1, 1] + [-1] * 32),
     }
     meta = {s: {'last': 100.0 + i} for i, s in enumerate(daily)}
-    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00')
+    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00',
+                            period_seconds=86400, min_bars=30)
     assert out['count'] == 1
     assert [s['symbol'] for s in out['signals']] == ['AAAUSDT']
     rec = out['signals'][0]
@@ -545,7 +546,8 @@ def test_st_board_newest_first():
         'NEWUSDT': _st_df([-1] * 39 + [1], start='2026-04-01'),
     }
     meta = {s: {'last': 100.0} for s in daily}
-    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00')
+    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00',
+                            period_seconds=86400, min_bars=30)
     syms = [s['symbol'] for s in out['signals']]
     assert syms == ['NEWUSDT', 'OLDUSDT'], f'got {syms}'
 
@@ -554,7 +556,8 @@ def test_st_board_skips_short_history():
     from analyzer.scanner import _build_st_signals
     daily = {'TINYUSDT': _st_df([1] * 5)}
     meta = {'TINYUSDT': {'last': 100.0}}
-    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00')
+    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00',
+                            period_seconds=86400, min_bars=30)
     assert out['count'] == 0
 
 
@@ -567,10 +570,12 @@ def test_st_board_drops_signals_older_than_max_age():
     }
     meta = {s: {'last': 100.0} for s in daily}
     # no cap -> both listed
-    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00')
+    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00',
+                            period_seconds=86400, min_bars=30)
     assert [s['symbol'] for s in out['signals']] == ['NEWUSDT', 'OLDUSDT']
-    # cap of 30 -> the 40-day-old run is dropped
-    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00', max_age=30)
+    # cap of 30 (daily candles) -> the 40-day-old run is dropped
+    out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00', max_age=30,
+                            period_seconds=86400, min_bars=30)
     assert [s['symbol'] for s in out['signals']] == ['NEWUSDT']
 
 
@@ -594,7 +599,8 @@ def test_st_board_lists_confirmed_uptrend():
     from analyzer.scanner import _build_st_signals
     df = enrich(_daily_frame())
     assert int(df['st_dir'].iloc[-1]) == 1  # sanity: confirmed UP run
-    board = _build_st_signals({'TESTUSDT': df}, {'TESTUSDT': {'last': 999}}, 'now')
+    board = _build_st_signals({'TESTUSDT': df}, {'TESTUSDT': {'last': 999}}, 'now',
+                              period_seconds=86400, min_bars=30)
     assert board['count'] == 1 and board['signals'][0]['symbol'] == 'TESTUSDT'
 
 
@@ -606,7 +612,8 @@ def test_st_board_removes_signal_immediately_on_intraday_flip_down():
     live = enrich(pd.concat([df[['t', 'o', 'h', 'l', 'c', 'v']], crash],
                             ignore_index=True))
     assert int(live['st_dir'].iloc[-1]) == -1  # the flip exists intraday
-    board = _build_st_signals({'TESTUSDT': live}, {'TESTUSDT': {'last': 999}}, 'now')
+    board = _build_st_signals({'TESTUSDT': live}, {'TESTUSDT': {'last': 999}}, 'now',
+                              period_seconds=86400, min_bars=30)
     # fast-exit policy: removed from the board immediately, even though the
     # confirmed daily run is still UP until the candle closes
     assert board['count'] == 0
@@ -619,7 +626,8 @@ def test_st_board_keeps_signal_while_open_candle_stays_up():
     live = enrich(pd.concat([df[['t', 'o', 'h', 'l', 'c', 'v']], cont],
                             ignore_index=True))
     assert int(live['st_dir'].iloc[-1]) == 1
-    board = _build_st_signals({'TESTUSDT': live}, {'TESTUSDT': {'last': 999}}, 'now')
+    board = _build_st_signals({'TESTUSDT': live}, {'TESTUSDT': {'last': 999}}, 'now',
+                              period_seconds=86400, min_bars=30)
     assert board['count'] == 1  # no flip -> stays listed
 
 
@@ -631,9 +639,36 @@ def test_st_board_no_phantom_signal_from_intraday_flip_up():
     live = enrich(pd.concat([df[['t', 'o', 'h', 'l', 'c', 'v']], pump],
                             ignore_index=True))
     assert int(live['st_dir'].iloc[-1]) == 1  # the open candle flips UP live
-    board = _build_st_signals({'TESTUSDT': live}, {'TESTUSDT': {'last': 999}}, 'now')
+    board = _build_st_signals({'TESTUSDT': live}, {'TESTUSDT': {'last': 999}}, 'now',
+                              period_seconds=86400, min_bars=30)
     # no signal may appear before the daily candle confirms the flip
     assert board['count'] == 0
+
+
+# ---------------- SuperTrend hourly board (default timeframe) ----------------
+def test_st_board_hourly_default_and_days_to_hours_age():
+    from analyzer.scanner import _build_st_signals
+    # hourly bars with >= min_bars so the board includes them all
+    def hourly(dirs):
+        n = len(dirs)
+        t = pd.date_range('2026-08-01', periods=n, freq='1h', tz='UTC')
+        c = [100.0 + i for i in range(n)]
+        return pd.DataFrame({'t': t, 'c': c, 'st_dir': dirs,
+                             'rsi': [55.0] * n, 'ema50': [90.0] * n})
+    frames = {
+        'FRESHUSDT': hourly([-1] * 250 + [1] * 50),   # UP run of 50h (fresh)
+        'AGEDUSDT': hourly([1] * 800),                # UP run of 800h (aged)
+        'DOWNUSDT': hourly([-1] * 300),               # not in an UP run
+    }
+    meta = {s: {'last': 100.0} for s in frames}
+    # default board is hourly; max_age is in hours here (30 days = 720h)
+    board = _build_st_signals(frames, meta, '2026-08-24T18:00:00+00:00',
+                              max_age=30 * 24)
+    assert board['timeframe'] == '1h'
+    syms = [s['symbol'] for s in board['signals']]
+    assert 'FRESHUSDT' in syms, f'got {syms}'
+    assert 'AGEDUSDT' not in syms, f'got {syms}'
+    assert 'DOWNUSDT' not in syms, f'got {syms}'
 
 
 # ---------------- quant-agent signal history ----------------

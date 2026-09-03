@@ -348,7 +348,15 @@ def scan(cfg, now_iso=None, verbose=True):
         heat_rows.append({'s': sym.replace('USDT', ''), 'c24': round(float(chg), 2),
                           'vol': round(meta.get('quoteVol', 0) / 1e6, 1)})
     market['heatmap'] = heat_rows[:36]
-    st_board = _build_st_signals(daily, meta_by_sym, now_iso, max_age=stp.get('max_signal_age_days'))
+    st_hourly = {
+        sym: enrich(f['1h'].copy(), st_period=stp['period'], st_mult=stp['multiplier'])
+        for sym, f in intraday.items() if '1h' in f
+    }
+    # max_signal_age_days is configured in days; on the hourly board bars_held
+    # counts hours, so convert days -> hours before filtering.
+    max_st_age_hours = int(stp.get('max_signal_age_days', 30)) * 24
+    st_board = _build_st_signals(st_hourly, meta_by_sym, now_iso,
+                                 max_age=max_st_age_hours)
     if verbose:
         print(f"[ST] supertrend daily BUY signals: {st_board['count']}")
 
@@ -653,23 +661,24 @@ def _write_chart_cache(ops, intraday, daily, now_iso, stp):
                 pass
 
 
-def _closed_daily(df):
-    """Drop the still-open daily candle if present (Binance returns the
-    in-progress candle as the last row). The SuperTrend board must reflect
-    CLOSED daily candles only, otherwise signals can appear and disappear
-    intraday before the day confirms."""
+def _closed_tf(df, period_seconds=3600):
+    """Drop the still-open candle if present (Binance returns the in-progress
+    candle as the last row). The SuperTrend board must reflect CLOSED candles
+    only, otherwise signals can appear and disappear before the candle
+    confirms. `period_seconds` is the candle length (3600 = 1h, 86400 = 1d).
+    """
     if df is None or len(df) < 2:
         return df
     last_open = df['t'].iloc[-1].to_pydatetime()
-    if (datetime.now(timezone.utc) - last_open).total_seconds() < 24 * 3600:
+    if (datetime.now(timezone.utc) - last_open).total_seconds() < period_seconds:
         return df.iloc[:-1]
     return df
 
 
 def _st_run_info(df):
-    """Info about the current SuperTrend UP-run of the given daily frame, or
-    None if not UP. The caller passes closed candles only (see _closed_daily),
-    so the result is deterministic within the day."""
+    """Info about the current SuperTrend UP-run of the given frame, or
+    None if not UP. The caller passes closed candles only (see _closed_tf),
+    so the result is deterministic within the candle."""
     sd = [int(x) if x == x else 0 for x in df['st_dir'].tolist()]
     if not sd or sd[-1] != 1:
         return None
@@ -683,33 +692,35 @@ def _st_run_info(df):
     }
 
 
-def _build_st_signals(daily, meta_by_sym, now_iso, cap=120, max_age=None):
-    """SuperTrend board: every screened symbol whose DAILY SuperTrend is
-    currently bullish. Listed from signal start until it flips to SELL.
-    Recomputed deterministically each cycle — no extra state file.
+def _build_st_signals(frames, meta_by_sym, now_iso, cap=120, max_age=None,
+                      timeframe='1h', period_seconds=3600, min_bars=200):
+    """SuperTrend board: every screened symbol whose SuperTrend on `timeframe`
+    (default 1h) is currently bullish. Listed from signal start until it flips
+    to SELL. Recomputed deterministically each cycle — no extra state file.
 
     Asymmetric policy (fast exits, confirmed entries):
-      * ENTRIES need the daily candle CLOSED (see _closed_daily) — no phantom
-        signals from intraday flips.
-      * EXITS are immediate: if the still-open daily candle has already
-        flipped SuperTrend DOWN, the symbol is removed from the board right
-        away, until a new confirmed signal appears.
+      * ENTRIES need the candle CLOSED (see _closed_tf) — no phantom signals
+        from intraday flips.
+      * EXITS are immediate: if the still-open candle has already flipped
+        SuperTrend DOWN, the symbol is removed from the board right away,
+        until a new confirmed signal appears.
     """
     signals = []
-    for sym, df in daily.items():
+    for sym, df in frames.items():
         try:
             live_dir = df['st_dir'].iloc[-1] if len(df) else None
-            df = _closed_daily(df)
-            if len(df) < 30:
+            df = _closed_tf(df, period_seconds)
+            if len(df) < min_bars:
                 continue
             info = _st_run_info(df)
             if info is None:
                 continue
-            # drop signals older than the daily-entry window: an aged trend
-            # that has run for many days is no longer a fresh entry opportunity
+            # drop signals older than the entry window (max_age in the same
+            # candle units as bars_held): an aged trend that has run for many
+            # candles is no longer a fresh entry opportunity
             if max_age is not None and info['bars_held'] > int(max_age):
                 continue
-            # immediate removal: intraday flip DOWN on the open candle
+            # immediate removal: flip DOWN on the open candle
             if live_dir == live_dir and live_dir is not None and int(live_dir) == -1:
                 continue
             c_now = float(df['c'].iloc[-1])
@@ -736,7 +747,7 @@ def _build_st_signals(daily, meta_by_sym, now_iso, cap=120, max_age=None):
     signals.sort(key=lambda s: s['signal_at'], reverse=True)
     return {
         'updated_at': now_iso,
-        'timeframe': '1d',
+        'timeframe': timeframe,
         'count': len(signals),
         'signals': signals[:cap],
     }

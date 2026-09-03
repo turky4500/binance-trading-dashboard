@@ -117,11 +117,11 @@ def st_signal_text(sig):
     return (
         f"📈 إشارة سوبر ترند جديدة\n\n"
         f"{pair}\n"
-        f"الاتجاه اليومي: شراء (BUY)\n"
+        f"الاتجاه (ساعة / 1H): شراء (BUY)\n"
         f"سعر بداية الإشارة: {sig.get('price_at_signal')}\n"
         f"السعر الحالي: {sig.get('current_price')} ({change_txt})\n"
         f"R.S.I: {sig.get('rsi') if sig.get('rsi') is not None else '—'}\n\n"
-        f"فرصة دخول جديدة على الفريم اليومي."
+        f"فرصة دخول جديدة على فريم الساعة."
     )
 
 
