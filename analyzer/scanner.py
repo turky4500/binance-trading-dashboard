@@ -668,15 +668,27 @@ def _st_run_info(df):
 def _build_st_signals(daily, meta_by_sym, now_iso, cap=120):
     """SuperTrend board: every screened symbol whose DAILY SuperTrend is
     currently bullish. Listed from signal start until it flips to SELL.
-    Recomputed deterministically each cycle — no extra state file."""
+    Recomputed deterministically each cycle — no extra state file.
+
+    Asymmetric policy (fast exits, confirmed entries):
+      * ENTRIES need the daily candle CLOSED (see _closed_daily) — no phantom
+        signals from intraday flips.
+      * EXITS are immediate: if the still-open daily candle has already
+        flipped SuperTrend DOWN, the symbol is removed from the board right
+        away, until a new confirmed signal appears.
+    """
     signals = []
     for sym, df in daily.items():
         try:
+            live_dir = df['st_dir'].iloc[-1] if len(df) else None
             df = _closed_daily(df)
             if len(df) < 30:
                 continue
             info = _st_run_info(df)
             if info is None:
+                continue
+            # immediate removal: intraday flip DOWN on the open candle
+            if live_dir == live_dir and live_dir is not None and int(live_dir) == -1:
                 continue
             c_now = float(df['c'].iloc[-1])
             e50 = float(df['ema50'].iloc[-1])

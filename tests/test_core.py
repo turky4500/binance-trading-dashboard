@@ -582,16 +582,29 @@ def test_st_board_lists_confirmed_uptrend():
     assert board['count'] == 1 and board['signals'][0]['symbol'] == 'TESTUSDT'
 
 
-def test_st_board_ignores_intraday_flip_to_down():
+def test_st_board_removes_signal_immediately_on_intraday_flip_down():
     from analyzer.scanner import _build_st_signals
     df = enrich(_daily_frame())
-    # today's OPEN candle crashes hard -> live SuperTrend flips DOWN before close
+    # today's OPEN candle crashes hard -> live SuperTrend flips DOWN
     crash = pd.DataFrame([_today_bar(float(df['c'].iloc[-1]), 0.80)])
     live = enrich(pd.concat([df[['t', 'o', 'h', 'l', 'c', 'v']], crash],
                             ignore_index=True))
     assert int(live['st_dir'].iloc[-1]) == -1  # the flip exists intraday
     board = _build_st_signals({'TESTUSDT': live}, {'TESTUSDT': {'last': 999}}, 'now')
-    assert board['count'] == 1  # confirmed UP run must NOT vanish before the close
+    # fast-exit policy: removed from the board immediately, even though the
+    # confirmed daily run is still UP until the candle closes
+    assert board['count'] == 0
+
+
+def test_st_board_keeps_signal_while_open_candle_stays_up():
+    from analyzer.scanner import _build_st_signals
+    df = enrich(_daily_frame())
+    cont = pd.DataFrame([_today_bar(float(df['c'].iloc[-1]), 1.02)])
+    live = enrich(pd.concat([df[['t', 'o', 'h', 'l', 'c', 'v']], cont],
+                            ignore_index=True))
+    assert int(live['st_dir'].iloc[-1]) == 1
+    board = _build_st_signals({'TESTUSDT': live}, {'TESTUSDT': {'last': 999}}, 'now')
+    assert board['count'] == 1  # no flip -> stays listed
 
 
 def test_st_board_no_phantom_signal_from_intraday_flip_up():
