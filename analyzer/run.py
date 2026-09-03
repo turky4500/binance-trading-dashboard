@@ -18,7 +18,8 @@ import urllib.parse
 import urllib.request
 
 from .scanner import scan
-from .storage import iso
+from .storage import iso, load_json, data_path
+from . import whatsapp
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_CONFIG = os.path.join(ROOT, 'config', 'settings.json')
@@ -138,7 +139,40 @@ def main(argv=None):
             print(f"  #{i} {op['pair']:12s} {op['direction']:5s} score={op['score']:3d} "
                   f"status={op['status']:20s} entry={op['entry_zone']} sl={op['stop_loss']} "
                   f"tp1={op['tp1']} tp2={op['tp2']} rr2={op['rr_tp2']}")
+    wa_sent = _send_whatsapp_alerts(events, cfg, ops)
+    if verbose and wa_sent:
+        print(f"WhatsApp alerts sent: {wa_sent}")
     return 0
+
+
+def _send_whatsapp_alerts(events, cfg, ops):
+    """Send WhatsApp for (1) new confirmed opportunities and (2) new daily
+    SuperTrend entry signals. Both are deduplicated against the persisted
+    state file so each distinct signal/opportunity alerts exactly once.
+
+    Sending requires WHATSAPP_TOKEN env var + whatsapp.enabled == True.
+    Returns the number of accepted messages.
+    """
+    wa = cfg.get("whatsapp", {})
+    if not wa.get("enabled") or not os.environ.get("WHATSAPP_TOKEN", "").strip():
+        return 0
+    notify = wa.get("notify", {})
+    sent = 0
+
+    if notify.get("new_opportunity", True):
+        new_opps = whatsapp.filter_new_opportunities(
+            events.get("new", []), wa.get("min_score_alert", 84))
+        for op in new_opps:
+            if whatsapp.send_whatsapp(whatsapp.opportunity_text(op), cfg):
+                sent += 1
+
+    if notify.get("new_st_signal", True):
+        st_board = load_json(data_path("st_signals.json"), {})
+        for s in whatsapp.filter_new_st_signals(st_board):
+            if whatsapp.send_whatsapp(whatsapp.st_signal_text(s), cfg):
+                sent += 1
+
+    return sent
 
 
 if __name__ == '__main__':

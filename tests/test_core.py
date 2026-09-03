@@ -675,3 +675,88 @@ def test_record_agent_history_never_raises(tmp_path, monkeypatch):
     monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
     sc._record_agent_history({'signals': [{'bars': []}], 'broken': True}, 'x')
     assert True
+
+
+# ---------------- WhatsApp alerts ----------------
+def test_whatsapp_filter_new_st_signals(tmp_path, monkeypatch):
+    from analyzer import whatsapp as wa
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    board1 = {'signals': [{'symbol': 'BTCUSDT'}, {'symbol': 'ETHUSDT'}]}
+    new1 = wa.filter_new_st_signals(board1)
+    assert {s['symbol'] for s in new1} == {'BTCUSDT', 'ETHUSDT'}
+    # second cycle with no new symbol -> nothing new
+    new2 = wa.filter_new_st_signals({'signals': [{'symbol': 'BTCUSDT'}, {'symbol': 'ETHUSDT'}]})
+    assert new2 == []
+    # new symbol added -> only the newcomer is reported
+    board3 = {'signals': [{'symbol': 'BTCUSDT'}, {'symbol': 'ETHUSDT'}, {'symbol': 'SOLUSDT'}]}
+    new3 = {s['symbol'] for s in wa.filter_new_st_signals(board3)}
+    assert new3 == {'SOLUSDT'}
+
+
+def test_whatsapp_filter_new_opportunities(tmp_path, monkeypatch):
+    from analyzer import whatsapp as wa
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+
+    def opp(sym, status, score):
+        return {'symbol': sym, 'direction': 'LONG', 'status': status, 'score': score}
+
+    first = [opp('BTCUSDT', 'READY', 88), opp('LOWUSDT', 'READY', 60),
+             opp('WAITUSDT', 'WAITING_CONFIRMATION', 90), opp('DRAFTUSDT', 'DRAFT', 95)]
+    out = wa.filter_new_opportunities(first, min_score=84)
+    got = {(o['symbol']) for o in out}
+    # only READY/WAITING above min_score are notified
+    assert got == {'BTCUSDT', 'WAITUSDT'}
+    # same opp again -> not re-notified
+    again = wa.filter_new_opportunities([opp('BTCUSDT', 'READY', 89)], min_score=84)
+    assert again == []
+
+
+def test_whatsapp_send_requires_token_and_cfg(tmp_path, monkeypatch):
+    from analyzer import whatsapp as wa
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    monkeypatch.delenv('WHATSAPP_TOKEN', raising=False)
+    cfg = {'whatsapp': {'enabled': True, 'to': '966533170332',
+                        'endpoint': 'https://example.invalid'}}
+    # no token -> never sends
+    assert wa.send_whatsapp('hi', cfg) is False
+    # disabled -> never sends even with token
+    monkeypatch.setenv('WHATSAPP_TOKEN', 'tok')
+    cfg2 = {'whatsapp': {'enabled': False, 'to': 'x', 'endpoint': 'https://example.invalid'}}
+    assert wa.send_whatsapp('hi', cfg2) is False
+
+
+def test_whatsapp_send_posts_to_endpoint(tmp_path, monkeypatch):
+    from analyzer import whatsapp as wa
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('WHATSAPP_TOKEN', 'sekret')
+    captured = {}
+
+    class FakeResp:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(req, timeout=0):
+        captured['url'] = req.full_url
+        captured['method'] = req.get_method()
+        captured['auth'] = req.get_header('Authorization')
+        captured['body'] = req.data.decode('utf-8')
+        return FakeResp()
+
+    monkeypatch.setattr(wa.urllib.request, 'urlopen', fake_urlopen)
+    cfg = {'whatsapp': {'enabled': True, 'to': '966533170332',
+                        'endpoint': 'https://wa.example/api/v1/send'}}
+    assert wa.send_whatsapp('hello', cfg) is True
+    assert captured['url'] == 'https://wa.example/api/v1/send'
+    assert captured['method'] == 'POST'
+    assert captured['auth'] == 'Bearer sekret'
+    assert '"to": "966533170332"' in captured['body']
+    assert '"message": "hello"' in captured['body']

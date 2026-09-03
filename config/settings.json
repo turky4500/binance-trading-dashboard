@@ -56,19 +56,29 @@
   "min_tp1_distance_atr": 1.2,
   "breakout_close_position_min": 0.6
  },
- "telegram": {
-  "enabled": false,
-  "min_score_alert": 85,
-  "notify": {
-   "new_setup": true,
-   "ready": true,
-   "triggered": true,
-   "tp_hit": true,
-   "stopped": true,
-   "expired": false,
-   "invalidated": false
-  }
- },
+  "telegram": {
+   "enabled": false,
+   "min_score_alert": 85,
+   "notify": {
+    "new_setup": true,
+    "ready": true,
+    "triggered": true,
+    "tp_hit": true,
+    "stopped": true,
+    "expired": false,
+    "invalidated": false
+   }
+  },
+  "whatsapp": {
+   "enabled": true,
+   "endpoint": "https://wats-saas.duckdns.org/api/v1/send",
+   "to": "966533170332",
+   "min_score_alert": 84,
+   "notify": {
+    "new_st_signal": true,
+    "new_opportunity": true
+   }
+  },
   "supertrend": {
    "period": 10,
    "multiplier": 3.0,
