@@ -556,3 +556,52 @@ def test_st_board_skips_short_history():
     meta = {'TINYUSDT': {'last': 100.0}}
     out = _build_st_signals(daily, meta, '2026-08-24T18:00:00+00:00')
     assert out['count'] == 0
+
+
+# ---------------- SuperTrend daily board: closed-candles correctness -------
+def _daily_frame(n=150, start=100.0, drift=0.9, noise=0.35, end_offset_days=1, seed=11):
+    """Daily candles ending `end_offset_days` days ago (1 = last closed day)."""
+    df = make_df(n=n, start=start, drift=drift, noise=noise, seed=seed)
+    end = (pd.Timestamp.utcnow().normalize() - pd.Timedelta(days=end_offset_days))
+    t = pd.date_range(end=end, periods=n, freq='1D', tz='UTC')
+    df['t'] = t
+    return df
+
+
+def _today_bar(last_close, mult):
+    t0 = pd.Timestamp.utcnow().normalize()
+    return {'t': t0, 'o': last_close, 'h': last_close * max(mult, 1.0),
+            'l': last_close * min(mult, 1.0), 'c': last_close * mult, 'v': 500.0}
+
+
+def test_st_board_lists_confirmed_uptrend():
+    from analyzer.scanner import _build_st_signals
+    df = enrich(_daily_frame())
+    assert int(df['st_dir'].iloc[-1]) == 1  # sanity: confirmed UP run
+    board = _build_st_signals({'TESTUSDT': df}, {'TESTUSDT': {'last': 999}}, 'now')
+    assert board['count'] == 1 and board['signals'][0]['symbol'] == 'TESTUSDT'
+
+
+def test_st_board_ignores_intraday_flip_to_down():
+    from analyzer.scanner import _build_st_signals
+    df = enrich(_daily_frame())
+    # today's OPEN candle crashes hard -> live SuperTrend flips DOWN before close
+    crash = pd.DataFrame([_today_bar(float(df['c'].iloc[-1]), 0.80)])
+    live = enrich(pd.concat([df[['t', 'o', 'h', 'l', 'c', 'v']], crash],
+                            ignore_index=True))
+    assert int(live['st_dir'].iloc[-1]) == -1  # the flip exists intraday
+    board = _build_st_signals({'TESTUSDT': live}, {'TESTUSDT': {'last': 999}}, 'now')
+    assert board['count'] == 1  # confirmed UP run must NOT vanish before the close
+
+
+def test_st_board_no_phantom_signal_from_intraday_flip_up():
+    from analyzer.scanner import _build_st_signals
+    df = enrich(_daily_frame(start=200.0, drift=-0.5, seed=13))  # confirmed DOWN
+    assert int(df['st_dir'].iloc[-1]) == -1
+    pump = pd.DataFrame([_today_bar(float(df['c'].iloc[-1]), 3.0)])
+    live = enrich(pd.concat([df[['t', 'o', 'h', 'l', 'c', 'v']], pump],
+                            ignore_index=True))
+    assert int(live['st_dir'].iloc[-1]) == 1  # the open candle flips UP live
+    board = _build_st_signals({'TESTUSDT': live}, {'TESTUSDT': {'last': 999}}, 'now')
+    # no signal may appear before the daily candle confirms the flip
+    assert board['count'] == 0

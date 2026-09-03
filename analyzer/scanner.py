@@ -10,6 +10,7 @@ import json
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
 
 from . import binance_client as bc
 from .indicators import klines_to_df, enrich
@@ -634,9 +635,23 @@ def _write_chart_cache(ops, intraday, daily, now_iso, stp):
                 pass
 
 
+def _closed_daily(df):
+    """Drop the still-open daily candle if present (Binance returns the
+    in-progress candle as the last row). The SuperTrend board must reflect
+    CLOSED daily candles only, otherwise signals can appear and disappear
+    intraday before the day confirms."""
+    if df is None or len(df) < 2:
+        return df
+    last_open = df['t'].iloc[-1].to_pydatetime()
+    if (datetime.now(timezone.utc) - last_open).total_seconds() < 24 * 3600:
+        return df.iloc[:-1]
+    return df
+
+
 def _st_run_info(df):
-    """Info about the current daily SuperTrend UP-run, or None if not UP.
-    Purely derived from closed candles (deterministic)."""
+    """Info about the current SuperTrend UP-run of the given daily frame, or
+    None if not UP. The caller passes closed candles only (see _closed_daily),
+    so the result is deterministic within the day."""
     sd = [int(x) if x == x else 0 for x in df['st_dir'].tolist()]
     if not sd or sd[-1] != 1:
         return None
@@ -657,6 +672,7 @@ def _build_st_signals(daily, meta_by_sym, now_iso, cap=120):
     signals = []
     for sym, df in daily.items():
         try:
+            df = _closed_daily(df)
             if len(df) < 30:
                 continue
             info = _st_run_info(df)

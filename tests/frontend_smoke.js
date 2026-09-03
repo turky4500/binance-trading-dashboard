@@ -190,13 +190,18 @@ const assert = (cond, msg) => {
     assert(modal.classList.contains('hidden'), 'modal closes');
   }
 
-  // 4. search + filters
+  // 4. search + filters (needs at least one card; the strict engine can
+  // legitimately publish zero opportunities for days at a time)
   const search = window.document.getElementById('search');
-  search.value = data.opportunities[0] ? data.opportunities[0].symbol.slice(0, 3) : 'BTC';
-  search.dispatchEvent(new window.Event('input', { bubbles: true }));
-  assert(window.document.querySelectorAll('#opps-grid .card').length >= 1, 'search filter works');
-  search.value = '';
-  search.dispatchEvent(new window.Event('input', { bubbles: true }));
+  if (data.opportunities.length > 0) {
+    search.value = data.opportunities[0].symbol.slice(0, 3);
+    search.dispatchEvent(new window.Event('input', { bubbles: true }));
+    assert(window.document.querySelectorAll('#opps-grid .card').length >= 1, 'search filter works');
+    search.value = '';
+    search.dispatchEvent(new window.Event('input', { bubbles: true }));
+  } else {
+    console.log('SKIP: search filter (zero opportunities in current data)');
+  }
   const sort = window.document.getElementById('f-sort');
   sort.value = 'rr'; sort.dispatchEvent(new window.Event('change', { bubbles: true }));
   // watchlist: star toggle + bar + filter chip (cards still visible here)
