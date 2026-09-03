@@ -54,6 +54,8 @@ jobs:
           # optional Telegram alerts — undefined by default, never logged
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # optional WhatsApp alerts — undefined by default, never logged
+          WHATSAPP_TOKEN: ${{ secrets.WHATSAPP_TOKEN }}
       - name: Commit updated data (race-proof)
         run: |
           git config user.name "github-actions[bot]"
