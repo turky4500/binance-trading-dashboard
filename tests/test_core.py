@@ -618,3 +618,44 @@ def test_st_board_no_phantom_signal_from_intraday_flip_up():
     board = _build_st_signals({'TESTUSDT': live}, {'TESTUSDT': {'last': 999}}, 'now')
     # no signal may appear before the daily candle confirms the flip
     assert board['count'] == 0
+
+
+# ---------------- quant-agent signal history ----------------
+def test_record_agent_history_dedupe_and_ends(tmp_path, monkeypatch):
+    from analyzer import scanner as sc
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+
+    def signal(sym, tf, score, price):
+        return {'symbol': sym, 'timeframe': tf, 'score': score,
+                'bars': [{'close': price}]}
+
+    sc._record_agent_history({'signals': [signal('BTCUSDT', '1h', 90, 70000)]},
+                             '2026-01-01T10:00:00Z')
+    # same symbol+tf again -> deduped (no duplicate ts row appended)
+    sc._record_agent_history({'signals': [signal('BTCUSDT', '1h', 91, 70100)]},
+                             '2026-01-01T11:00:00Z')
+    # different symbol+tf -> appended
+    sc._record_agent_history({'signals': [signal('ETHUSDT', '15m', 85, 3200)]},
+                             '2026-01-01T12:00:00Z')
+    hist = st.load_json(st.data_path('agent_history.json'))
+    assert len(hist) == 2, f'expect 2 unique (sym|tf) rows, got {len(hist)}'
+    assert hist[0]['symbol'] == 'BTCUSDT' and hist[0]['score'] == 91  # updated on 2nd scan
+    assert hist[1]['symbol'] == 'ETHUSDT'
+
+    # when the BTC signal disappears from the scan, the same-day row gets ended_at
+    sc._record_agent_history({'signals': [signal('ETHUSDT', '15m', 86, 3210)]},
+                             '2026-01-01T13:00:00Z')
+    hist = st.load_json(st.data_path('agent_history.json'))
+    btc = [r for r in hist if r['symbol'] == 'BTCUSDT'][0]
+    assert btc.get('ended_at') == '2026-01-01T12:00:00Z'
+    eth = [r for r in hist if r['symbol'] == 'ETHUSDT'][0]
+    assert eth.get('ended_at') is None
+
+
+def test_record_agent_history_never_raises(tmp_path, monkeypatch):
+    from analyzer import scanner as sc
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    sc._record_agent_history({'signals': [{'bars': []}], 'broken': True}, 'x')
+    assert True

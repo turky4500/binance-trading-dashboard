@@ -3,7 +3,7 @@
 
 const state = {
   meta: null, market: null, opps: [], agent: null, perf: null, history: [], bt: null,
-  bh: null, ul: null, symbols: [], engineCfg: null, st: null,
+  bh: null, ul: null, symbols: [], engineCfg: null, st: null, fg: null, ah: [],
   filter: { q: '', dir: 'ALL', status: 'ALL', sort: 'score', high: false, watch: false },
   prefs: loadPrefs(),
   analyzer: { busy: false, result: null, frames4h: null },
@@ -11,7 +11,7 @@ const state = {
 };
 
 function loadPrefs() {
-  const d = { minScore: 0, maxCards: 20, live: true };
+  const d = { minScore: 0, maxCards: 20, live: true, entryZoneAlerts: true };
   try {
     const s = localStorage.getItem('dash-prefs');
     if (s) {
@@ -19,6 +19,7 @@ function loadPrefs() {
       d.minScore = isFinite(+p.minScore) ? Math.max(0, Math.min(100, +p.minScore)) : 0;
       d.maxCards = isFinite(+p.maxCards) ? Math.max(1, Math.min(50, +p.maxCards)) : 20;
       d.live = p.live !== false;
+      d.entryZoneAlerts = p.entryZoneAlerts !== false;
     }
   } catch (e) { /* defaults */ }
   return d;
@@ -42,7 +43,7 @@ async function loadAll() {
   // embedded snapshot unless there is no data at all.
   const hadMeta = !!state.meta;
   const prevOpps = window.__dashDataSeeded ? state.opps.slice() : null;
-  const [m, mk, o, qa, p, h, bt, bh, ul, syms, ecfg, stb] = await Promise.allSettled([
+  const [m, mk, o, qa, p, h, bt, bh, ul, syms, ecfg, stb, fg, ah] = await Promise.allSettled([
     fetchJSON('data/meta.json'),
     fetchJSON('data/market.json'),
     fetchJSON('data/opportunities.json'),
@@ -55,6 +56,8 @@ async function loadAll() {
     fetchJSON('data/symbols.json'),
     fetchJSON('data/config.json'),
     fetchJSON('data/st_signals.json'),
+    fetchJSON('data/fear_greed.json'),
+    fetchJSON('data/agent_history.json'),
   ]);
   if (m.status === 'fulfilled') {
     state.meta = m.value;
@@ -84,6 +87,8 @@ async function loadAll() {
   if (syms.status === 'fulfilled' && syms.value && syms.value.symbols) state.symbols = syms.value.symbols;
   if (ecfg.status === 'fulfilled' && ecfg.value) state.engineCfg = ecfg.value;
   if (stb.status === 'fulfilled' && stb.value) state.st = stb.value;
+  if (fg.status === 'fulfilled' && fg.value) state.fg = fg.value;
+  if (ah.status === 'fulfilled' && ah.value) state.ah = ah.value;
   // lifecycle alerts: diff vs previously displayed data (skipped on first seed)
   if (window.Alerts && prevOpps && prevOpps.length && o.status === 'fulfilled') {
     window.Alerts.diffEvents(prevOpps, state.opps).forEach(ev => window.Alerts.emit(ev));
@@ -348,6 +353,31 @@ function updateNextStat() {
   el.textContent = `${locTime(new Date(target).toISOString())} (${mm}:${String(ss).padStart(2, '0')})`;
 }
 
+function checkEntryZoneAlerts() {
+  if (!state.prefs || !state.prefs.entryZoneAlerts) return;
+  if (!window.LivePrices) return;
+  window.__ezFired = window.__ezFired || {};
+  (state.opps || []).forEach(o => {
+    if (o.status !== 'READY') return;
+    const zone = o.entry_zone;
+    if (!zone || !Array.isArray(zone) || zone.length < 2) return;
+    const lo = zone[0], hi = zone[1];
+    if (!isFinite(lo) || !isFinite(hi) || lo >= hi) return;
+    const live = window.LivePrices.currentPrice(o.symbol);
+    if (live == null || !isFinite(live) || live <= 0) return;
+    // fire once per symbol while price sits inside the entry zone
+    if (live >= lo && live <= hi && !window.__ezFired[o.symbol]) {
+      window.__ezFired[o.symbol] = Date.now();
+      const pair = o.pair || o.symbol;
+      const msg = t('ez_alert').replace('{pair}', pair);
+      if (window.Alerts && window.Alerts.prefs().notif) window.Alerts.notify(msg, msg);
+      if (window.toast) window.toast(msg, 'alert');
+    }
+    // reset the fired flag once the price leaves the zone so a re-entry re-alerts
+    if (live < lo || live > hi) delete window.__ezFired[o.symbol];
+  });
+}
+
 function tick() {
   // runs every second: data age, live badge, countdown ring + trigger refresh at zero
   if (state.meta) document.getElementById('data-age').textContent = relTime(state.meta.data_timestamp);
@@ -371,6 +401,10 @@ function tick() {
   else if (window.__refreshing) setLive('updating');
   else if (ageMs > staleMin * 60000) setLive('stale');
   else setLive('live');
+
+  // entry-zone proximity alerts: when a live price enters a READY opportunity's
+  // entry zone, surface a one-time browser notification + toast for that symbol.
+  checkEntryZoneAlerts();
 
   const cd = document.getElementById('countdown');
   if (!cd) return;
@@ -631,6 +665,22 @@ function renderQuantAgent() {
   if (details && list) {
     details.classList.toggle('hidden', rejections.length === 0);
     list.innerHTML = rejections.slice(0, 100).map(r => `<div class="agent-rejection-row"><b>${esc(r.symbol || '—')} <i>${esc(r.primary_timeframe || '')}</i></b><span>${esc((r.codes || []).join(', '))}</span><small>${esc(LANG === 'ar' ? r.reason_ar : r.reason_en)}</small></div>`).join('');
+  }
+
+  // signal history (recent appearances; disappeared signals leave a trace)
+  const ahList = document.getElementById('agent-history-list');
+  const ahDetails = document.getElementById('agent-hist-recent');
+  if (ahList && ahDetails) {
+    const recent = (state.ah || []).slice(-60).reverse();
+    ahDetails.classList.toggle('hidden', recent.length === 0);
+    const activeKeys = new Set((signals).map(s => `${s.symbol}|${s.timeframe}`));
+    ahList.innerHTML = recent.map(r => {
+      const ended = r.ended_at ? ` · <span class="neg">${t('agent_ended')} ${locTime(r.ended_at)}</span>` : '';
+      const liveMark = activeKeys.has(`${r.symbol}|${r.tf}`) ? ` <span class="pos">●</span>` : '';
+      return `<div class="agent-rejection-row"><b>${esc(r.symbol || '—')} ${esc(r.tf || '')}${liveMark}</b>
+        <span>${r.score != null ? 'score ' + r.score : ''}</span>
+        <small>${locTime(r.ts)}${ended}</small></div>`;
+    }).join('');
   }
 }
 
@@ -910,6 +960,39 @@ function renderMarketTab() {
       <div class="perf"><div class="k">${t('coins_analyzed')}</div><div class="v">${m.coins_analyzed}</div></div>
       <div class="perf"><div class="k">${t('volume_24h')} (top30)</div><div class="v">$${m.top_quote_volume_24h}M</div></div>` : '';
   }
+  // Fear & Greed sentiment gauge
+  const fgEl = document.getElementById('fear-greed');
+  if (fgEl) {
+    if (state.fg && state.fg.value != null) {
+      const v = state.fg.value;
+      const min = 5, max = 95;
+      const norm = Math.max(0, Math.min(1, (v - min) / (max - min)));
+      const color = v >= 75 ? '#16c784' : v >= 55 ? '#75b872' : v >= 45 ? '#f0b90b' : v >= 25 ? '#e8773c' : '#ea3943';
+      fgEl.innerHTML = `
+        <div class="mcell-head"><span>${t('fear_greed')}</span><b>${v} · ${esc(state.fg.label || '')}</b></div>
+        <div class="fg-gauge"><div class="fg-track"><div class="fg-fill" style="width:${Math.round(norm * 100)}%;background:${color}"></div></div>
+        <div class="fg-scale"><span>0 ${t('fear')}</span><span>50</span><span>100 ${t('greed')}</span></div></div>`;
+    } else {
+      fgEl.innerHTML = `<div class="mcell-head"><span>${t('fear_greed')}</span><b>—</b></div><p class="alert-note">${t('no_fg')}</p>`;
+    }
+  }
+  // Market heatmap: 24h % change, colored by sign/magnitude
+  const hmEl = document.getElementById('heatmap-grid');
+  if (hmEl) {
+    const rows = (state.market && state.market.heatmap) || [];
+    if (rows.length) {
+      const mx = Math.max(...rows.map(r => Math.abs(r.c24)), 1);
+      hmEl.innerHTML = rows.map(r => {
+        const pct = r.c24;
+        const strength = Math.max(0.08, Math.min(1, Math.abs(pct) / mx));
+        const bg = pct >= 0 ? `rgba(22,199,132,${strength})` : `rgba(234,57,67,${strength})`;
+        return `<div class="hm-cell" style="background:${bg}" title="${esc(r.s)}USDT · ${pct}% · $${r.vol}M">
+          <b>${esc(r.s)}</b><span class="${pct >= 0 ? 'pos' : 'neg'}">${pct > 0 ? '+' : ''}${pct}%</span></div>`;
+      }).join('');
+    } else {
+      hmEl.innerHTML = `<p class="alert-note">${t('no_market_history')}</p>`;
+    }
+  }
   const bh = state.bh;
   const bChart = document.getElementById('breadth-chart');
   const btcChart = document.getElementById('btc-chart');
@@ -1020,6 +1103,7 @@ function bindSettingsPanel() {
     document.getElementById('set-theme').value = document.documentElement.dataset.theme || 'dark';
     document.getElementById('set-lang').value = LANG;
     document.getElementById('set-live').checked = state.prefs.live;
+    document.getElementById('set-ez').checked = state.prefs.entryZoneAlerts;
     document.getElementById('set-minscore').value = state.prefs.minScore;
     document.getElementById('set-maxcards').value = state.prefs.maxCards;
     const ap = window.Alerts ? window.Alerts.prefs() : null;
@@ -1040,6 +1124,9 @@ function bindSettingsPanel() {
       if (state.prefs.live) window.LivePrices.resume();
       else window.LivePrices.pause();
     }
+  });
+  document.getElementById('set-ez').addEventListener('change', e => {
+    state.prefs.entryZoneAlerts = e.target.checked; savePrefs();
   });
   document.getElementById('set-sound').addEventListener('change', e => {
     if (window.Alerts) { const p = window.Alerts.prefs(); p.sound = e.target.checked; window.Alerts.setPrefs(p); }

@@ -332,6 +332,22 @@ def scan(cfg, now_iso=None, verbose=True):
         market['gate_reason'] = (f"BTC {btc_info.get('close')} below daily EMA200 "
                                  f"{btc_info.get('ema200')} (btc_filter)")
     market['btc_filter'] = btc_info
+    # daily performance heatmap: top coins by quote volume, colored grid of 24h
+    # % change. Reuses the meta captured during universe screening (quoteVol +
+    # chg24 settle (or changePercentFallback) without any extra API calls).
+    heat_rows = []
+    for sym, meta in sorted(meta_by_sym.items(), key=lambda kv: -kv[1].get('quoteVol', 0))[:40]:
+        chg = meta.get('chg24')
+        if chg is None:
+            for c in meta.get('changePercentFallback', []) or []:
+                if isinstance(c, dict) and c.get('value') is not None:
+                    chg = c['value']
+                    break
+        if chg is None or meta.get('quoteVol', 0) < cfg['universe'].get('min_quote_volume_24h', 0):
+            continue
+        heat_rows.append({'s': sym.replace('USDT', ''), 'c24': round(float(chg), 2),
+                          'vol': round(meta.get('quoteVol', 0) / 1e6, 1)})
+    market['heatmap'] = heat_rows[:36]
     st_board = _build_st_signals(daily, meta_by_sym, now_iso)
     if verbose:
         print(f"[ST] supertrend daily BUY signals: {st_board['count']}")
@@ -371,12 +387,14 @@ def scan(cfg, now_iso=None, verbose=True):
 
     save_json(data_path('opportunities.json'), merged)
     save_json(data_path('agent_scan.json'), agent_scan)
+    _record_agent_history(agent_scan, now_iso)
     # history: dedupe by opportunity id (concurrent runs can double-record the
     # same closure), then append this cycle's closures and cap the file
     hist = _dedupe_history(load_json(data_path('history.json'), []), closed)
     save_json(data_path('history.json'), hist)
     save_json(data_path('market.json'), market)
     save_json(data_path('st_signals.json'), st_board)
+    save_json(data_path('fear_greed.json'), _fetch_fear_greed(now_iso))
     save_json(data_path('performance.json'), performance_stats(hist))
     # engine config for the in-browser Coin Analyzer (JS mirror must match)
     save_json(data_path('config.json'), {
@@ -744,6 +762,79 @@ def _market_status(daily, meta_by_sym):
         'btc': btc,
         'top_quote_volume_24h': round(sum(v['quoteVol'] for _, v in top) / 1e6, 1),
     }
+
+
+def _fetch_fear_greed(now_iso):
+    """Fetch the public Crypto Fear & Greed Index (5 min delay, best-effort).
+    Returns a small JSON payload or None; never throws. Used on the Market
+    tab as a broad sentiment signal alongside the internal breadth/regime."""
+    try:
+        import urllib.request
+        url = 'https://api.alternative.me/fng/'
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.loads(r.read().decode('utf-8'))
+        row = (data.get('data') or [{}])[0]
+        if not row or not row.get('value'):
+            return None
+        value = int(row['value'])
+        label = row.get('value_classification', 'Neutral')
+        return {
+            'value': value,
+            'label': label,
+            'updated_at': now_iso,
+        }
+    except Exception:
+        return None
+
+
+def _pick_universe_rows(rows, uni, verbose):
+    return rows
+
+
+def _record_agent_history(agent_scan, now_iso):
+    """Keep a rolling log of the quant agent's signals so disappearing
+    recommendations leave a trace. Each (symbol, timeframe) has a single live
+    row that is updated while the signal persists and stamped `ended_at` when
+    it leaves the scan. Capped so the repo stays small."""
+    try:
+        hist = load_json(data_path('agent_history.json'), [])
+        signals = agent_scan.get('signals') or []
+        day = now_iso[:10]
+
+        active = set()
+        for s in signals:
+            bar = s.get('bars') or []
+            b = bar[-1] if bar else None
+            key = (s.get('symbol', ''), s.get('timeframe', ''))
+            if not key[0] or not key[1]:
+                continue
+            active.add(key)
+            rec = {
+                'ts': now_iso,
+                'symbol': s.get('symbol'),
+                'tf': s.get('timeframe'),
+                'score': s.get('score'),
+                'price': b.get('close') if b else None,
+                'ended_at': None,
+            }
+            # refresh the open row for this pair, else start a new one
+            existing = next((r for r in hist
+                             if r.get('symbol') == key[0] and r.get('tf') == key[1]
+                             and not r.get('ended_at')), None)
+            if existing:
+                existing.update({k: v for k, v in rec.items() if k != 'ended_at'})
+            else:
+                hist.append(rec)
+
+        # any open row from an earlier cycle that is no longer active gets ended
+        for r in hist:
+            if not r.get('ended_at') and (r.get('symbol'), r.get('tf')) not in active:
+                r['ended_at'] = now_iso
+
+        save_json(data_path('agent_history.json'), hist[-2000:])
+    except Exception:
+        pass  # history recording never breaks the cycle
 
 
 def _record_market_history(market, now_iso, runtime):

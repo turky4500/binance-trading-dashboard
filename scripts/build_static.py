@@ -50,6 +50,8 @@ def load_data():
         'symbols': j('symbols.json'),
         'config': j('config.json'),
         'st_signals': j('st_signals.json'),
+        'fear_greed': j('fear_greed.json'),
+        'agent_history': j('agent_history.json', []),
         'klines': klines,
     }
 

@@ -58,6 +58,7 @@
           <select id="set-lang" class="mini-select"><option value="en">English</option><option value="ar">العربية</option></select></label>
         <div class="alert-divider"></div>
         <label class="alert-row"><span data-i18n="live_prices" style="flex:1"></span><input type="checkbox" id="set-live"></label>
+        <label class="alert-row"><span data-i18n="ez_alerts" style="flex:1"></span><input type="checkbox" id="set-ez"></label>
         <label class="alert-row"><span data-i18n="sound_master" style="flex:1"></span><input type="checkbox" id="set-sound"></label>
         <label class="alert-row"><span data-i18n="notif_master" style="flex:1"></span><input type="checkbox" id="set-notif"></label>
         <div class="alert-divider"></div>
@@ -160,6 +161,10 @@
       <summary data-i18n="agent_rejections">Rejection summary</summary>
       <div id="agent-rejection-list"></div>
     </details>
+    <details id="agent-hist-recent" class="agent-rejections hidden">
+      <summary data-i18n="agent_history">Recent agent signals (incl. closed)</summary>
+      <div id="agent-history-list"></div>
+    </details>
   </section>
 
   <section id="tab-supertrend" class="tab-panel">
@@ -203,7 +208,8 @@
 
   <section id="tab-market" class="tab-panel">
     <div class="market-stats" id="market-stats"></div>
-    <div class="market-charts">
+    <div class="mcell" style="margin-top:16px" id="fear-greed"></div>
+    <div class="market-charts" style="margin-top:16px">
       <div class="mcell">
         <div class="mcell-head"><span data-i18n="breadth_chart">Market Breadth (% above EMA50)</span><b id="breadth-now">—</b></div>
         <div class="chart-wrap"><canvas id="breadth-chart" style="width:100%"></canvas></div>
@@ -212,6 +218,10 @@
         <div class="mcell-head"><span data-i18n="btc_chart">BTC / USDT</span><b id="btc-now">—</b></div>
         <div class="chart-wrap"><canvas id="btc-chart" style="width:100%"></canvas></div>
       </div>
+    </div>
+    <div class="mcell" style="margin-top:16px">
+      <div class="mcell-head"><span data-i18n="heatmap">Market Heatmap (24h % change, top by volume)</span></div>
+      <div id="heatmap-grid" class="heatmap-grid"></div>
     </div>
     <div class="mcell" style="margin-top:16px">
       <div class="mcell-head"><span data-i18n="pipeline_health">Pipeline Health (last 24h)</span><b id="health-summary">—</b></div>

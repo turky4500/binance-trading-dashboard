@@ -214,6 +214,7 @@ const Alerts = (function () {
     prefs: () => prefs,
     setPrefs: (p) => { prefs = Object.assign(prefs, p); save(); syncPanel(); },
     eventLabel,
+    notify: (title, body) => { beep('ready'); browserNotify(title, body); },
   };
 })();
 window.Alerts = Alerts;
