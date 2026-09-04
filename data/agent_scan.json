@@ -1,11 +1,11 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-04T14:59:54Z",
- "source_data_timestamp": "2026-09-04T14:59:54Z",
+ "scan_timestamp": "2026-09-04T15:03:47Z",
+ "source_data_timestamp": "2026-09-04T15:03:47Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
-  "breadth_pct_above_ema50": 93.3,
+  "breadth_pct_above_ema50": 96.7,
   "new_setups_gated": false
  },
  "timeframes_scanned": [
@@ -23,33 +23,33 @@
  },
  "signals": [
   {
-   "opportunity_id": "ASTERUSDT_LONG_SUPERTREND_1H_2026-09-04T1459",
-   "symbol": "ASTERUSDT",
-   "pair": "ASTER/USDT",
+   "opportunity_id": "AAVEUSDT_LONG_SUPERTREND_1H_2026-09-04T1503",
+   "symbol": "AAVEUSDT",
+   "pair": "AAVE/USDT",
    "direction": "LONG",
    "setup_type": "SCALP_SUPERTREND",
    "setup_label": "SuperTrend opportunity (1h)",
    "status": "READY",
    "decision": "FAVORABLE",
-   "score": 91,
+   "score": 90,
    "grade": "EXCELLENT",
-   "current_price": 0.726,
-   "entry_mid": 0.726,
+   "current_price": 130.02,
+   "entry_mid": 130.02,
    "entry_zone": [
-    0.724911,
-    0.727089
+    129.825,
+    130.215
    ],
-   "stop_loss": 0.72126435,
-   "tp1": 0.734712,
-   "tp2": 0.742335,
-   "tp3": 0.76,
-   "rr_tp1": 1.84,
-   "rr_tp2": 3.45,
-   "rr_tp3": 7.18,
-   "sl_distance_pct": 0.65,
+   "stop_loss": 129.94,
+   "tp1": 131.58,
+   "tp2": 132.945,
+   "tp3": 135.52,
+   "rr_tp1": 19.48,
+   "rr_tp2": 36.53,
+   "rr_tp3": 68.68,
+   "sl_distance_pct": 0.06,
    "profit_pct_tp1": 1.2,
    "profit_pct_tp2": 2.25,
-   "profit_pct_tp3": 4.68,
+   "profit_pct_tp3": 4.23,
    "primary_timeframe": "1h",
    "confirmation_timeframes": [
     "4h",
@@ -74,10 +74,10 @@
     "trend_alignment": 25,
     "price_action": 18,
     "entry_quality": 12,
-    "risk_reward": 13,
-    "momentum": 10.0,
+    "risk_reward": 15,
+    "momentum": 4.5,
     "volume": 10,
-    "liquidity": 3
+    "liquidity": 5
    },
    "score_breakdown_labels": {
     "trend_alignment": "Trend & SuperTrend Alignment",
@@ -110,10 +110,10 @@
      "The score is not a guaranteed probability of profit."
     ]
    },
-   "invalidation_level": 0.72126435,
+   "invalidation_level": 129.94,
    "invalidation_reason": {
-    "ar": "تُلغى الفكرة عند إغلاق شمعة ساعة أسفل 0.72126435.",
-    "en": "The idea is invalidated by a 1h close below 0.72126435."
+    "ar": "تُلغى الفكرة عند إغلاق شمعة ساعة أسفل 129.94.",
+    "en": "The idea is invalidated by a 1h close below 129.94."
    },
    "confirmation": {
     "ar": "شروط إطار ساعة وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
@@ -129,8 +129,8 @@
      "4h",
      "1d"
     ],
-    "ema200_distance_pct": 2.659,
-    "live_chase_atr": 0.0,
+    "ema200_distance_pct": 2.461,
+    "live_chase_atr": 0.095,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +140,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": -0.684,
-   "quote_volume_24h": 18578768.56,
-   "spread_pct": 0.13774,
-   "data_timestamp": "2026-09-04T14:59:54Z"
+   "change_24h": -3.006,
+   "quote_volume_24h": 24637641.65,
+   "spread_pct": 0.00769,
+   "data_timestamp": "2026-09-04T15:03:47Z"
   }
  ],
  "rejections": [
@@ -672,15 +672,6 @@
   {
    "symbol": "AAVEUSDT",
    "codes": [
-    "INVALID_LEVEL_ORDER"
-   ],
-   "reason_ar": "ترتيب الدخول والوقف والأهداف غير صالح.",
-   "reason_en": "Entry, stop and target ordering is invalid.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "AAVEUSDT",
-   "codes": [
     "EMA200_OVEREXTENDED"
    ],
    "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
@@ -771,10 +762,10 @@
   {
    "symbol": "CHIPUSDT",
    "codes": [
-    "EMA200_NOT_CONFIRMED"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -803,6 +794,15 @@
    "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
    "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "ASTERUSDT",
+   "codes": [
+    "RR_BELOW_MINIMUM"
+   ],
+   "reason_ar": "العائد إلى المخاطرة للهدف الأول أقل من الحد الأدنى.",
+   "reason_en": "TP1 risk/reward is below the configured minimum.",
+   "primary_timeframe": "1h"
   },
   {
    "symbol": "ASTERUSDT",
@@ -868,6 +868,60 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "SPCXBUSDT",
+   "codes": [
+    "SUPERTREND_BEARISH"
+   ],
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "SPCXBUSDT",
+   "codes": [
+    "MISSING_DATA"
+   ],
+   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
+   "reason_en": "Candle or indicator data is incomplete.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "SPCXBUSDT",
+   "codes": [
+    "MISSING_DATA"
+   ],
+   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
+   "reason_en": "Candle or indicator data is incomplete.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "PENGUUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "PENGUUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "PENGUUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "LTCUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
@@ -892,60 +946,6 @@
    ],
    "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
    "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "SPCXBUSDT",
-   "codes": [
-    "SUPERTREND_BEARISH"
-   ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "SPCXBUSDT",
-   "codes": [
-    "MISSING_DATA"
-   ],
-   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
-   "reason_en": "Candle or indicator data is incomplete.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "SPCXBUSDT",
-   "codes": [
-    "MISSING_DATA"
-   ],
-   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
-   "reason_en": "Candle or indicator data is incomplete.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "PENGUUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "PENGUUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "PENGUUSDT",
-   "codes": [
-    "SUPERTREND_BEARISH"
-   ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "4h"
   },
   {
@@ -1570,33 +1570,6 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "OPUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "OPUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "OPUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "4h"
-  },
-  {
    "symbol": "APTUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
@@ -1616,6 +1589,33 @@
   },
   {
    "symbol": "APTUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "OPUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "OPUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "OPUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
