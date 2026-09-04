@@ -26,13 +26,15 @@ def _save_state(state):
     save_json(data_path(STATE_FILE), state)
 
 
-def filter_new_st_signals(st_board):
-    """Return SuperTrend signals that have not been notified before.
+def filter_new_st_signals(st_board, max_fresh_hours=None):
+    """Return only FRESH, not-yet-notified SuperTrend signals.
 
-    Only daily BUY signals that are newly present (and fresh enough to be a
-    real entry, per whatsapp.notify.new_st_signal) are returned. The caller
-    decides whether to actually send; the state file is committed with the
-    data each CI cycle so seen-dates persist across runs.
+    A signal is only worth alerting if it is BOTH brand-new to the board AND
+    young enough to still be a real entry. An aged trend that started many
+    candles ago is already "priced in" — alerting it late is worse than not
+    alerting (e.g. a coin that already ran +9% in 23h). `max_fresh_hours`
+    (in 1h-unit hours) caps the signal age; signals older than that are
+    silently marked seen (so they never re-alert) but are NOT returned.
     """
     state = _load_state()
     seen = set(state.get("st_notified", []))
@@ -40,9 +42,13 @@ def filter_new_st_signals(st_board):
     new = []
     for s in sigs:
         sym = s.get("symbol")
-        if sym and sym not in seen:
-            new.append(s)
-    state["st_notified"] = sorted({s.get("symbol") for s in sigs} | seen)
+        if not sym or sym in seen:
+            continue
+        seen.add(sym)  # mark as seen so it never re-alerts on later cycles
+        if max_fresh_hours is not None and int(s.get("bars_held") or 0) > int(max_fresh_hours):
+            continue  # too old to be a fresh entry — skip without alerting
+        new.append(s)
+    state["st_notified"] = sorted(seen)
     _save_state(state)
     return new
 

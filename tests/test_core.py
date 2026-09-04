@@ -729,6 +729,23 @@ def test_whatsapp_filter_new_st_signals(tmp_path, monkeypatch):
     assert new3 == {'SOLUSDT'}
 
 
+def test_whatsapp_only_sends_fresh_st_signals(tmp_path, monkeypatch):
+    from analyzer import whatsapp as wa
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    # a fresh 2h-old signal should alert; a 30h-old one must NOT
+    board = {'signals': [
+        {'symbol': 'FRESHUSDT', 'bars_held': 2},
+        {'symbol': 'AGEDUSDT', 'bars_held': 30},
+        {'symbol': 'ALSOFRESHUSDT', 'bars_held': 23},
+    ]}
+    got = {s['symbol'] for s in wa.filter_new_st_signals(board, max_fresh_hours=24)}
+    assert got == {'FRESHUSDT', 'ALSOFRESHUSDT'}, f'got {got}'
+    # the aged symbol was still marked seen, so it never re-alerts
+    again = wa.filter_new_st_signals(board, max_fresh_hours=24)
+    assert again == []
+
+
 def test_whatsapp_filter_new_opportunities(tmp_path, monkeypatch):
     from analyzer import whatsapp as wa
     from analyzer import storage as st

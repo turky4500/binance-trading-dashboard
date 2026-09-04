@@ -168,7 +168,8 @@ def _send_whatsapp_alerts(events, cfg, ops):
 
     if notify.get("new_st_signal", True):
         st_board = load_json(data_path("st_signals.json"), {})
-        for s in whatsapp.filter_new_st_signals(st_board):
+        max_fresh = wa.get("max_signal_fresh_hours")
+        for s in whatsapp.filter_new_st_signals(st_board, max_fresh):
             if whatsapp.send_whatsapp(whatsapp.st_signal_text(s), cfg):
                 sent += 1
 
