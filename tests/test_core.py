@@ -776,21 +776,35 @@ def test_whatsapp_filter_new_st_signals(tmp_path, monkeypatch):
     assert new3 == {'SOLUSDT'}
 
 
-def test_whatsapp_only_sends_fresh_st_signals(tmp_path, monkeypatch):
+def test_whatsapp_alerts_aged_st_signals_with_flag(tmp_path, monkeypatch):
     from analyzer import whatsapp as wa
     from analyzer import storage as st
     monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
-    # a fresh 2h-old signal should alert; a 30h-old one must NOT
+    # aged signals must ALSO be returned (owner decides) — only flagged
     board = {'signals': [
         {'symbol': 'FRESHUSDT', 'bars_held': 2},
         {'symbol': 'AGEDUSDT', 'bars_held': 30},
         {'symbol': 'ALSOFRESHUSDT', 'bars_held': 23},
     ]}
-    got = {s['symbol'] for s in wa.filter_new_st_signals(board, max_fresh_hours=24)}
-    assert got == {'FRESHUSDT', 'ALSOFRESHUSDT'}, f'got {got}'
-    # the aged symbol was still marked seen, so it never re-alerts
+    got = {s['symbol']: s.get('aged') for s in wa.filter_new_st_signals(board, max_fresh_hours=24)}
+    assert got == {'FRESHUSDT': False, 'AGEDUSDT': True, 'ALSOFRESHUSDT': False}, f'got {got}'
+    # still deduplicated: nothing re-alerts on later cycles
     again = wa.filter_new_st_signals(board, max_fresh_hours=24)
     assert again == []
+
+
+def test_whatsapp_st_signal_text_shows_time_age_and_caution():
+    from analyzer import whatsapp as wa
+    sig = {'pair': 'WLFI/USDT', 'signal_at': '2026-09-03T14:00:00+00:00',
+           'bars_held': 28, 'price_at_signal': 0.0573, 'current_price': 0.0569,
+           'change_pct': -0.7, 'rsi': 45.9, 'aged': True}
+    txt = wa.st_signal_text(sig)
+    assert '2026-09-03 17:00' in txt  # 14:00 UTC -> 17:00 Riyadh (UTC+3)
+    assert '28 ساعة' in txt
+    assert 'متأخر' in txt
+    fresh = dict(sig, aged=False, bars_held=3)
+    txt2 = wa.st_signal_text(fresh)
+    assert 'متأخر' not in txt2 and '2026-09-03 17:00' in txt2
 
 
 def test_whatsapp_filter_new_opportunities(tmp_path, monkeypatch):

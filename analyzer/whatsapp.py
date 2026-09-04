@@ -11,11 +11,15 @@ analysis run.
 import json
 import os
 import urllib.request
+from datetime import datetime, timedelta, timezone
 
 from .storage import load_json, save_json, data_path
 
 ENDPOINT_DEFAULT = "https://wats-saas.duckdns.org/api/v1/send"
 STATE_FILE = "whatsapp_state.json"
+
+# The owner's timezone for human-readable alert times (UTC+3, no DST).
+RIYADH_TZ = timezone(timedelta(hours=3), name="Asia/Riyadh")
 
 
 def _load_state():
@@ -27,14 +31,14 @@ def _save_state(state):
 
 
 def filter_new_st_signals(st_board, max_fresh_hours=None):
-    """Return only FRESH, not-yet-notified SuperTrend signals.
+    """Return every not-yet-notified SuperTrend signal, aged ones included.
 
-    A signal is only worth alerting if it is BOTH brand-new to the board AND
-    young enough to still be a real entry. An aged trend that started many
-    candles ago is already "priced in" — alerting it late is worse than not
-    alerting (e.g. a coin that already ran +9% in 23h). `max_fresh_hours`
-    (in 1h-unit hours) caps the signal age; signals older than that are
-    silently marked seen (so they never re-alert) but are NOT returned.
+    Policy (owner decision): a late signal may still be an opportunity, so
+    alerts are NEVER suppressed by age. Instead, each returned signal carries
+    an `aged` flag (bars_held > max_fresh_hours) and the message itself shows
+    the exact signal start time and its age, leaving the decision to the user.
+    `max_fresh_hours` therefore only marks the caution line — it no longer
+    drops anything.
     """
     state = _load_state()
     seen = set(state.get("st_notified", []))
@@ -45,8 +49,9 @@ def filter_new_st_signals(st_board, max_fresh_hours=None):
         if not sym or sym in seen:
             continue
         seen.add(sym)  # mark as seen so it never re-alerts on later cycles
-        if max_fresh_hours is not None and int(s.get("bars_held") or 0) > int(max_fresh_hours):
-            continue  # too old to be a fresh entry — skip without alerting
+        s = dict(s)
+        s["aged"] = (max_fresh_hours is not None
+                     and int(s.get("bars_held") or 0) > int(max_fresh_hours))
         new.append(s)
     state["st_notified"] = sorted(seen)
     _save_state(state)
@@ -114,21 +119,53 @@ def send_whatsapp(text, cfg, to=None):
         return False
 
 
+def _fmt_signal_time(iso_str):
+    """'2026-09-03T14:00:00+00:00' -> '2026-09-03 17:00' in Riyadh time (UTC+3).
+    Falls back to the raw string if parsing fails."""
+    try:
+        dt = datetime.fromisoformat(str(iso_str))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(RIYADH_TZ).strftime('%Y-%m-%d %H:%M')
+    except Exception:
+        return str(iso_str) if iso_str else '—'
+
+
 def st_signal_text(sig):
-    """Format a new daily SuperTrend entry signal for WhatsApp."""
+    """Format a new SuperTrend entry signal (1H board) for WhatsApp.
+
+    Always includes the exact signal start time (Riyadh) and the signal's
+    current age, so late alerts carry enough context for the owner to decide.
+    """
     pair = sig.get("pair") or (sig.get("symbol") or "").replace("USDT", "/USDT")
     change = sig.get("change_pct")
     change_txt = ("+" if change is not None and change >= 0 else "") + \
         f"{change:.2f}%" if change is not None else "—"
-    return (
-        f"📈 إشارة سوبر ترند جديدة\n\n"
-        f"{pair}\n"
-        f"الاتجاه (ساعة / 1H): شراء (BUY)\n"
-        f"سعر بداية الإشارة: {sig.get('price_at_signal')}\n"
-        f"السعر الحالي: {sig.get('current_price')} ({change_txt})\n"
-        f"R.S.I: {sig.get('rsi') if sig.get('rsi') is not None else '—'}\n\n"
-        f"فرصة دخول جديدة على فريم الساعة."
-    )
+    bars = sig.get("bars_held")
+    lines = [
+        "📈 إشارة سوبر ترند جديدة",
+        "",
+        f"{pair}",
+        "الاتجاه (ساعة / 1H): شراء (BUY)",
+        f"وقت بداية الإشارة: {_fmt_signal_time(sig.get('signal_at'))} (بتوقيت الرياض)",
+    ]
+    if bars is not None:
+        lines.append(f"عمر الإشارة الآن: {bars} ساعة")
+    lines += [
+        f"سعر بداية الإشارة: {sig.get('price_at_signal')}",
+        f"السعر الحالي: {sig.get('current_price')} ({change_txt})",
+        f"R.S.I: {sig.get('rsi') if sig.get('rsi') is not None else '—'}",
+        "",
+    ]
+    if sig.get("aged"):
+        lines.append(
+            "⚠️ تنبيه متأخر: ظهرت هذه الإشارة على اللوحة بعد أكثر من "
+            "24 ساعة من بدايتها، فالسعر قد يكون تحرك بالفعل — قرار الدخول "
+            "لك بعد التحقق من السعر والاتجاه."
+        )
+    else:
+        lines.append("فرصة دخول جديدة على فريم الساعة.")
+    return "\n".join(lines)
 
 
 def opportunity_text(op):
