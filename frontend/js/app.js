@@ -1337,6 +1337,22 @@ function bindAnalyzer() {
 }
 
 /* ---------------- supertrend tab (daily BUY signals board) ---------------- */
+function supportFlagsHtml(support) {
+  if (!support) return '<span class="muted">—</span>';
+  const order = [
+    ['trend', 'stb_flag_trend'],
+    ['volume', 'stb_flag_volume'],
+    ['timing', 'stb_flag_timing'],
+    ['momentum', 'stb_flag_momentum'],
+  ];
+  return order.map(([k, tipKey]) => {
+    const v = support[k];
+    const mark = v === 'ok' ? '✅' : (v === 'warn' ? '⚠️' : '❌');
+    const cls = v === 'ok' ? 'sup-ok' : (v === 'warn' ? 'sup-warn' : 'sup-no');
+    return `<span class="sup ${cls}" title="${t(tipKey)}">${mark}</span>`;
+  }).join('');
+}
+
 function renderStTab() {
   const countEl = document.getElementById('st-count');
   const body = document.getElementById('st-body');
@@ -1368,7 +1384,7 @@ function renderStTab() {
       <td data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</td>
       <td class="${chgCls}">${chgTxt}</td>
       <td>${s.rsi != null ? s.rsi : '—'}</td>
-      <td>${s.above_ema50 ? '<span class="pos">' + t('above_e50') + '</span>' : '<span class="neg">' + t('below_e50') + '</span>'}</td>
+      <td>${supportFlagsHtml(s.support)}</td>
     </tr>`;
   }).join('');
 }

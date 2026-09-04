@@ -692,6 +692,76 @@ def _st_run_info(df):
     }
 
 
+def _support_flags(df):
+    """Score the bullish case for the current candle with 4 context flags.
+
+    Each returns one of 'ok' / 'warn' / 'no' so the frontend can render a
+    coloured marker (✅ / ⚠️ / ❌). Flags (for a LONG entry on the 1h board):
+      - trend:   price above EMA50 AND EMA20>EMA50 = strong uptrend
+      - volume:  vol_ratio relative to its 1h average
+      - timing:  RSI in a comfortable re-trace / early momentum zone
+      - momentum: MACD above its signal line (ideally above zero)
+    """
+    def _n(key):
+        try:
+            v = float(df[key].iloc[-1])
+        except Exception:
+            return None
+        return v if v == v else None
+
+    c = _n('c')
+    e20 = _n('ema20')
+    e50 = _n('ema50')
+    vr = _n('vol_ratio')
+    rsi = _n('rsi')
+    macd = _n('macd')
+    macd_s = _n('macd_s')
+
+    trend = 'ok'
+    if c is None or e20 is None or e50 is None:
+        trend = 'no'
+    elif c > e50 and e20 > e50:
+        trend = 'ok'
+    elif c > e50 or e20 > e50:
+        trend = 'warn'
+    else:
+        trend = 'no'
+
+    if vr is None:
+        volume = 'no'
+    elif vr >= 2.0:
+        volume = 'ok'
+    elif vr >= 1.0:
+        volume = 'warn'
+    else:
+        volume = 'no'
+
+    if rsi is None:
+        timing = 'no'
+    elif 40 <= rsi <= 60:
+        timing = 'ok'
+    elif 60 < rsi <= 70 or 35 <= rsi < 40:
+        timing = 'warn'
+    else:
+        timing = 'no'
+
+    if macd is None or macd_s is None:
+        momentum = 'no'
+    elif macd > macd_s and macd > 0:
+        momentum = 'ok'
+    elif macd > macd_s:
+        momentum = 'warn'
+    else:
+        momentum = 'no'
+
+    return {
+        'trend': trend,
+        'volume': volume,
+        'timing': timing,
+        'momentum': momentum,
+    }
+
+
 def _build_st_signals(frames, meta_by_sym, now_iso, cap=120, max_age=None,
                       timeframe='1h', period_seconds=3600, min_bars=200):
     """SuperTrend board: every screened symbol whose SuperTrend on `timeframe`
@@ -741,6 +811,7 @@ def _build_st_signals(frames, meta_by_sym, now_iso, cap=120, max_age=None,
                 'change_pct': round((cur - sig_p) / sig_p * 100, 2),
                 'rsi': round(rsi_v, 1) if rsi_v == rsi_v else None,
                 'above_ema50': bool(c_now > e50),
+                'support': _support_flags(df),
             })
         except Exception:
             continue

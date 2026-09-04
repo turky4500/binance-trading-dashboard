@@ -671,6 +671,53 @@ def test_st_board_hourly_default_and_days_to_hours_age():
     assert 'DOWNUSDT' not in syms, f'got {syms}'
 
 
+def test_support_flags_classification():
+    from analyzer.scanner import _support_flags
+    import pandas as pd
+
+    def frame(**kw):
+        row = dict(c=105.0, ema20=103.0, ema50=100.0, vol_ratio=2.5,
+                   rsi=55.0, macd=5.0, macd_s=3.0)
+        row.update(kw)
+        return pd.DataFrame([row])
+
+    # strong bullish: everything OK
+    f = _support_flags(frame())
+    assert f == {'trend': 'ok', 'volume': 'ok', 'timing': 'ok', 'momentum': 'ok'}, f
+
+    # price below EMA50 but EMA20 still above it -> mixed (warn)
+    f = _support_flags(frame(c=98.0))
+    assert f['trend'] == 'warn', f
+
+    # both price and EMA20 below EMA50 -> weak trend (no)
+    f = _support_flags(frame(c=98.0, ema20=95.0))
+    assert f['trend'] == 'no', f
+
+    # half trend (price above E50 but E20 below) -> warn
+    f = _support_flags(frame(ema20=90.0))
+    assert f['trend'] == 'warn', f
+
+    # modest volume -> warn
+    f = _support_flags(frame(vol_ratio=1.4))
+    assert f['volume'] == 'warn', f
+
+    # low volume -> no
+    f = _support_flags(frame(vol_ratio=0.5))
+    assert f['volume'] == 'no', f
+
+    # overbought but not extreme RSI -> warn
+    f = _support_flags(frame(rsi=65.0))
+    assert f['timing'] == 'warn', f
+
+    # extreme RSI (overbought / oversold) -> no
+    f = _support_flags(frame(rsi=76.0))
+    assert f['timing'] == 'no', f
+
+    # MACD below signal -> momentum no
+    f = _support_flags(frame(macd=2.0, macd_s=3.5))
+    assert f['momentum'] == 'no', f
+
+
 # ---------------- quant-agent signal history ----------------
 def test_record_agent_history_dedupe_and_ends(tmp_path, monkeypatch):
     from analyzer import scanner as sc
