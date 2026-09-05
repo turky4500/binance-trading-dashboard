@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-05T14:45:39Z",
- "source_data_timestamp": "2026-09-05T14:45:39Z",
+ "scan_timestamp": "2026-09-05T14:50:34Z",
+ "source_data_timestamp": "2026-09-05T14:50:34Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -23,7 +23,7 @@
  },
  "signals": [
   {
-   "opportunity_id": "FILUSDT_LONG_SUPERTREND_15M_2026-09-05T1445",
+   "opportunity_id": "FILUSDT_LONG_SUPERTREND_15M_2026-09-05T1450",
    "symbol": "FILUSDT",
    "pair": "FIL/USDT",
    "direction": "LONG",
@@ -33,23 +33,23 @@
    "decision": "FAVORABLE",
    "score": 88,
    "grade": "STRONG",
-   "current_price": 0.7833,
-   "entry_mid": 0.7833,
+   "current_price": 0.7829,
+   "entry_mid": 0.7829,
    "entry_zone": [
-    0.78212505,
-    0.78447495
+    0.78172565,
+    0.78407435
    ],
    "stop_loss": 0.77740212,
-   "tp1": 0.7926996,
-   "tp2": 0.80092425,
+   "tp1": 0.7922948,
+   "tp2": 0.80051525,
    "tp3": 0.8151,
-   "rr_tp1": 1.59,
-   "rr_tp2": 2.99,
-   "rr_tp3": 5.39,
-   "sl_distance_pct": 0.75,
+   "rr_tp1": 1.71,
+   "rr_tp2": 3.2,
+   "rr_tp3": 5.86,
+   "sl_distance_pct": 0.7,
    "profit_pct_tp1": 1.2,
    "profit_pct_tp2": 2.25,
-   "profit_pct_tp3": 4.06,
+   "profit_pct_tp3": 4.11,
    "primary_timeframe": "15m",
    "confirmation_timeframes": [
     "1h",
@@ -129,8 +129,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 1.793,
-    "live_chase_atr": 0.1,
+    "ema200_distance_pct": 1.741,
+    "live_chase_atr": 0.02,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +140,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": 5.099,
-   "quote_volume_24h": 5674395.04,
+   "change_24h": 5.356,
+   "quote_volume_24h": 5584535.65,
    "spread_pct": 0.01277,
-   "data_timestamp": "2026-09-05T14:45:39Z"
+   "data_timestamp": "2026-09-05T14:50:34Z"
   }
  ],
  "rejections": [
@@ -348,10 +348,10 @@
   {
    "symbol": "DOGEUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "HTF_TREND_CONFLICT"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
    "primary_timeframe": "1h"
   },
   {
@@ -526,33 +526,6 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "SNDKBUSDT",
-   "codes": [
-    "BREAKOUT_NOT_HOLDING"
-   ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "SNDKBUSDT",
-   "codes": [
-    "MISSING_DATA"
-   ],
-   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
-   "reason_en": "Candle or indicator data is incomplete.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "SNDKBUSDT",
-   "codes": [
-    "MISSING_DATA"
-   ],
-   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
-   "reason_en": "Candle or indicator data is incomplete.",
-   "primary_timeframe": "4h"
-  },
-  {
    "symbol": "TRXUSDT",
    "codes": [
     "HTF_TREND_CONFLICT"
@@ -577,6 +550,33 @@
    ],
    "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
    "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "SNDKBUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "SNDKBUSDT",
+   "codes": [
+    "MISSING_DATA"
+   ],
+   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
+   "reason_en": "Candle or indicator data is incomplete.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "SNDKBUSDT",
+   "codes": [
+    "MISSING_DATA"
+   ],
+   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
+   "reason_en": "Candle or indicator data is incomplete.",
    "primary_timeframe": "4h"
   },
   {
@@ -1095,10 +1095,10 @@
   {
    "symbol": "PORTALUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
