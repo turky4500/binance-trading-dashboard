@@ -1,11 +1,11 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-05T05:30:44Z",
- "source_data_timestamp": "2026-09-05T05:30:44Z",
+ "scan_timestamp": "2026-09-05T05:34:08Z",
+ "source_data_timestamp": "2026-09-05T05:34:08Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
-  "breadth_pct_above_ema50": 96.7,
+  "breadth_pct_above_ema50": 93.3,
   "new_setups_gated": false
  },
  "timeframes_scanned": [
@@ -15,15 +15,138 @@
  ],
  "symbols_scanned": 54,
  "total_scanned": 162,
- "opportunities_found": 1,
+ "opportunities_found": 2,
  "opportunities_by_timeframe": {
-  "15m": 1,
+  "15m": 2,
   "1h": 0,
   "4h": 0
  },
  "signals": [
   {
-   "opportunity_id": "SKHYBUSDT_LONG_SUPERTREND_15M_2026-09-05T0530",
+   "opportunity_id": "SAHARAUSDT_LONG_SUPERTREND_15M_2026-09-05T0534",
+   "symbol": "SAHARAUSDT",
+   "pair": "SAHARA/USDT",
+   "direction": "LONG",
+   "setup_type": "SCALP_SUPERTREND",
+   "setup_label": "SuperTrend opportunity (15m)",
+   "status": "READY",
+   "decision": "FAVORABLE",
+   "score": 86,
+   "grade": "STRONG",
+   "current_price": 0.00929,
+   "entry_mid": 0.00929,
+   "entry_zone": [
+    0.00927607,
+    0.00930394
+   ],
+   "stop_loss": 0.00922199,
+   "tp1": 0.00940148,
+   "tp2": 0.0095,
+   "tp3": 0.00968482,
+   "rr_tp1": 1.64,
+   "rr_tp2": 3.09,
+   "rr_tp3": 5.81,
+   "sl_distance_pct": 0.73,
+   "profit_pct_tp1": 1.2,
+   "profit_pct_tp2": 2.26,
+   "profit_pct_tp3": 4.25,
+   "primary_timeframe": "15m",
+   "confirmation_timeframes": [
+    "1h",
+    "4h"
+   ],
+   "timeframes": [
+    "15m",
+    "1h",
+    "4h"
+   ],
+   "supertrend_status": {
+    "15m": "UP",
+    "1h": "UP",
+    "4h": "UP"
+   },
+   "ema200_status": {
+    "15m": "ABOVE",
+    "1h": "ABOVE",
+    "4h": "ABOVE"
+   },
+   "score_breakdown": {
+    "trend_alignment": 25,
+    "price_action": 18,
+    "entry_quality": 12,
+    "risk_reward": 11,
+    "momentum": 7,
+    "volume": 10,
+    "liquidity": 3
+   },
+   "score_breakdown_labels": {
+    "trend_alignment": "Trend & SuperTrend Alignment",
+    "price_action": "Price Action Quality",
+    "entry_quality": "EMA200 Extension / Entry Quality",
+    "risk_reward": "Risk / Reward",
+    "momentum": "Momentum",
+    "volume": "Volume",
+    "liquidity": "Liquidity"
+   },
+   "reason": {
+    "ar": "فرصة على إطار 15 دقيقة: SuperTrend صاعد على 15 دقيقة وساعة و4 ساعات، والسعر فوق EMA200 مع ارتداد مؤكد من خط SuperTrend دون مطاردة سعرية.",
+    "en": "15m opportunity: SuperTrend is bullish on 15m, 1h, 4h; price is above EMA200 with a confirmed SuperTrend bounce and no excessive extension."
+   },
+   "sl_reason": {
+    "ar": "الوقف أسفل أقرب دعم صالح على إطار 15 دقيقة من خط SuperTrend وقيعان آخر شمعتين صاعدتين مع هامش ATR صغير.",
+    "en": "The stop sits below the nearest valid 15m SuperTrend/two-bullish-candle support with a small ATR buffer."
+   },
+   "tp_reason": {
+    "ar": "الأهداف ضمن نطاقات الاستراتيجية، مع تفضيل مقاومة هيكلية عندما تقع داخل النطاق المحدد.",
+    "en": "Targets use the configured bands, preferring a structural resistance when it falls inside the band."
+   },
+   "risk_notes": {
+    "ar": [
+     "إشارة على إطار 15 دقيقة؛ ألغِ الفكرة عند كسر الوقف.",
+     "الدرجة ليست احتمالًا مضمونًا للربح."
+    ],
+    "en": [
+     "15m signal; invalidate it if the stop breaks.",
+     "The score is not a guaranteed probability of profit."
+    ]
+   },
+   "invalidation_level": 0.00922199,
+   "invalidation_reason": {
+    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 0.00922199.",
+    "en": "The idea is invalidated by a 15m close below 0.00922199."
+   },
+   "confirmation": {
+    "ar": "شروط إطار 15 دقيقة وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
+    "en": "The 15m conditions and higher-frame confirmations pass; price is inside the entry zone at scan time."
+   },
+   "execution_note": {
+    "ar": "الفرصة مستوفية للشروط حاليًا؛ التزم بالوقف ولا تطارد السعر إذا غادر منطقة الدخول.",
+    "en": "Conditions currently pass; respect the stop and do not chase price outside the entry zone."
+   },
+   "diagnostics": {
+    "primary_timeframe": "15m",
+    "confirmation_timeframes": [
+     "1h",
+     "4h"
+    ],
+    "ema200_distance_pct": 2.843,
+    "live_chase_atr": -0.25,
+    "supertrend_last_3": [
+     "UP",
+     "UP",
+     "UP"
+    ],
+    "upper_wick_rejection": false,
+    "lower_highs_detected": false,
+    "entry_trigger": "SUPERTREND_BOUNCE"
+   },
+   "change_24h": 4.853,
+   "quote_volume_24h": 75757212.97,
+   "spread_pct": 0.10764,
+   "data_timestamp": "2026-09-05T05:34:08Z"
+  },
+  {
+   "opportunity_id": "SKHYBUSDT_LONG_SUPERTREND_15M_2026-09-05T0534",
    "symbol": "SKHYBUSDT",
    "pair": "SKHYB/USDT",
    "direction": "LONG",
@@ -33,20 +156,20 @@
    "decision": "FAVORABLE",
    "score": 84,
    "grade": "STRONG",
-   "current_price": 176.68,
-   "entry_mid": 176.68,
+   "current_price": 176.72,
+   "entry_mid": 176.72,
    "entry_zone": [
-    176.415,
-    176.945
+    176.455,
+    176.985
    ],
    "stop_loss": 175.975,
-   "tp1": 178.8,
-   "tp2": 180.655,
-   "tp3": 184.189,
-   "rr_tp1": 3.01,
-   "rr_tp2": 5.64,
-   "rr_tp3": 10.65,
-   "sl_distance_pct": 0.4,
+   "tp1": 178.841,
+   "tp2": 180.696,
+   "tp3": 184.231,
+   "rr_tp1": 2.85,
+   "rr_tp2": 5.34,
+   "rr_tp3": 10.08,
+   "sl_distance_pct": 0.42,
    "profit_pct_tp1": 1.2,
    "profit_pct_tp2": 2.25,
    "profit_pct_tp3": 4.25,
@@ -129,8 +252,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 4.859,
-    "live_chase_atr": -0.427,
+    "ema200_distance_pct": 4.883,
+    "live_chase_atr": -0.296,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +263,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "BREAKOUT_HOLD"
    },
-   "change_24h": 6.274,
-   "quote_volume_24h": 7553794.22,
-   "spread_pct": 0.01132,
-   "data_timestamp": "2026-09-05T05:30:44Z"
+   "change_24h": 6.1,
+   "quote_volume_24h": 7541630.66,
+   "spread_pct": 0.00566,
+   "data_timestamp": "2026-09-05T05:34:08Z"
   }
  ],
  "rejections": [
@@ -364,42 +487,6 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "ENSOUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "ENSOUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "ENSOUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "SAHARAUSDT",
-   "codes": [
-    "RR_BELOW_MINIMUM"
-   ],
-   "reason_ar": "العائد إلى المخاطرة للهدف الأول أقل من الحد الأدنى.",
-   "reason_en": "TP1 risk/reward is below the configured minimum.",
-   "primary_timeframe": "15m"
-  },
-  {
    "symbol": "SAHARAUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
@@ -410,6 +497,33 @@
   },
   {
    "symbol": "SAHARAUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "ENSOUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "ENSOUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "ENSOUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -555,10 +669,10 @@
   {
    "symbol": "LINKUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -1201,33 +1315,6 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "ICPUSDT",
-   "codes": [
-    "RR_BELOW_MINIMUM"
-   ],
-   "reason_ar": "العائد إلى المخاطرة للهدف الأول أقل من الحد الأدنى.",
-   "reason_en": "TP1 risk/reward is below the configured minimum.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "ICPUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "ICPUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "4h"
-  },
-  {
    "symbol": "CAKEUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
@@ -1252,6 +1339,33 @@
    ],
    "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
    "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "ICPUSDT",
+   "codes": [
+    "RR_BELOW_MINIMUM"
+   ],
+   "reason_ar": "العائد إلى المخاطرة للهدف الأول أقل من الحد الأدنى.",
+   "reason_en": "TP1 risk/reward is below the configured minimum.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "ICPUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "ICPUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "4h"
   },
   {
