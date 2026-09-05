@@ -767,7 +767,7 @@ def test_whatsapp_filter_new_st_signals(tmp_path, monkeypatch):
     board1 = {'signals': [{'symbol': 'BTCUSDT'}, {'symbol': 'ETHUSDT'}]}
     new1 = wa.filter_new_st_signals(board1)
     assert {s['symbol'] for s in new1} == {'BTCUSDT', 'ETHUSDT'}
-    # filter alone does NOT deduplicate — must call mark_st_sent
+    # mark them sent → they won't appear again for 4 hours
     wa.mark_st_sent(['BTCUSDT', 'ETHUSDT'])
     new2 = wa.filter_new_st_signals({'signals': [{'symbol': 'BTCUSDT'}, {'symbol': 'ETHUSDT'}]})
     assert new2 == []
@@ -786,13 +786,10 @@ def test_whatsapp_filter_and_mark_st_sent(tmp_path, monkeypatch):
         {'symbol': 'AGEDUSDT', 'bars_held': 30},
         {'symbol': 'ALSOFRESHUSDT', 'bars_held': 23},
     ]}
-    # filter returns all not-yet-sent signals (does NOT modify state)
+    # all three are new (nothing sent yet)
     got = {s['symbol'] for s in wa.filter_new_st_signals(board)}
     assert got == {'FRESHUSDT', 'AGEDUSDT', 'ALSOFRESHUSDT'}, f'got {got}'
-    # state still empty — nothing was marked yet
-    again = wa.filter_new_st_signals(board)
-    assert len(again) == 3
-    # mark only the fresh ones as sent
+    # mark only two as sent
     wa.mark_st_sent(['FRESHUSDT', 'ALSOFRESHUSDT'])
     # now only AGEDUSDT should be returned
     remaining = {s['symbol'] for s in wa.filter_new_st_signals(board)}

@@ -17,6 +17,7 @@ from .storage import load_json, save_json, data_path
 
 ENDPOINT_DEFAULT = "https://wats-saas.duckdns.org/api/v1/send"
 STATE_FILE = "whatsapp_state.json"
+ST_RECENT_FILE = "whatsapp_st_recent.json"
 
 # The owner's timezone for human-readable alert times (UTC+3, no DST).
 RIYADH_TZ = timezone(timedelta(hours=3), name="Asia/Riyadh")
@@ -30,28 +31,51 @@ def _save_state(state):
     save_json(data_path(STATE_FILE), state)
 
 
-def filter_new_st_signals(st_board, max_fresh_hours=None):
-    """Return SuperTrend signals that have not been successfully sent yet.
+def _load_st_recent():
+    return load_json(data_path(ST_RECENT_FILE), {})
 
-    Does NOT modify state — the caller is responsible for marking signals
-    as sent (via mark_st_sent) only AFTER a successful delivery. This avoids
-    the race condition where concurrent CI runs mark signals as "seen" without
-    actually sending them.
+
+def _save_st_recent(d):
+    save_json(data_path(ST_RECENT_FILE), d)
+
+
+def filter_new_st_signals(st_board, max_fresh_hours=None):
+    """Return SuperTrend signals that haven't been sent recently.
+
+    Uses whatsapp_st_recent.json (timestamp-based, NOT committed to git)
+    to track when each symbol was last sent. A signal is "new" if it's on
+    the board AND was not sent in the last 4 hours. This avoids the race
+    condition with concurrent CI runs that refill whatsapp_state.json.
     """
-    state = _load_state()
-    seen = set(state.get("st_notified", []))
+    recent = _load_st_recent()
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=4)
     sigs = (st_board or {}).get("signals") or []
-    return [s for s in sigs if s.get("symbol") and s["symbol"] not in seen]
+    return [s for s in sigs
+            if s.get("symbol")
+            and _parse_iso(recent.get(s["symbol"])) < cutoff]
+
+
+def _parse_iso(s):
+    """Parse ISO timestamp, return epoch 0 if missing/invalid."""
+    if not s:
+        return datetime(2000, 1, 1, tzinfo=timezone.utc)
+    try:
+        dt = datetime.fromisoformat(str(s))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return datetime(2000, 1, 1, tzinfo=timezone.utc)
 
 
 def mark_st_sent(symbols):
-    """Mark symbols as successfully sent in st_notified. Called by the caller
-    after each successful send, NOT by filter_new_st_signals."""
-    state = _load_state()
-    seen = set(state.get("st_notified", []))
-    seen.update(symbols)
-    state["st_notified"] = sorted(seen)
-    _save_state(state)
+    """Record that symbols were successfully sent (with timestamp)."""
+    recent = _load_st_recent()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    for sym in symbols:
+        recent[sym] = now_iso
+    _save_st_recent(recent)
 
 
 def filter_new_opportunities(new_ops, min_score=84):
