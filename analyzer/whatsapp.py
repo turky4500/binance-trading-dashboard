@@ -119,6 +119,33 @@ def send_whatsapp(text, cfg, to=None):
         return False
 
 
+def send_whatsapp_diag(text, cfg, to=None):
+    """Like send_whatsapp but returns (success: bool, error: str|None)."""
+    token = os.environ.get("WHATSAPP_TOKEN", "").strip()
+    wa = cfg.get("whatsapp", {})
+    if not token:
+        return False, "WHATSAPP_TOKEN not set"
+    if not wa.get("enabled"):
+        return False, "whatsapp disabled in config"
+    recipient = to or wa.get("to")
+    endpoint = wa.get("endpoint") or ENDPOINT_DEFAULT
+    if not recipient:
+        return False, "no recipient"
+    try:
+        payload = json.dumps({"to": recipient, "message": text}).encode("utf-8")
+        req = urllib.request.Request(
+            endpoint, data=payload, method="POST",
+            headers={
+                "Authorization": "Bearer " + token,
+                "Content-Type": "application/json",
+            })
+        with urllib.request.urlopen(req, timeout=20) as r:
+            ok = 200 <= r.status < 300
+            return ok, None if ok else "HTTP {}".format(r.status)
+    except Exception as e:
+        return False, str(e)[:200]
+
+
 def _fmt_signal_time(iso_str):
     """'2026-09-03T14:00:00+00:00' -> '2026-09-03 17:00' in Riyadh time (UTC+3).
     Falls back to the raw string if parsing fails."""

@@ -18,7 +18,7 @@ import urllib.parse
 import urllib.request
 
 from .scanner import scan
-from .storage import iso, load_json, data_path
+from .storage import iso, load_json, save_json, data_path
 from . import whatsapp
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -146,15 +146,35 @@ def main(argv=None):
 
 
 def _send_whatsapp_alerts(events, cfg, ops):
-    """Send WhatsApp for (1) new confirmed opportunities and (2) new daily
+    """Send WhatsApp for (1) new confirmed opportunities and (2) new
     SuperTrend entry signals. Both are deduplicated against the persisted
     state file so each distinct signal/opportunity alerts exactly once.
 
     Sending requires WHATSAPP_TOKEN env var + whatsapp.enabled == True.
     Returns the number of accepted messages.
+
+    Writes data/whatsapp_delivery.json each cycle with a diagnostic record so
+    delivery can be verified from the committed data (token set? how many
+    signals were new vs actually delivered?).
     """
+    from .storage import iso
     wa = cfg.get("whatsapp", {})
-    if not wa.get("enabled") or not os.environ.get("WHATSAPP_TOKEN", "").strip():
+    token_set = bool(os.environ.get("WHATSAPP_TOKEN", "").strip())
+    rep = {
+        "ts": iso(),
+        "enabled": bool(wa.get("enabled")),
+        "token_set": token_set,
+        "endpoint": wa.get("endpoint"),
+        "to": wa.get("to"),
+        "new_st_candidates": 0,
+        "new_opp_candidates": 0,
+        "delivered": 0,
+        "failures": [],
+    }
+    if not wa.get("enabled") or not token_set:
+        rep["reason"] = ("disabled" if not wa.get("enabled")
+                         else "WHATSAPP_TOKEN not set")
+        save_json(data_path("whatsapp_delivery.json"), rep)
         return 0
     notify = wa.get("notify", {})
     sent = 0
@@ -162,17 +182,32 @@ def _send_whatsapp_alerts(events, cfg, ops):
     if notify.get("new_opportunity", True):
         new_opps = whatsapp.filter_new_opportunities(
             events.get("new", []), wa.get("min_score_alert", 84))
+        rep["new_opp_candidates"] = len(new_opps)
         for op in new_opps:
-            if whatsapp.send_whatsapp(whatsapp.opportunity_text(op), cfg):
+            ok, err = whatsapp.send_whatsapp_diag(
+                whatsapp.opportunity_text(op), cfg)
+            if ok:
                 sent += 1
+            else:
+                rep.setdefault("failures", []).append(
+                    "opp {}: {}".format(op.get("symbol"), err))
 
     if notify.get("new_st_signal", True):
         st_board = load_json(data_path("st_signals.json"), {})
         max_fresh = wa.get("max_signal_fresh_hours")
-        for s in whatsapp.filter_new_st_signals(st_board, max_fresh):
-            if whatsapp.send_whatsapp(whatsapp.st_signal_text(s), cfg):
+        cands = whatsapp.filter_new_st_signals(st_board, max_fresh)
+        rep["new_st_candidates"] = len(cands)
+        for s in cands:
+            ok, err = whatsapp.send_whatsapp_diag(
+                whatsapp.st_signal_text(s), cfg)
+            if ok:
                 sent += 1
+            else:
+                rep.setdefault("failures", []).append(
+                    "st {}: {}".format(s.get("symbol"), err))
 
+    rep["delivered"] = sent
+    save_json(data_path("whatsapp_delivery.json"), rep)
     return sent
 
 
