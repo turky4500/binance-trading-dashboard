@@ -1,11 +1,11 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-05T08:40:40Z",
- "source_data_timestamp": "2026-09-05T08:40:40Z",
+ "scan_timestamp": "2026-09-05T08:45:38Z",
+ "source_data_timestamp": "2026-09-05T08:45:38Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
-  "breadth_pct_above_ema50": 93.3,
+  "breadth_pct_above_ema50": 96.7,
   "new_setups_gated": false
  },
  "timeframes_scanned": [
@@ -161,10 +161,10 @@
   {
    "symbol": "BNBUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "RR_BELOW_MINIMUM"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "العائد إلى المخاطرة للهدف الأول أقل من الحد الأدنى.",
+   "reason_en": "TP1 risk/reward is below the configured minimum.",
    "primary_timeframe": "15m"
   },
   {
@@ -242,10 +242,10 @@
   {
    "symbol": "PROMUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "HTF_TREND_CONFLICT"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
    "primary_timeframe": "15m"
   },
   {
@@ -512,10 +512,10 @@
   {
    "symbol": "ARBUSDT",
    "codes": [
-    "UPPER_WICK_REJECTION"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "ظهر ذيل علوي طويل قرب مقاومة.",
-   "reason_en": "A long upper rejection wick appeared near resistance.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -564,6 +564,33 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "ASTERUSDT",
+   "codes": [
+    "RR_BELOW_MINIMUM"
+   ],
+   "reason_ar": "العائد إلى المخاطرة للهدف الأول أقل من الحد الأدنى.",
+   "reason_en": "TP1 risk/reward is below the configured minimum.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "ASTERUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "ASTERUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "XPLUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
@@ -588,33 +615,6 @@
    ],
    "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
    "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "ASTERUSDT",
-   "codes": [
-    "LIVE_PRICE_CHASE"
-   ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "ASTERUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "ASTERUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "4h"
   },
   {
@@ -971,11 +971,12 @@
   {
    "symbol": "ICPUSDT",
    "codes": [
-    "BREAKOUT_NOT_HOLDING"
+    "SCORE_BELOW_MINIMUM"
    ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
-   "primary_timeframe": "15m"
+   "reason_ar": "درجة الجودة أقل من حد النشر.",
+   "reason_en": "The deterministic quality score is below the publication threshold.",
+   "primary_timeframe": "15m",
+   "score": 80
   },
   {
    "symbol": "ICPUSDT",
