@@ -197,14 +197,21 @@ def _send_whatsapp_alerts(events, cfg, ops):
         max_fresh = wa.get("max_signal_fresh_hours")
         cands = whatsapp.filter_new_st_signals(st_board, max_fresh)
         rep["new_st_candidates"] = len(cands)
+        sent_syms = []
         for s in cands:
+            s = dict(s)
+            if max_fresh is not None:
+                s["aged"] = int(s.get("bars_held") or 0) > int(max_fresh)
             ok, err = whatsapp.send_whatsapp_diag(
                 whatsapp.st_signal_text(s), cfg)
             if ok:
                 sent += 1
+                sent_syms.append(s.get("symbol"))
             else:
                 rep.setdefault("failures", []).append(
                     "st {}: {}".format(s.get("symbol"), err))
+        if sent_syms:
+            whatsapp.mark_st_sent(sent_syms)
 
     rep["delivered"] = sent
     save_json(data_path("whatsapp_delivery.json"), rep)

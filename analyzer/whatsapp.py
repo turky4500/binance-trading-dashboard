@@ -31,31 +31,27 @@ def _save_state(state):
 
 
 def filter_new_st_signals(st_board, max_fresh_hours=None):
-    """Return every not-yet-notified SuperTrend signal, aged ones included.
+    """Return SuperTrend signals that have not been successfully sent yet.
 
-    Policy (owner decision): a late signal may still be an opportunity, so
-    alerts are NEVER suppressed by age. Instead, each returned signal carries
-    an `aged` flag (bars_held > max_fresh_hours) and the message itself shows
-    the exact signal start time and its age, leaving the decision to the user.
-    `max_fresh_hours` therefore only marks the caution line — it no longer
-    drops anything.
+    Does NOT modify state — the caller is responsible for marking signals
+    as sent (via mark_st_sent) only AFTER a successful delivery. This avoids
+    the race condition where concurrent CI runs mark signals as "seen" without
+    actually sending them.
     """
     state = _load_state()
     seen = set(state.get("st_notified", []))
     sigs = (st_board or {}).get("signals") or []
-    new = []
-    for s in sigs:
-        sym = s.get("symbol")
-        if not sym or sym in seen:
-            continue
-        seen.add(sym)  # mark as seen so it never re-alerts on later cycles
-        s = dict(s)
-        s["aged"] = (max_fresh_hours is not None
-                     and int(s.get("bars_held") or 0) > int(max_fresh_hours))
-        new.append(s)
+    return [s for s in sigs if s.get("symbol") and s["symbol"] not in seen]
+
+
+def mark_st_sent(symbols):
+    """Mark symbols as successfully sent in st_notified. Called by the caller
+    after each successful send, NOT by filter_new_st_signals."""
+    state = _load_state()
+    seen = set(state.get("st_notified", []))
+    seen.update(symbols)
     state["st_notified"] = sorted(seen)
     _save_state(state)
-    return new
 
 
 def filter_new_opportunities(new_ops, min_score=84):

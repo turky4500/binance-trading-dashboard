@@ -767,7 +767,8 @@ def test_whatsapp_filter_new_st_signals(tmp_path, monkeypatch):
     board1 = {'signals': [{'symbol': 'BTCUSDT'}, {'symbol': 'ETHUSDT'}]}
     new1 = wa.filter_new_st_signals(board1)
     assert {s['symbol'] for s in new1} == {'BTCUSDT', 'ETHUSDT'}
-    # second cycle with no new symbol -> nothing new
+    # filter alone does NOT deduplicate — must call mark_st_sent
+    wa.mark_st_sent(['BTCUSDT', 'ETHUSDT'])
     new2 = wa.filter_new_st_signals({'signals': [{'symbol': 'BTCUSDT'}, {'symbol': 'ETHUSDT'}]})
     assert new2 == []
     # new symbol added -> only the newcomer is reported
@@ -776,21 +777,26 @@ def test_whatsapp_filter_new_st_signals(tmp_path, monkeypatch):
     assert new3 == {'SOLUSDT'}
 
 
-def test_whatsapp_alerts_aged_st_signals_with_flag(tmp_path, monkeypatch):
+def test_whatsapp_filter_and_mark_st_sent(tmp_path, monkeypatch):
     from analyzer import whatsapp as wa
     from analyzer import storage as st
     monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
-    # aged signals must ALSO be returned (owner decides) — only flagged
     board = {'signals': [
         {'symbol': 'FRESHUSDT', 'bars_held': 2},
         {'symbol': 'AGEDUSDT', 'bars_held': 30},
         {'symbol': 'ALSOFRESHUSDT', 'bars_held': 23},
     ]}
-    got = {s['symbol']: s.get('aged') for s in wa.filter_new_st_signals(board, max_fresh_hours=24)}
-    assert got == {'FRESHUSDT': False, 'AGEDUSDT': True, 'ALSOFRESHUSDT': False}, f'got {got}'
-    # still deduplicated: nothing re-alerts on later cycles
-    again = wa.filter_new_st_signals(board, max_fresh_hours=24)
-    assert again == []
+    # filter returns all not-yet-sent signals (does NOT modify state)
+    got = {s['symbol'] for s in wa.filter_new_st_signals(board)}
+    assert got == {'FRESHUSDT', 'AGEDUSDT', 'ALSOFRESHUSDT'}, f'got {got}'
+    # state still empty — nothing was marked yet
+    again = wa.filter_new_st_signals(board)
+    assert len(again) == 3
+    # mark only the fresh ones as sent
+    wa.mark_st_sent(['FRESHUSDT', 'ALSOFRESHUSDT'])
+    # now only AGEDUSDT should be returned
+    remaining = {s['symbol'] for s in wa.filter_new_st_signals(board)}
+    assert remaining == {'AGEDUSDT'}, f'got {remaining}'
 
 
 def test_whatsapp_st_signal_text_shows_time_age_and_caution():
