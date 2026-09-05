@@ -173,7 +173,7 @@ def _fmt_signal_time(iso_str):
         dt = datetime.fromisoformat(str(iso_str))
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
-        return dt.astimezone(RIYADH_TZ).strftime('%Y-%m-%d %H:%M')
+        return dt.astimezone(RIYADH_TZ).strftime('%Y-%m-%d %I:%M %p')
     except Exception:
         return str(iso_str) if iso_str else '—'
 

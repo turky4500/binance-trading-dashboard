@@ -802,12 +802,12 @@ def test_whatsapp_st_signal_text_shows_time_age_and_caution():
            'bars_held': 28, 'price_at_signal': 0.0573, 'current_price': 0.0569,
            'change_pct': -0.7, 'rsi': 45.9, 'aged': True}
     txt = wa.st_signal_text(sig)
-    assert '2026-09-03 17:00' in txt  # 14:00 UTC -> 17:00 Riyadh (UTC+3)
+    assert '2026-09-03 05:00 PM' in txt  # 14:00 UTC -> 17:00 Riyadh -> 5:00 PM
     assert '28 ساعة' in txt
     assert 'متأخر' in txt
     fresh = dict(sig, aged=False, bars_held=3)
     txt2 = wa.st_signal_text(fresh)
-    assert 'متأخر' not in txt2 and '2026-09-03 17:00' in txt2
+    assert 'متأخر' not in txt2 and '2026-09-03 05:00 PM' in txt2
 
 
 def test_whatsapp_filter_new_opportunities(tmp_path, monkeypatch):
