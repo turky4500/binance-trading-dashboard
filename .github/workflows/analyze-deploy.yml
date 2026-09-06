@@ -69,6 +69,8 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             cp -r /tmp/data_fresh/. data/
+                        # whatsapp dedup files are ephemeral — never commit them
+            rm -f data/whatsapp_st_recent.json data/whatsapp_delivery.json
             git add data/
             if git diff --cached --quiet; then
               echo "no data changes — done"
