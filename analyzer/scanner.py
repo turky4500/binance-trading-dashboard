@@ -105,8 +105,14 @@ def scan(cfg, now_iso=None, verbose=True):
 
     allowed = {s['symbol'] for s in einfo['symbols']
                if s['status'] == 'TRADING' and s.get('isSpotTradingAllowed')}
-    # Build price precision map from exchangeInfo (used by _build_st_signals)
-    price_prec = {s['symbol']: s.get('pricePrecision', 8) for s in einfo['symbols']}
+    # Build price precision map from exchangeInfo PRICE_FILTER tickSize
+    def _tick_precision(sym_info):
+        for f in sym_info.get('filters', []):
+            if f.get('filterType') == 'PRICE_FILTER':
+                tick = str(f.get('tickSize', '1'))
+                return len(tick.rstrip('0').split('.')[-1]) if '.' in tick else 0
+        return 8
+    price_prec = {s['symbol']: _tick_precision(s) for s in einfo['symbols']}
     tk = {x['symbol']: x for x in tickers}
     bk = {x['symbol']: x for x in books}
 
@@ -560,8 +566,13 @@ def _save_symbol_list(einfo, now_iso):
         for s in einfo['symbols']:
             if s['status'] != 'TRADING' or not s.get('isSpotTradingAllowed'):
                 continue
-            rows.append({'s': s['symbol'], 'b': s['baseAsset'], 'q': s['quoteAsset'],
-                         'p': s.get('pricePrecision', 8)})
+            pp = 8
+            for f in s.get('filters', []):
+                if f.get('filterType') == 'PRICE_FILTER':
+                    tick = str(f.get('tickSize', '1'))
+                    pp = len(tick.rstrip('0').split('.')[-1]) if '.' in tick else 0
+                    break
+            rows.append({'s': s['symbol'], 'b': s['baseAsset'], 'q': s['quoteAsset'], 'p': pp})
         rows.sort(key=lambda r: (r['q'] != 'USDT', r['q'] != 'BTC', r['b']))
         save_json(data_path('symbols.json'), {'updated_at': now_iso, 'symbols': rows[:3000]})
     except Exception:
