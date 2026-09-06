@@ -105,6 +105,8 @@ def scan(cfg, now_iso=None, verbose=True):
 
     allowed = {s['symbol'] for s in einfo['symbols']
                if s['status'] == 'TRADING' and s.get('isSpotTradingAllowed')}
+    # Build price precision map from exchangeInfo (used by _build_st_signals)
+    price_prec = {s['symbol']: s.get('pricePrecision', 8) for s in einfo['symbols']}
     tk = {x['symbol']: x for x in tickers}
     bk = {x['symbol']: x for x in books}
 
@@ -374,7 +376,8 @@ def scan(cfg, now_iso=None, verbose=True):
     # counts hours, so convert days -> hours before filtering.
     max_st_age_hours = int(stp.get('max_signal_age_days', 30)) * 24
     st_board = _build_st_signals(st_hourly, meta_by_sym, now_iso,
-                                 max_age=max_st_age_hours)
+                                 max_age=max_st_age_hours,
+                                 price_prec=price_prec)
     if verbose:
         print(f"[ST] supertrend daily BUY signals: {st_board['count']}")
 
@@ -782,7 +785,8 @@ def _support_flags(df):
 
 
 def _build_st_signals(frames, meta_by_sym, now_iso, cap=120, max_age=None,
-                      timeframe='1h', period_seconds=3600, min_bars=200):
+                      timeframe='1h', period_seconds=3600, min_bars=200,
+                      price_prec=None):
     """SuperTrend board: every screened symbol whose SuperTrend on `timeframe`
     (default 1h) is currently bullish. Listed from signal start until it flips
     to SELL. Recomputed deterministically each cycle — no extra state file.
@@ -795,10 +799,7 @@ def _build_st_signals(frames, meta_by_sym, now_iso, cap=120, max_age=None,
         until a new confirmed signal appears.
     """
     signals = []
-    try:
-        sym_map = {s['s']: s for s in load_json(data_path('symbols.json'), {}).get('symbols', [])}
-    except Exception:
-        sym_map = {}
+    prec = price_prec or {}
     for sym, df in frames.items():
         try:
             live_dir = df['st_dir'].iloc[-1] if len(df) else None
@@ -829,7 +830,7 @@ def _build_st_signals(frames, meta_by_sym, now_iso, cap=120, max_age=None,
             # SL = SuperTrend line (natural ATR-based stop); R = distance from entry to SL
             sl = st_line if st_line and st_line < cur else (cur - atr_v * 2 if atr_v else None)
             R = abs(cur - sl) if sl and sl > 0 else None
-            pp = _price_precision(sym, sym_map)
+            pp = prec.get(sym, 8)
             tp1 = _round_price(cur + R * 1.5, pp) if R else None
             tp2 = _round_price(cur + R * 2.5, pp) if R else None
             tp3 = _round_price(cur + R * 4.0, pp) if R else None
