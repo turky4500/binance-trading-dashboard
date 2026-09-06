@@ -203,7 +203,7 @@ def st_signal_text(sig):
         "",
         f"{pair}",
         "الاتجاه (ساعة / 1H): شراء (BUY)",
-        f"وقت بداية الإشارة: {_fmt_signal_time(sig.get('signal_at'))} (بتوقيت الرياض)",
+        f"وقت بداية الإشارة: {_fmt_signal_time(sig.get('signal_at'))}",
     ]
     if bars is not None:
         lines.append(f"عمر الإشارة الآن: {bars} ساعة")
