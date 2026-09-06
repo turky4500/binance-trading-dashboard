@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-06T17:14:54Z",
- "source_data_timestamp": "2026-09-06T17:14:54Z",
+ "scan_timestamp": "2026-09-06T17:17:30Z",
+ "source_data_timestamp": "2026-09-06T17:17:30Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -13,8 +13,8 @@
   "1h",
   "4h"
  ],
- "symbols_scanned": 57,
- "total_scanned": 171,
+ "symbols_scanned": 56,
+ "total_scanned": 168,
  "opportunities_found": 1,
  "opportunities_by_timeframe": {
   "15m": 0,
@@ -23,7 +23,7 @@
  },
  "signals": [
   {
-   "opportunity_id": "ETHUSDT_LONG_SUPERTREND_1H_2026-09-06T1714",
+   "opportunity_id": "ETHUSDT_LONG_SUPERTREND_1H_2026-09-06T1717",
    "symbol": "ETHUSDT",
    "pair": "ETH/USDT",
    "direction": "LONG",
@@ -33,22 +33,22 @@
    "decision": "FAVORABLE",
    "score": 96,
    "grade": "EXCELLENT",
-   "current_price": 2485.33,
-   "entry_mid": 2485.33,
+   "current_price": 2487.43,
+   "entry_mid": 2487.43,
    "entry_zone": [
-    2481.6,
-    2489.06
+    2483.7,
+    2491.16
    ],
    "stop_loss": 2474.08,
-   "tp1": 2515.15,
+   "tp1": 2517.28,
    "tp2": 2546.66,
-   "tp3": 2590.96,
-   "rr_tp1": 2.65,
-   "rr_tp2": 5.45,
-   "rr_tp3": 9.39,
-   "sl_distance_pct": 0.45,
+   "tp3": 2593.15,
+   "rr_tp1": 2.24,
+   "rr_tp2": 4.44,
+   "rr_tp3": 7.92,
+   "sl_distance_pct": 0.54,
    "profit_pct_tp1": 1.2,
-   "profit_pct_tp2": 2.47,
+   "profit_pct_tp2": 2.38,
    "profit_pct_tp3": 4.25,
    "primary_timeframe": "1h",
    "confirmation_timeframes": [
@@ -129,8 +129,8 @@
      "4h",
      "1d"
     ],
-    "ema200_distance_pct": 1.02,
-    "live_chase_atr": 0.059,
+    "ema200_distance_pct": 1.106,
+    "live_chase_atr": 0.223,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +140,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": 0.196,
-   "quote_volume_24h": 476747181.17,
+   "change_24h": 0.405,
+   "quote_volume_24h": 476800788.28,
    "spread_pct": 0.0004,
-   "data_timestamp": "2026-09-06T17:14:54Z"
+   "data_timestamp": "2026-09-06T17:17:30Z"
   }
  ],
  "rejections": [
@@ -744,10 +744,10 @@
   {
    "symbol": "AAVEUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "LOWER_HIGHS"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "آخر القمم الهيكلية هابطة.",
+   "reason_en": "Recent structural highs are descending.",
    "primary_timeframe": "1h"
   },
   {
@@ -787,6 +787,33 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "AVAXUSDT",
+   "codes": [
+    "SUPERTREND_BEARISH"
+   ],
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "AVAXUSDT",
+   "codes": [
+    "HTF_TREND_CONFLICT"
+   ],
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "AVAXUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "TRXUSDT",
    "codes": [
     "UPPER_WICK_REJECTION"
@@ -814,7 +841,7 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "AVAXUSDT",
+   "symbol": "PENGUUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
    ],
@@ -823,7 +850,7 @@
    "primary_timeframe": "15m"
   },
   {
-   "symbol": "AVAXUSDT",
+   "symbol": "PENGUUSDT",
    "codes": [
     "HTF_TREND_CONFLICT"
    ],
@@ -832,7 +859,7 @@
    "primary_timeframe": "1h"
   },
   {
-   "symbol": "AVAXUSDT",
+   "symbol": "PENGUUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -865,33 +892,6 @@
    ],
    "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
    "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "PENGUUSDT",
-   "codes": [
-    "SUPERTREND_BEARISH"
-   ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "PENGUUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "PENGUUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "4h"
   },
   {
@@ -1327,33 +1327,6 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "币安人生USDT",
-   "codes": [
-    "MISSING_DATA"
-   ],
-   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
-   "reason_en": "Candle or indicator data is incomplete.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "币安人生USDT",
-   "codes": [
-    "MISSING_DATA"
-   ],
-   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
-   "reason_en": "Candle or indicator data is incomplete.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "币安人生USDT",
-   "codes": [
-    "MISSING_DATA"
-   ],
-   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
-   "reason_en": "Candle or indicator data is incomplete.",
-   "primary_timeframe": "4h"
-  },
-  {
    "symbol": "CRVUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
@@ -1381,6 +1354,33 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "币安人生USDT",
+   "codes": [
+    "MISSING_DATA"
+   ],
+   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
+   "reason_en": "Candle or indicator data is incomplete.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "币安人生USDT",
+   "codes": [
+    "MISSING_DATA"
+   ],
+   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
+   "reason_en": "Candle or indicator data is incomplete.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "币安人生USDT",
+   "codes": [
+    "MISSING_DATA"
+   ],
+   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
+   "reason_en": "Candle or indicator data is incomplete.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "CHIPUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
@@ -1432,33 +1432,6 @@
    ],
    "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
    "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "ZKUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "ZKUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "ZKUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "4h"
   },
   {
@@ -1653,10 +1626,10 @@
   {
    "symbol": "TIAUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "EMA200_OVEREXTENDED"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "15m"
   },
   {
