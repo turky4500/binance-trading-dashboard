@@ -18,9 +18,28 @@ from .storage import load_json, save_json, data_path
 ENDPOINT_DEFAULT = "https://wats-saas.duckdns.org/api/v1/send"
 STATE_FILE = "whatsapp_state.json"
 ST_RECENT_FILE = "whatsapp_st_recent.json"
+RECIPIENTS_FILE = "recipients.txt"
 
 # The owner's timezone for human-readable alert times (UTC+3, no DST).
 RIYADH_TZ = timezone(timedelta(hours=3), name="Asia/Riyadh")
+
+
+def load_recipients(cfg):
+    """Load recipient numbers from data/recipients.txt (one per line).
+    Falls back to cfg['whatsapp']['to'] if the file is missing or empty.
+    Returns a list of phone number strings.
+    """
+    try:
+        path = data_path(RECIPIENTS_FILE)
+        with open(path, 'r', encoding='utf-8') as f:
+            nums = [line.strip() for line in f if line.strip()]
+        if nums:
+            return nums
+    except Exception:
+        pass
+    # fallback: single number from config
+    single = (cfg.get("whatsapp") or {}).get("to")
+    return [single] if single else []
 
 
 def _load_state():
@@ -117,7 +136,8 @@ def reset_state(which="all"):
 
 
 def send_whatsapp(text, cfg, to=None):
-    """Send a plain-text WhatsApp message. Returns True on accepted delivery.
+    """Send a plain-text WhatsApp message to all recipients. Returns True if
+    at least one delivery was accepted.
 
     Requires WHATSAPP_TOKEN env var and whatsapp.enabled == True. Recipient,
     endpoint and the message come from config/args. Never raises.
@@ -126,49 +146,63 @@ def send_whatsapp(text, cfg, to=None):
     wa = cfg.get("whatsapp", {})
     if not token or not wa.get("enabled"):
         return False
-    recipient = to or wa.get("to")
     endpoint = wa.get("endpoint") or ENDPOINT_DEFAULT
-    if not recipient:
+    recipients = [to] if to else load_recipients(cfg)
+    if not recipients:
         return False
-    try:
-        payload = json.dumps({"to": recipient, "message": text}).encode("utf-8")
-        req = urllib.request.Request(
-            endpoint, data=payload, method="POST",
-            headers={
-                "Authorization": "Bearer " + token,
-                "Content-Type": "application/json",
-            })
-        with urllib.request.urlopen(req, timeout=20) as r:
-            return 200 <= r.status < 300
-    except Exception:
-        return False
+    ok_any = False
+    for recipient in recipients:
+        try:
+            payload = json.dumps({"to": recipient, "message": text}).encode("utf-8")
+            req = urllib.request.Request(
+                endpoint, data=payload, method="POST",
+                headers={
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json",
+                })
+            with urllib.request.urlopen(req, timeout=20) as r:
+                if 200 <= r.status < 300:
+                    ok_any = True
+        except Exception:
+            pass
+    return ok_any
 
 
 def send_whatsapp_diag(text, cfg, to=None):
-    """Like send_whatsapp but returns (success: bool, error: str|None)."""
+    """Like send_whatsapp but returns (success: bool, error: str|None).
+    Sends to all recipients; returns success if at least one delivery worked.
+    """
     token = os.environ.get("WHATSAPP_TOKEN", "").strip()
     wa = cfg.get("whatsapp", {})
     if not token:
         return False, "WHATSAPP_TOKEN not set"
     if not wa.get("enabled"):
         return False, "whatsapp disabled in config"
-    recipient = to or wa.get("to")
     endpoint = wa.get("endpoint") or ENDPOINT_DEFAULT
-    if not recipient:
-        return False, "no recipient"
-    try:
-        payload = json.dumps({"to": recipient, "message": text}).encode("utf-8")
-        req = urllib.request.Request(
-            endpoint, data=payload, method="POST",
-            headers={
-                "Authorization": "Bearer " + token,
-                "Content-Type": "application/json",
-            })
-        with urllib.request.urlopen(req, timeout=20) as r:
-            ok = 200 <= r.status < 300
-            return ok, None if ok else "HTTP {}".format(r.status)
-    except Exception as e:
-        return False, str(e)[:200]
+    recipients = [to] if to else load_recipients(cfg)
+    if not recipients:
+        return False, "no recipients"
+    errors = []
+    ok_any = False
+    for recipient in recipients:
+        try:
+            payload = json.dumps({"to": recipient, "message": text}).encode("utf-8")
+            req = urllib.request.Request(
+                endpoint, data=payload, method="POST",
+                headers={
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json",
+                })
+            with urllib.request.urlopen(req, timeout=20) as r:
+                if 200 <= r.status < 300:
+                    ok_any = True
+                else:
+                    errors.append("HTTP {}".format(r.status))
+        except Exception as e:
+            errors.append(str(e)[:100])
+    if ok_any:
+        return True, None
+    return False, "; ".join(errors) if errors else "all deliveries failed"
 
 
 def _fmt_signal_time(iso_str):

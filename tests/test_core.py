@@ -901,3 +901,43 @@ def test_whatsapp_send_posts_to_endpoint(tmp_path, monkeypatch):
     assert captured['auth'] == 'Bearer sekret'
     assert '"to": "966533170332"' in captured['body']
     assert '"message": "hello"' in captured['body']
+
+
+def test_whatsapp_load_recipients_from_file(tmp_path, monkeypatch):
+    from analyzer import whatsapp as wa
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    cfg = {'whatsapp': {'to': '1111111111'}}
+    # no file yet -> falls back to config
+    assert wa.load_recipients(cfg) == ['1111111111']
+    # create recipients.txt with multiple numbers
+    (tmp_path / 'recipients.txt').write_text('966533170332\n966999999999\n')
+    assert wa.load_recipients(cfg) == ['966533170332', '966999999999']
+    # empty file -> falls back to config
+    (tmp_path / 'recipients.txt').write_text('')
+    assert wa.load_recipients(cfg) == ['1111111111']
+
+
+def test_whatsapp_send_multiple_recipients(tmp_path, monkeypatch):
+    from analyzer import whatsapp as wa
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('WHATSAPP_TOKEN', 'tok')
+    sent_to = []
+
+    class FakeResp:
+        status = 200
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    def fake_urlopen(req, timeout=0):
+        import json as _j
+        body = _j.loads(req.data.decode('utf-8'))
+        sent_to.append(body['to'])
+        return FakeResp()
+
+    monkeypatch.setattr(wa.urllib.request, 'urlopen', fake_urlopen)
+    (tmp_path / 'recipients.txt').write_text('111\n222\n333\n')
+    cfg = {'whatsapp': {'enabled': True, 'endpoint': 'https://wa.example/api/v1/send'}}
+    assert wa.send_whatsapp('test', cfg) is True
+    assert sent_to == ['111', '222', '333']
