@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-06T15:15:40Z",
- "source_data_timestamp": "2026-09-06T15:15:40Z",
+ "scan_timestamp": "2026-09-06T15:20:39Z",
+ "source_data_timestamp": "2026-09-06T15:20:39Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -23,7 +23,7 @@
  },
  "signals": [
   {
-   "opportunity_id": "FETUSDT_LONG_SUPERTREND_15M_2026-09-06T1515",
+   "opportunity_id": "FETUSDT_LONG_SUPERTREND_15M_2026-09-06T1520",
    "symbol": "FETUSDT",
    "pair": "FET/USDT",
    "direction": "LONG",
@@ -33,22 +33,22 @@
    "decision": "FAVORABLE",
    "score": 88,
    "grade": "STRONG",
-   "current_price": 0.1684,
-   "entry_mid": 0.1684,
+   "current_price": 0.1687,
+   "entry_mid": 0.1687,
    "entry_zone": [
-    0.1681474,
-    0.1686526
+    0.16844695,
+    0.16895305
    ],
    "stop_loss": 0.16770428,
-   "tp1": 0.1704208,
-   "tp2": 0.1722,
-   "tp3": 0.175557,
-   "rr_tp1": 2.9,
-   "rr_tp2": 5.46,
-   "rr_tp3": 10.29,
-   "sl_distance_pct": 0.41,
+   "tp1": 0.1707244,
+   "tp2": 0.1724,
+   "tp3": 0.17586975,
+   "rr_tp1": 2.03,
+   "rr_tp2": 3.72,
+   "rr_tp3": 7.2,
+   "sl_distance_pct": 0.59,
    "profit_pct_tp1": 1.2,
-   "profit_pct_tp2": 2.26,
+   "profit_pct_tp2": 2.19,
    "profit_pct_tp3": 4.25,
    "primary_timeframe": "15m",
    "confirmation_timeframes": [
@@ -129,8 +129,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 2.674,
-    "live_chase_atr": 0.0,
+    "ema200_distance_pct": 2.857,
+    "live_chase_atr": 0.203,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +140,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": 1.629,
-   "quote_volume_24h": 9735439.76,
-   "spread_pct": 0.05938,
-   "data_timestamp": "2026-09-06T15:15:40Z"
+   "change_24h": 2.057,
+   "quote_volume_24h": 9701742.7,
+   "spread_pct": 0.05928,
+   "data_timestamp": "2026-09-06T15:20:39Z"
   }
  ],
  "rejections": [
@@ -258,10 +258,10 @@
   {
    "symbol": "DOGEUSDT",
    "codes": [
-    "EMA200_NOT_CONFIRMED"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -420,10 +420,10 @@
   {
    "symbol": "SUIUSDT",
    "codes": [
-    "EMA200_NOT_CONFIRMED"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -934,10 +934,10 @@
   {
    "symbol": "ICPUSDT",
    "codes": [
-    "BREAKOUT_NOT_HOLDING"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -1474,10 +1474,10 @@
   {
    "symbol": "APTUSDT",
    "codes": [
-    "HTF_TREND_CONFLICT"
+    "EMA200_OVEREXTENDED"
    ],
-   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
-   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "1h"
   },
   {
@@ -1517,33 +1517,6 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "RENDERUSDT",
-   "codes": [
-    "RR_BELOW_MINIMUM"
-   ],
-   "reason_ar": "العائد إلى المخاطرة للهدف الأول أقل من الحد الأدنى.",
-   "reason_en": "TP1 risk/reward is below the configured minimum.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "RENDERUSDT",
-   "codes": [
-    "HTF_TREND_CONFLICT"
-   ],
-   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
-   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "RENDERUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "4h"
-  },
-  {
    "symbol": "ARUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
@@ -1568,6 +1541,33 @@
    ],
    "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
    "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "RENDERUSDT",
+   "codes": [
+    "RR_BELOW_MINIMUM"
+   ],
+   "reason_ar": "العائد إلى المخاطرة للهدف الأول أقل من الحد الأدنى.",
+   "reason_en": "TP1 risk/reward is below the configured minimum.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "RENDERUSDT",
+   "codes": [
+    "HTF_TREND_CONFLICT"
+   ],
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "RENDERUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "4h"
   },
   {
@@ -1600,10 +1600,10 @@
   {
    "symbol": "MORPHOUSDT",
    "codes": [
-    "EMA200_NOT_CONFIRMED"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
