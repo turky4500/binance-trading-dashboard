@@ -39,13 +39,16 @@ def _save_st_recent(d):
     save_json(data_path(ST_RECENT_FILE), d)
 
 
-def filter_new_st_signals(st_board, max_fresh_hours=None):
+def filter_new_st_signals(st_board, max_fresh_hours=None, max_age_bars=None):
     """Return SuperTrend signals that haven't been sent recently.
 
     Uses whatsapp_st_recent.json (timestamp-based, NOT committed to git)
     to track when each symbol was last sent. A signal is "new" if it's on
     the board AND was not sent in the last 4 hours. This avoids the race
     condition with concurrent CI runs that refill whatsapp_state.json.
+
+    If max_age_bars is set, signals older than that (bars_held > max_age_bars)
+    are silently dropped — a 67-hour-old signal is no longer actionable.
     """
     recent = _load_st_recent()
     now = datetime.now(timezone.utc)
@@ -53,7 +56,9 @@ def filter_new_st_signals(st_board, max_fresh_hours=None):
     sigs = (st_board or {}).get("signals") or []
     return [s for s in sigs
             if s.get("symbol")
-            and _parse_iso(recent.get(s["symbol"])) < cutoff]
+            and _parse_iso(recent.get(s["symbol"])) < cutoff
+            and (max_age_bars is None
+                 or int(s.get("bars_held") or 0) <= int(max_age_bars))]
 
 
 def _parse_iso(s):

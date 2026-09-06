@@ -195,7 +195,7 @@ def _send_whatsapp_alerts(events, cfg, ops):
     if notify.get("new_st_signal", True):
         st_board = load_json(data_path("st_signals.json"), {})
         max_fresh = wa.get("max_signal_fresh_hours")
-        cands = whatsapp.filter_new_st_signals(st_board, max_fresh)
+        cands = whatsapp.filter_new_st_signals(st_board, max_fresh, max_age_bars=max_fresh)
         rep["new_st_candidates"] = len(cands)
         sent_syms = []
         for s in cands:

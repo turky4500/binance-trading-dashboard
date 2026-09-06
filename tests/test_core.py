@@ -777,6 +777,24 @@ def test_whatsapp_filter_new_st_signals(tmp_path, monkeypatch):
     assert new3 == {'SOLUSDT'}
 
 
+def test_whatsapp_filter_st_max_age_bars(tmp_path, monkeypatch):
+    from analyzer import whatsapp as wa
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    board = {'signals': [
+        {'symbol': 'FRESHUSDT', 'bars_held': 2},
+        {'symbol': 'MIDUSDT', 'bars_held': 12},
+        {'symbol': 'OLDUSDT', 'bars_held': 67},
+        {'symbol': 'VERYOLDUSDT', 'bars_held': 120},
+    ]}
+    # with max_age_bars=24, only signals <=24 bars should pass
+    got = {s['symbol'] for s in wa.filter_new_st_signals(board, max_age_bars=24)}
+    assert got == {'FRESHUSDT', 'MIDUSDT'}, f'got {got}'
+    # without max_age_bars, all pass (dedup only)
+    all_got = {s['symbol'] for s in wa.filter_new_st_signals(board)}
+    assert all_got == {'FRESHUSDT', 'MIDUSDT', 'OLDUSDT', 'VERYOLDUSDT'}
+
+
 def test_whatsapp_filter_and_mark_st_sent(tmp_path, monkeypatch):
     from analyzer import whatsapp as wa
     from analyzer import storage as st
