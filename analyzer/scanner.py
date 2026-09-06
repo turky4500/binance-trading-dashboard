@@ -796,11 +796,19 @@ def _build_st_signals(frames, meta_by_sym, now_iso, cap=120, max_age=None,
             c_now = float(df['c'].iloc[-1])
             e50 = float(df['ema50'].iloc[-1])
             rsi_v = float(df['rsi'].iloc[-1])
+            atr_v = float(df['atr'].iloc[-1]) if 'atr' in df.columns else None
+            st_line = float(df['st_line'].iloc[-1]) if 'st_line' in df.columns else None
             sig_p = info['price_at_signal']
             if not (c_now == c_now) or not (sig_p == sig_p) or sig_p <= 0:
                 continue
             m = meta_by_sym.get(sym)
             cur = m['last'] if m else c_now
+            # SL = SuperTrend line (natural ATR-based stop); R = distance from entry to SL
+            sl = st_line if st_line and st_line < cur else (cur - atr_v * 2 if atr_v else None)
+            R = abs(cur - sl) if sl and sl > 0 else None
+            tp1 = round(cur + R * 1.5, 8) if R else None
+            tp2 = round(cur + R * 2.5, 8) if R else None
+            tp3 = round(cur + R * 4.0, 8) if R else None
             signals.append({
                 'symbol': sym,
                 'pair': sym.replace('USDT', '/USDT'),
@@ -812,6 +820,10 @@ def _build_st_signals(frames, meta_by_sym, now_iso, cap=120, max_age=None,
                 'rsi': round(rsi_v, 1) if rsi_v == rsi_v else None,
                 'above_ema50': bool(c_now > e50),
                 'support': _support_flags(df),
+                'stop_loss': round(sl, 8) if sl else None,
+                'tp1': tp1, 'tp2': tp2, 'tp3': tp3,
+                'rr_tp1': round((tp1 - cur) / R, 2) if R and tp1 else None,
+                'rr_tp2': round((tp2 - cur) / R, 2) if R and tp2 else None,
             })
         except Exception:
             continue

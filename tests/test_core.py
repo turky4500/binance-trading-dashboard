@@ -818,14 +818,21 @@ def test_whatsapp_st_signal_text_shows_time_age_and_caution():
     from analyzer import whatsapp as wa
     sig = {'pair': 'WLFI/USDT', 'signal_at': '2026-09-03T14:00:00+00:00',
            'bars_held': 28, 'price_at_signal': 0.0573, 'current_price': 0.0569,
-           'change_pct': -0.7, 'rsi': 45.9, 'aged': True}
+           'change_pct': -0.7, 'rsi': 45.9, 'aged': True,
+           'stop_loss': 0.054, 'tp1': 0.060, 'tp2': 0.063, 'tp3': 0.068,
+           'rr_tp1': 1.5, 'rr_tp2': 2.5}
     txt = wa.st_signal_text(sig)
     assert '2026-09-03 05:00 PM' in txt  # 14:00 UTC -> 17:00 Riyadh -> 5:00 PM
     assert '28 ساعة' in txt
     assert 'متأخر' in txt
+    assert 'وقف الخسارة' in txt
+    assert 'TP1' in txt
+    assert 'TP2' in txt
+    assert 'TP3' in txt
     fresh = dict(sig, aged=False, bars_held=3)
     txt2 = wa.st_signal_text(fresh)
     assert 'متأخر' not in txt2 and '2026-09-03 05:00 PM' in txt2
+    assert 'وقف الخسارة' in txt2
 
 
 def test_whatsapp_filter_new_opportunities(tmp_path, monkeypatch):

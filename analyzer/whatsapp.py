@@ -194,6 +194,10 @@ def st_signal_text(sig):
     change_txt = ("+" if change is not None and change >= 0 else "") + \
         f"{change:.2f}%" if change is not None else "—"
     bars = sig.get("bars_held")
+    sl = sig.get("stop_loss")
+    tp1 = sig.get("tp1")
+    tp2 = sig.get("tp2")
+    tp3 = sig.get("tp3")
     lines = [
         "📈 إشارة سوبر ترند جديدة",
         "",
@@ -209,6 +213,16 @@ def st_signal_text(sig):
         f"R.S.I: {sig.get('rsi') if sig.get('rsi') is not None else '—'}",
         "",
     ]
+    if sl and tp1 and tp2 and tp3:
+        sl_pct = round(abs(sig.get('current_price', 0) - sl) / sig.get('current_price', 1) * 100, 2)
+        lines += [
+            "💰 الأهداف:",
+            f"وقف الخسارة: {sl} (-{sl_pct}%)",
+            f"الهدف الأول TP1: {tp1} ({sig.get('rr_tp1', '—')}R)",
+            f"الهدف الثاني TP2: {tp2} ({sig.get('rr_tp2', '—')}R)",
+            f"الهدف الثالث TP3: {tp3}",
+            "",
+        ]
     if sig.get("aged"):
         lines.append(
             "⚠️ تنبيه متأخر: ظهرت هذه الإشارة على اللوحة بعد أكثر من "
