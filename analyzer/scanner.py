@@ -23,6 +23,24 @@ from .storage import load_json, save_json, data_path, iso
 from .quant_agent import run_quant_agent
 
 TFS = ['15m', '1h', '4h', '1d']
+
+
+def _price_precision(sym, sym_map=None):
+    """Return the number of decimal places for a symbol's price (from Binance exchangeInfo).
+    Defaults to 8 if unknown."""
+    if sym_map is None:
+        try:
+            sym_map = {s['s']: s for s in load_json(data_path('symbols.json'), {}).get('symbols', [])}
+        except Exception:
+            sym_map = {}
+    return sym_map.get(sym, {}).get('p', 8)
+
+
+def _round_price(price, precision):
+    """Round a price to the given number of decimal places."""
+    if price is None:
+        return None
+    return round(price, precision)
 SKIP_BASE = {
     'USDC', 'FDUSD', 'TUSD', 'USDP', 'DAI', 'AEUR', 'BUSD', 'PAXG', 'XAUT', 'PYUSD',
     'XUSD', 'BFUSD', 'EURI', 'RLUSD', 'USDE', 'USD1', 'USDR', 'USDX', 'U', 'WBTC', 'BTCB', 'CBBTC',
@@ -539,7 +557,8 @@ def _save_symbol_list(einfo, now_iso):
         for s in einfo['symbols']:
             if s['status'] != 'TRADING' or not s.get('isSpotTradingAllowed'):
                 continue
-            rows.append({'s': s['symbol'], 'b': s['baseAsset'], 'q': s['quoteAsset']})
+            rows.append({'s': s['symbol'], 'b': s['baseAsset'], 'q': s['quoteAsset'],
+                         'p': s.get('pricePrecision', 8)})
         rows.sort(key=lambda r: (r['q'] != 'USDT', r['q'] != 'BTC', r['b']))
         save_json(data_path('symbols.json'), {'updated_at': now_iso, 'symbols': rows[:3000]})
     except Exception:
@@ -776,6 +795,10 @@ def _build_st_signals(frames, meta_by_sym, now_iso, cap=120, max_age=None,
         until a new confirmed signal appears.
     """
     signals = []
+    try:
+        sym_map = {s['s']: s for s in load_json(data_path('symbols.json'), {}).get('symbols', [])}
+    except Exception:
+        sym_map = {}
     for sym, df in frames.items():
         try:
             live_dir = df['st_dir'].iloc[-1] if len(df) else None
@@ -806,9 +829,13 @@ def _build_st_signals(frames, meta_by_sym, now_iso, cap=120, max_age=None,
             # SL = SuperTrend line (natural ATR-based stop); R = distance from entry to SL
             sl = st_line if st_line and st_line < cur else (cur - atr_v * 2 if atr_v else None)
             R = abs(cur - sl) if sl and sl > 0 else None
-            tp1 = round(cur + R * 1.5, 8) if R else None
-            tp2 = round(cur + R * 2.5, 8) if R else None
-            tp3 = round(cur + R * 4.0, 8) if R else None
+            pp = _price_precision(sym, sym_map)
+            tp1 = _round_price(cur + R * 1.5, pp) if R else None
+            tp2 = _round_price(cur + R * 2.5, pp) if R else None
+            tp3 = _round_price(cur + R * 4.0, pp) if R else None
+            sl = _round_price(sl, pp) if sl else None
+            sig_p = _round_price(sig_p, pp)
+            cur = _round_price(cur, pp)
             signals.append({
                 'symbol': sym,
                 'pair': sym.replace('USDT', '/USDT'),
