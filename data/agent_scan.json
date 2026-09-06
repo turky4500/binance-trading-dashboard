@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-06T13:00:53Z",
- "source_data_timestamp": "2026-09-06T13:00:53Z",
+ "scan_timestamp": "2026-09-06T13:05:37Z",
+ "source_data_timestamp": "2026-09-06T13:05:37Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -161,10 +161,10 @@
   {
    "symbol": "PROMUSDT",
    "codes": [
-    "HTF_TREND_CONFLICT"
+    "EMA200_OVEREXTENDED"
    ],
-   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
-   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "15m"
   },
   {
@@ -1077,6 +1077,33 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "PENDLEUSDT",
+   "codes": [
+    "SUPERTREND_BEARISH"
+   ],
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "PENDLEUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "PENDLEUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "GRAMUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
@@ -1104,7 +1131,7 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "CRVUSDT",
+   "symbol": "MUBARAKUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
    ],
@@ -1113,7 +1140,7 @@
    "primary_timeframe": "15m"
   },
   {
-   "symbol": "CRVUSDT",
+   "symbol": "MUBARAKUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -1122,7 +1149,7 @@
    "primary_timeframe": "1h"
   },
   {
-   "symbol": "CRVUSDT",
+   "symbol": "MUBARAKUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -1131,7 +1158,7 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "PENDLEUSDT",
+   "symbol": "CRVUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
    ],
@@ -1140,7 +1167,7 @@
    "primary_timeframe": "15m"
   },
   {
-   "symbol": "PENDLEUSDT",
+   "symbol": "CRVUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -1149,34 +1176,7 @@
    "primary_timeframe": "1h"
   },
   {
-   "symbol": "PENDLEUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "MUBARAKUSDT",
-   "codes": [
-    "SUPERTREND_BEARISH"
-   ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "MUBARAKUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "MUBARAKUSDT",
+   "symbol": "CRVUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -1376,10 +1376,10 @@
   {
    "symbol": "APTUSDT",
    "codes": [
-    "BREAKOUT_NOT_HOLDING"
+    "LIVE_PRICE_CHASE"
    ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
+   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
+   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
    "primary_timeframe": "15m"
   },
   {
