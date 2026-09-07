@@ -1,11 +1,11 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-07T19:05:39Z",
- "source_data_timestamp": "2026-09-07T19:05:39Z",
+ "scan_timestamp": "2026-09-07T19:10:41Z",
+ "source_data_timestamp": "2026-09-07T19:10:41Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
-  "breadth_pct_above_ema50": 96.7,
+  "breadth_pct_above_ema50": 93.3,
   "new_setups_gated": false
  },
  "timeframes_scanned": [
@@ -23,7 +23,7 @@
  },
  "signals": [
   {
-   "opportunity_id": "OPUSDT_LONG_SUPERTREND_15M_2026-09-07T1905",
+   "opportunity_id": "OPUSDT_LONG_SUPERTREND_15M_2026-09-07T1910",
    "symbol": "OPUSDT",
    "pair": "OP/USDT",
    "direction": "LONG",
@@ -33,23 +33,23 @@
    "decision": "FAVORABLE",
    "score": 83,
    "grade": "STRONG",
-   "current_price": 0.1095,
-   "entry_mid": 0.1095,
+   "current_price": 0.1092,
+   "entry_mid": 0.1092,
    "entry_zone": [
-    0.10933575,
-    0.10966425
+    0.1090362,
+    0.1093638
    ],
    "stop_loss": 0.1089911,
-   "tp1": 0.110814,
-   "tp2": 0.112,
-   "tp3": 0.1142,
-   "rr_tp1": 2.58,
-   "rr_tp2": 4.91,
-   "rr_tp3": 9.24,
-   "sl_distance_pct": 0.46,
+   "tp1": 0.1105104,
+   "tp2": 0.111657,
+   "tp3": 0.1137,
+   "rr_tp1": 6.27,
+   "rr_tp2": 11.76,
+   "rr_tp3": 21.54,
+   "sl_distance_pct": 0.19,
    "profit_pct_tp1": 1.2,
-   "profit_pct_tp2": 2.28,
-   "profit_pct_tp3": 4.29,
+   "profit_pct_tp2": 2.25,
+   "profit_pct_tp3": 4.12,
    "primary_timeframe": "15m",
    "confirmation_timeframes": [
     "1h",
@@ -129,8 +129,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 1.066,
-    "live_chase_atr": -0.092,
+    "ema200_distance_pct": 0.789,
+    "live_chase_atr": -0.367,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +140,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": 1.108,
-   "quote_volume_24h": 7603794.9,
-   "spread_pct": 0.09132,
-   "data_timestamp": "2026-09-07T19:05:39Z"
+   "change_24h": 0.831,
+   "quote_volume_24h": 7605167.1,
+   "spread_pct": 0.09158,
+   "data_timestamp": "2026-09-07T19:10:41Z"
   }
  ],
  "rejections": [
@@ -609,10 +609,10 @@
   {
    "symbol": "ADAUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -1446,10 +1446,10 @@
   {
    "symbol": "CRVUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "RR_BELOW_MINIMUM"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "العائد إلى المخاطرة للهدف الأول أقل من الحد الأدنى.",
+   "reason_en": "TP1 risk/reward is below the configured minimum.",
    "primary_timeframe": "1h"
   },
   {
@@ -1489,33 +1489,6 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "RENDERUSDT",
-   "codes": [
-    "BREAKOUT_NOT_HOLDING"
-   ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "RENDERUSDT",
-   "codes": [
-    "HTF_TREND_CONFLICT"
-   ],
-   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
-   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "RENDERUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "4h"
-  },
-  {
    "symbol": "COTIUSDT",
    "codes": [
     "LIVE_PRICE_CHASE"
@@ -1540,6 +1513,33 @@
    ],
    "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
    "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "RENDERUSDT",
+   "codes": [
+    "BREAKOUT_NOT_HOLDING"
+   ],
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "RENDERUSDT",
+   "codes": [
+    "HTF_TREND_CONFLICT"
+   ],
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "RENDERUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "4h"
   },
   {
