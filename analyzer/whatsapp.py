@@ -19,6 +19,7 @@ from .storage import load_json, save_json, data_path
 ENDPOINT_DEFAULT = "https://wats-saas.duckdns.org/api/v1/send"
 STATE_FILE = "whatsapp_state.json"
 ST_RECENT_FILE = "whatsapp_st_recent.json"
+ST_SENT_FILE = "st_sent.json"
 
 _SSL_CTX = ssl.create_default_context()
 _SSL_CTX.check_hostname = False
@@ -64,30 +65,44 @@ def _save_st_recent(d):
 
 
 def filter_new_st_signals(st_board, max_fresh_hours=None, max_age_bars=None):
-    """Return SuperTrend signals that haven't been sent recently.
+    """Return SuperTrend signals that haven't been sent yet.
 
-    Uses whatsapp_st_recent.json (timestamp-based, NOT committed to git)
-    to track when each symbol was last sent. A signal is "new" if it's on
-    the board AND was not sent in the last 4 hours. This avoids the race
-    condition with concurrent CI runs that refill whatsapp_state.json.
+    Uses data/st_sent.json (committed to git) to track which signals were
+    already sent. A signal is identified by its (symbol, bars_held, signal_at)
+    tuple — if that exact signal was already sent, it's skipped.
 
     If max_age_bars is set, signals older than that (bars_held > max_age_bars)
-    are silently dropped — a 67-hour-old signal is no longer actionable.
-
-    Signal age check: if signal_at is older than 20 minutes, skip it.
-    This prevents duplicate sends when the dedup file is wiped between CI runs.
+    are silently dropped.
     """
-    recent = _load_st_recent()
-    now = datetime.now(timezone.utc)
-    cutoff = now - timedelta(hours=4)
-    fresh_cutoff = now - timedelta(minutes=20)
+    sent = _load_st_sent()
     sigs = (st_board or {}).get("signals") or []
     return [s for s in sigs
             if s.get("symbol")
-            and _parse_iso(recent.get(s["symbol"])) < cutoff
-            and _parse_iso(s.get("signal_at")) >= fresh_cutoff
+            and _signal_key(s) not in sent
             and (max_age_bars is None
                  or int(s.get("bars_held") or 0) <= int(max_age_bars))]
+
+
+def _signal_key(sig):
+    """Unique key for a signal: symbol|bars_held|signal_at."""
+    return "{}|{}|{}".format(
+        sig.get("symbol", ""),
+        sig.get("bars_held", 0),
+        sig.get("signal_at", ""))
+
+
+def _load_st_sent():
+    """Load the set of already-sent signal keys from st_sent.json."""
+    try:
+        data = load_json(data_path(ST_SENT_FILE), [])
+        return set(data) if isinstance(data, list) else set()
+    except Exception:
+        return set()
+
+
+def _save_st_sent(keys):
+    """Save sent signal keys to st_sent.json."""
+    save_json(data_path(ST_SENT_FILE), sorted(keys))
 
 
 def _parse_iso(s):
@@ -103,13 +118,16 @@ def _parse_iso(s):
         return datetime(2000, 1, 1, tzinfo=timezone.utc)
 
 
-def mark_st_sent(symbols):
-    """Record that symbols were successfully sent (with timestamp)."""
-    recent = _load_st_recent()
-    now_iso = datetime.now(timezone.utc).isoformat()
-    for sym in symbols:
-        recent[sym] = now_iso
-    _save_st_recent(recent)
+def mark_st_sent(signals):
+    """Record that signals were successfully sent. Accepts list of signal
+    dicts (with symbol, bars_held, signal_at) or plain symbol strings."""
+    sent = _load_st_sent()
+    for s in signals:
+        if isinstance(s, dict):
+            sent.add(_signal_key(s))
+        else:
+            sent.add("{}|*|*".format(s))
+    _save_st_sent(sent)
 
 
 def filter_new_opportunities(new_ops, min_score=84):
