@@ -908,7 +908,7 @@ def test_whatsapp_send_posts_to_endpoint(tmp_path, monkeypatch):
         def __exit__(self, *a):
             return False
 
-    def fake_urlopen(req, timeout=0):
+    def fake_urlopen(req, timeout=0, context=None):
         captured['url'] = req.full_url
         captured['method'] = req.get_method()
         captured['auth'] = req.get_header('Authorization')
@@ -953,7 +953,7 @@ def test_whatsapp_send_multiple_recipients(tmp_path, monkeypatch):
         def __enter__(self): return self
         def __exit__(self, *a): return False
 
-    def fake_urlopen(req, timeout=0):
+    def fake_urlopen(req, timeout=0, context=None):
         import json as _j
         body = _j.loads(req.data.decode('utf-8'))
         sent_to.append(body['to'])

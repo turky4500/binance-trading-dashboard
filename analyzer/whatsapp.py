@@ -10,6 +10,7 @@ analysis run.
 """
 import json
 import os
+import ssl
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
@@ -18,6 +19,10 @@ from .storage import load_json, save_json, data_path
 ENDPOINT_DEFAULT = "https://wats-saas.duckdns.org/api/v1/send"
 STATE_FILE = "whatsapp_state.json"
 ST_RECENT_FILE = "whatsapp_st_recent.json"
+
+_SSL_CTX = ssl.create_default_context()
+_SSL_CTX.check_hostname = False
+_SSL_CTX.verify_mode = ssl.CERT_NONE
 RECIPIENTS_FILE = "recipients.txt"
 
 # The owner's timezone for human-readable alert times (UTC+3, no DST).
@@ -165,7 +170,7 @@ def send_whatsapp(text, cfg, to=None):
                     "Authorization": "Bearer " + token,
                     "Content-Type": "application/json",
                 })
-            with urllib.request.urlopen(req, timeout=20) as r:
+            with urllib.request.urlopen(req, timeout=20, context=_SSL_CTX) as r:
                 if 200 <= r.status < 300:
                     ok_any = True
         except Exception:
@@ -198,7 +203,7 @@ def send_whatsapp_diag(text, cfg, to=None):
                     "Authorization": "Bearer " + token,
                     "Content-Type": "application/json",
                 })
-            with urllib.request.urlopen(req, timeout=20) as r:
+            with urllib.request.urlopen(req, timeout=20, context=_SSL_CTX) as r:
                 if 200 <= r.status < 300:
                     ok_any = True
                 else:
