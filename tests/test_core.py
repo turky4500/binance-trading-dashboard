@@ -763,16 +763,18 @@ def test_record_agent_history_never_raises(tmp_path, monkeypatch):
 def test_whatsapp_filter_new_st_signals(tmp_path, monkeypatch):
     from analyzer import whatsapp as wa
     from analyzer import storage as st
+    from datetime import datetime, timedelta, timezone
     monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
-    board1 = {'signals': [{'symbol': 'BTCUSDT'}, {'symbol': 'ETHUSDT'}]}
+    now = datetime.now(timezone.utc).isoformat()
+    board1 = {'signals': [{'symbol': 'BTCUSDT', 'signal_at': now}, {'symbol': 'ETHUSDT', 'signal_at': now}]}
     new1 = wa.filter_new_st_signals(board1)
     assert {s['symbol'] for s in new1} == {'BTCUSDT', 'ETHUSDT'}
     # mark them sent → they won't appear again for 4 hours
     wa.mark_st_sent(['BTCUSDT', 'ETHUSDT'])
-    new2 = wa.filter_new_st_signals({'signals': [{'symbol': 'BTCUSDT'}, {'symbol': 'ETHUSDT'}]})
+    new2 = wa.filter_new_st_signals({'signals': [{'symbol': 'BTCUSDT', 'signal_at': now}, {'symbol': 'ETHUSDT', 'signal_at': now}]})
     assert new2 == []
     # new symbol added -> only the newcomer is reported
-    board3 = {'signals': [{'symbol': 'BTCUSDT'}, {'symbol': 'ETHUSDT'}, {'symbol': 'SOLUSDT'}]}
+    board3 = {'signals': [{'symbol': 'BTCUSDT', 'signal_at': now}, {'symbol': 'ETHUSDT', 'signal_at': now}, {'symbol': 'SOLUSDT', 'signal_at': now}]}
     new3 = {s['symbol'] for s in wa.filter_new_st_signals(board3)}
     assert new3 == {'SOLUSDT'}
 
@@ -780,12 +782,15 @@ def test_whatsapp_filter_new_st_signals(tmp_path, monkeypatch):
 def test_whatsapp_filter_st_max_age_bars(tmp_path, monkeypatch):
     from analyzer import whatsapp as wa
     from analyzer import storage as st
+    from datetime import datetime, timedelta, timezone
     monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    now = datetime.now(timezone.utc).isoformat()
+    old = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
     board = {'signals': [
-        {'symbol': 'FRESHUSDT', 'bars_held': 2},
-        {'symbol': 'MIDUSDT', 'bars_held': 12},
-        {'symbol': 'OLDUSDT', 'bars_held': 67},
-        {'symbol': 'VERYOLDUSDT', 'bars_held': 120},
+        {'symbol': 'FRESHUSDT', 'bars_held': 2, 'signal_at': now},
+        {'symbol': 'MIDUSDT', 'bars_held': 12, 'signal_at': now},
+        {'symbol': 'OLDUSDT', 'bars_held': 67, 'signal_at': now},
+        {'symbol': 'VERYOLDUSDT', 'bars_held': 120, 'signal_at': now},
     ]}
     # with max_age_bars=24, only signals <=24 bars should pass
     got = {s['symbol'] for s in wa.filter_new_st_signals(board, max_age_bars=24)}
@@ -795,14 +800,32 @@ def test_whatsapp_filter_st_max_age_bars(tmp_path, monkeypatch):
     assert all_got == {'FRESHUSDT', 'MIDUSDT', 'OLDUSDT', 'VERYOLDUSDT'}
 
 
+def test_whatsapp_filter_st_signal_age_minutes(tmp_path, monkeypatch):
+    from analyzer import whatsapp as wa
+    from analyzer import storage as st
+    from datetime import datetime, timedelta, timezone
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    now = datetime.now(timezone.utc)
+    fresh = now.isoformat()
+    old = (now - timedelta(minutes=25)).isoformat()
+    board = {'signals': [
+        {'symbol': 'FRESHUSDT', 'bars_held': 1, 'signal_at': fresh},
+        {'symbol': 'STALEUSDT', 'bars_held': 1, 'signal_at': old},
+    ]}
+    got = {s['symbol'] for s in wa.filter_new_st_signals(board)}
+    assert got == {'FRESHUSDT'}, f'got {got}'
+
+
 def test_whatsapp_filter_and_mark_st_sent(tmp_path, monkeypatch):
     from analyzer import whatsapp as wa
     from analyzer import storage as st
+    from datetime import datetime, timedelta, timezone
     monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    now = datetime.now(timezone.utc).isoformat()
     board = {'signals': [
-        {'symbol': 'FRESHUSDT', 'bars_held': 2},
-        {'symbol': 'AGEDUSDT', 'bars_held': 30},
-        {'symbol': 'ALSOFRESHUSDT', 'bars_held': 23},
+        {'symbol': 'FRESHUSDT', 'bars_held': 2, 'signal_at': now},
+        {'symbol': 'AGEDUSDT', 'bars_held': 30, 'signal_at': now},
+        {'symbol': 'ALSOFRESHUSDT', 'bars_held': 23, 'signal_at': now},
     ]}
     # all three are new (nothing sent yet)
     got = {s['symbol'] for s in wa.filter_new_st_signals(board)}

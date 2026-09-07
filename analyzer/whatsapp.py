@@ -68,14 +68,19 @@ def filter_new_st_signals(st_board, max_fresh_hours=None, max_age_bars=None):
 
     If max_age_bars is set, signals older than that (bars_held > max_age_bars)
     are silently dropped — a 67-hour-old signal is no longer actionable.
+
+    Signal age check: if signal_at is older than 20 minutes, skip it.
+    This prevents duplicate sends when the dedup file is wiped between CI runs.
     """
     recent = _load_st_recent()
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(hours=4)
+    fresh_cutoff = now - timedelta(minutes=20)
     sigs = (st_board or {}).get("signals") or []
     return [s for s in sigs
             if s.get("symbol")
             and _parse_iso(recent.get(s["symbol"])) < cutoff
+            and _parse_iso(s.get("signal_at")) >= fresh_cutoff
             and (max_age_bars is None
                  or int(s.get("bars_held") or 0) <= int(max_age_bars))]
 
