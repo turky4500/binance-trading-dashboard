@@ -4,6 +4,7 @@
 const state = {
   meta: null, market: null, opps: [], agent: null, perf: null, history: [], bt: null,
   bh: null, ul: null, symbols: [], engineCfg: null, st: null, fg: null, ah: [],
+  indicators: { smc: null, confluence: null, momentum: null, liquidity: null, adaptive: null, volume: null, unified: null },
   filter: { q: '', dir: 'ALL', status: 'ALL', sort: 'score', high: false, watch: false },
   prefs: loadPrefs(),
   analyzer: { busy: false, result: null, frames4h: null },
@@ -43,7 +44,7 @@ async function loadAll() {
   // embedded snapshot unless there is no data at all.
   const hadMeta = !!state.meta;
   const prevOpps = window.__dashDataSeeded ? state.opps.slice() : null;
-  const [m, mk, o, qa, p, h, bt, bh, ul, syms, ecfg, stb, fg, ah] = await Promise.allSettled([
+  const [m, mk, o, qa, p, h, bt, bh, ul, syms, ecfg, stb, fg, ah, smc, conf, mom, liq, ada, vol, uni] = await Promise.allSettled([
     fetchJSON('data/meta.json'),
     fetchJSON('data/market.json'),
     fetchJSON('data/opportunities.json'),
@@ -58,6 +59,13 @@ async function loadAll() {
     fetchJSON('data/st_signals.json'),
     fetchJSON('data/fear_greed.json'),
     fetchJSON('data/agent_history.json'),
+    fetchJSON('data/signals_smc.json'),
+    fetchJSON('data/signals_confluence.json'),
+    fetchJSON('data/signals_momentum.json'),
+    fetchJSON('data/signals_liquidity.json'),
+    fetchJSON('data/signals_adaptive.json'),
+    fetchJSON('data/signals_volume.json'),
+    fetchJSON('data/signals_unified.json'),
   ]);
   if (m.status === 'fulfilled') {
     state.meta = m.value;
@@ -89,6 +97,13 @@ async function loadAll() {
   if (stb.status === 'fulfilled' && stb.value) state.st = stb.value;
   if (fg.status === 'fulfilled' && fg.value) state.fg = fg.value;
   if (ah.status === 'fulfilled' && ah.value) state.ah = ah.value;
+  if (smc.status === 'fulfilled' && smc.value) state.indicators.smc = smc.value;
+  if (conf.status === 'fulfilled' && conf.value) state.indicators.confluence = conf.value;
+  if (mom.status === 'fulfilled' && mom.value) state.indicators.momentum = mom.value;
+  if (liq.status === 'fulfilled' && liq.value) state.indicators.liquidity = liq.value;
+  if (ada.status === 'fulfilled' && ada.value) state.indicators.adaptive = ada.value;
+  if (vol.status === 'fulfilled' && vol.value) state.indicators.volume = vol.value;
+  if (uni.status === 'fulfilled' && uni.value) state.indicators.unified = uni.value;
   // lifecycle alerts: diff vs previously displayed data (skipped on first seed)
   if (window.Alerts && prevOpps && prevOpps.length && o.status === 'fulfilled') {
     window.Alerts.diffEvents(prevOpps, state.opps).forEach(ev => window.Alerts.emit(ev));
@@ -1389,6 +1404,140 @@ function renderStTab() {
   }).join('');
 }
 
+/* ---------------- indicator tabs rendering ---------------- */
+function renderIndicatorTab(indicatorKey, gridId, emptyId, countId, overallId, cardFn) {
+  const grid = document.getElementById(gridId);
+  const empty = document.getElementById(emptyId);
+  const countEl = document.getElementById(countId);
+  const overallEl = document.getElementById(overallId);
+  if (!grid) return;
+  const data = state.indicators[indicatorKey];
+  const signals = (data && Array.isArray(data.signals)) ? data.signals : [];
+  if (countEl) countEl.textContent = signals.length;
+  if (overallEl) {
+    if (data && data.count > 0) {
+      const first = signals[0];
+      const bias = first.bias || 'NEUTRAL';
+      overallEl.textContent = bias === 'BULLISH' ? 'صاعد' : bias === 'BEARISH' ? 'هابط' : 'محايد';
+      overallEl.className = 'indicator-badge ' + (bias === 'BULLISH' ? 'badge-bullish' : bias === 'BEARISH' ? 'badge-bearish' : 'badge-neutral');
+    } else {
+      overallEl.textContent = '—';
+    }
+  }
+  if (!signals.length) {
+    grid.innerHTML = '';
+    if (empty) empty.classList.remove('hidden');
+    return;
+  }
+  if (empty) empty.classList.add('hidden');
+  grid.innerHTML = signals.map(s => cardFn(s)).join('');
+}
+
+function smcCard(s) {
+  const biasCls = s.bias === 'BULLISH' ? 'pos' : s.bias === 'BEARISH' ? 'neg' : '';
+  const biasLabel = s.bias === 'BULLISH' ? 'صاعد' : s.bias === 'BEARISH' ? 'هابط' : 'محايد';
+  const signals = (s.signals || []).map(sig => {
+    const type = sig.type || '';
+    const icon = type.includes('BULLISH') ? '🟢' : type.includes('BEARISH') ? '🔴' : '🟡';
+    return `<span class="signal-chip ${type.includes('BULLISH') ? 'chip-bull' : type.includes('BEARISH') ? 'chip-bear' : 'chip-neutral'}">${icon} ${esc(type.replace(/_/g, ' '))}</span>`;
+  }).join('');
+  return `<div class="card indicator-card card-${biasCls}">
+    <div class="card-head"><span class="pair">${esc(s.pair)}</span><span class="badge badge-${biasCls}">${biasLabel}</span></div>
+    <div class="card-price" data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</div>
+    <div class="card-detail">الثقة: ${s.confidence || 0}%</div>
+    <div class="signal-chips">${signals}</div>
+  </div>`;
+}
+
+function confluenceCard(s) {
+  const biasCls = s.bias === 'BULLISH' ? 'pos' : s.bias === 'BEARISH' ? 'neg' : '';
+  const biasLabel = s.bias === 'BULLISH' ? 'صاعد' : s.bias === 'BEARISH' ? 'هابط' : 'محايد';
+  const tfInfo = Object.entries(s.per_timeframe || {}).map(([tf, v]) => {
+    const icon = v.bias === 'BULLISH' ? '🟢' : v.bias === 'BEARISH' ? '🔴' : '🟡';
+    return `<span class="tf-chip">${icon} ${tf}: ${v.score || 0}</span>`;
+  }).join('');
+  return `<div class="card indicator-card card-${biasCls}">
+    <div class="card-head"><span class="pair">${esc(s.pair)}</span><span class="badge badge-${biasCls}">${biasLabel}</span></div>
+    <div class="card-price" data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</div>
+    <div class="card-detail">التصنيف: ${s.score || 0}/100</div>
+    <div class="tf-chips">${tfInfo}</div>
+  </div>`;
+}
+
+function momentumCard(s) {
+  const biasCls = s.bias === 'BULLISH' ? 'pos' : s.bias === 'BEARISH' ? 'neg' : '';
+  const biasLabel = s.bias === 'BULLISH' ? 'صاعد' : s.bias === 'BEARISH' ? 'هابط' : 'محايد';
+  const sigs = (s.top_signals || []).map(sig => {
+    const icon = sig.direction === 'LONG' ? '🟢' : '🔴';
+    return `<span class="signal-chip ${sig.direction === 'LONG' ? 'chip-bull' : 'chip-bear'}">${icon} ${esc(sig.indicator || sig.type || '')}</span>`;
+  }).join('');
+  return `<div class="card indicator-card card-${biasCls}">
+    <div class="card-head"><span class="pair">${esc(s.pair)}</span><span class="badge badge-${biasCls}">${biasLabel}</span></div>
+    <div class="card-price" data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</div>
+    <div class="card-detail">التصنيف: ${s.score || 0}/100</div>
+    <div class="signal-chips">${sigs}</div>
+  </div>`;
+}
+
+function liquidityCard(s) {
+  const biasCls = s.bias === 'BULLISH' ? 'pos' : s.bias === 'BEARISH' ? 'neg' : '';
+  const biasLabel = s.bias === 'BULLISH' ? 'صاعد' : s.bias === 'BEARISH' ? 'هابط' : 'محايد';
+  const sigs = (s.top_signals || []).map(sig => {
+    const icon = sig.direction === 'LONG' ? '🟢' : '🔴';
+    return `<span class="signal-chip ${sig.direction === 'LONG' ? 'chip-bull' : 'chip-bear'}">${icon} ${esc(sig.type || '').replace(/_/g, ' ')}</span>`;
+  }).join('');
+  return `<div class="card indicator-card card-${biasCls}">
+    <div class="card-head"><span class="pair">${esc(s.pair)}</span><span class="badge badge-${biasCls}">${biasLabel}</span></div>
+    <div class="card-price" data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</div>
+    <div class="card-detail">الثقة: ${s.confidence || 0}%</div>
+    <div class="signal-chips">${sigs}</div>
+  </div>`;
+}
+
+function adaptiveCard(s) {
+  const biasCls = s.bias === 'BULLISH' ? 'pos' : s.bias === 'BEARISH' ? 'neg' : '';
+  const biasLabel = s.bias === 'BULLISH' ? 'صاعد' : s.bias === 'BEARISH' ? 'هابط' : 'محايد';
+  return `<div class="card indicator-card card-${biasCls}">
+    <div class="card-head"><span class="pair">${esc(s.pair)}</span><span class="badge badge-${biasCls}">${biasLabel}</span></div>
+    <div class="card-price" data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</div>
+    <div class="card-detail">التصنيف: ${s.score || 0}/100 | KNN ثقة: ${s.confidence || 0}%</div>
+  </div>`;
+}
+
+function volumeCard(s) {
+  const biasCls = s.bias === 'BULLISH' ? 'pos' : s.bias === 'BEARISH' ? 'neg' : '';
+  const biasLabel = s.bias === 'BULLISH' ? 'صاعد' : s.bias === 'BEARISH' ? 'هابط' : 'محايد';
+  return `<div class="card indicator-card card-${biasCls}">
+    <div class="card-head"><span class="pair">${esc(s.pair)}</span><span class="badge badge-${biasCls}">${biasLabel}</span></div>
+    <div class="card-price" data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</div>
+    <div class="card-detail">التصنيف: ${s.score || 0}/100</div>
+  </div>`;
+}
+
+function unifiedCard(s) {
+  const biasCls = s.bias === 'BULLISH' ? 'pos' : s.bias === 'BEARISH' ? 'neg' : '';
+  const biasLabel = s.bias === 'BULLISH' ? 'صاعد' : s.bias === 'BEARISH' ? 'هابط' : 'محايد';
+  const breakdown = (s.breakdown || []).map(b => {
+    const icon = b.bias === 'BULLISH' ? '🟢' : b.bias === 'BEARISH' ? '🔴' : '🟡';
+    return `<span class="signal-chip ${b.bias === 'BULLISH' ? 'chip-bull' : b.bias === 'BEARISH' ? 'chip-bear' : 'chip-neutral'}">${icon} ${esc(b.name)}: ${b.score}</span>`;
+  }).join('');
+  return `<div class="card indicator-card card-${biasCls}">
+    <div class="card-head"><span class="pair">${esc(s.pair)}</span><span class="badge badge-${biasCls}">${biasLabel} ${s.confidence || 0}%</span></div>
+    <div class="card-price" data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</div>
+    <div class="signal-chips">${breakdown}</div>
+  </div>`;
+}
+
+function renderAllIndicatorTabs() {
+  renderIndicatorTab('unified', 'uni-grid', 'uni-empty', 'uni-count', 'uni-overall', unifiedCard);
+  renderIndicatorTab('smc', 'smc-grid', 'smc-empty', 'smc-count', 'smc-overall', smcCard);
+  renderIndicatorTab('confluence', 'conf-grid', 'conf-empty', 'conf-count', 'conf-overall', confluenceCard);
+  renderIndicatorTab('momentum', 'mom-grid', 'mom-empty', 'mom-count', 'mom-overall', momentumCard);
+  renderIndicatorTab('liquidity', 'liq-grid', 'liq-empty', 'liq-count', 'liq-overall', liquidityCard);
+  renderIndicatorTab('adaptive', 'ada-grid', 'ada-empty', 'ada-count', 'ada-overall', adaptiveCard);
+  renderIndicatorTab('volume', 'vol-grid', 'vol-empty', 'vol-count', 'vol-overall', volumeCard);
+}
+
 /* ---------------- render all ---------------- */
 window.renderAll = function () {
   renderHeader();
@@ -1399,6 +1548,7 @@ window.renderAll = function () {
   renderMarketTab();
   renderPerformance();
   renderAbout();
+  renderAllIndicatorTabs();
 };
 
 /* ---------------- boot ---------------- */

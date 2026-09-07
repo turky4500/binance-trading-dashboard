@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مشروع التوصيات</title>
+<title>لوحة تحليل العملات</title>
 <meta name="theme-color" content="#0b0e11">
-<meta name="description" content="Automated read-only Binance spot trading-opportunities dashboard — analysis only, no trading.">
+<meta name="description" content="لوحة تحكم تلقائية لرصد فرص التداول على Binance — تحليل فقط، بدون أي تداول.">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -16,14 +16,14 @@
   <div class="brand">
     <span class="logo">◈</span>
     <div>
-      <h1 data-i18n="title">BINANCE TRADING DASHBOARD</h1>
-      <p class="subtitle" data-i18n="subtitle">Automated spot-market opportunity scanner — analysis only, no trading</p>
+      <h1 data-i18n="title">لوحة تحليل العملات</h1>
+      <p class="subtitle" data-i18n="subtitle">مسح تلقائي لفرص التداول — تحليل فقط، لا تداول</p>
     </div>
   </div>
   <div class="topbar-right">
     <div class="market-status" id="market-status"><span class="dot"></span><span id="market-status-text">—</span></div>
-    <div class="live-badge" id="live-badge"><span class="pulse-dot"></span><span id="live-text">LIVE</span></div>
-    <div class="countdown" id="countdown" title="Countdown to next data cycle">
+    <div class="live-badge" id="live-badge"><span class="pulse-dot"></span><span id="live-text">مباشر</span></div>
+    <div class="countdown" id="countdown" title="الوقت المتبقي للدورة التالية">
       <svg viewBox="0 0 36 36">
         <circle class="ring-bg" cx="18" cy="18" r="15.5"/>
         <circle class="ring" id="countdown-ring" cx="18" cy="18" r="15.5"/>
@@ -31,31 +31,32 @@
       <span id="countdown-text">--:--</span>
     </div>
     <div class="alert-wrap">
-      <button class="lang-btn" id="alert-btn" title="Alerts">🔔</button>
-      <div class="alert-panel hidden" id="alert-panel">        <h4 data-i18n="alerts_title">Alerts &amp; Notifications</h4>
+      <button class="lang-btn" id="alert-btn" title="التنبيهات">🔔</button>
+      <div class="alert-panel hidden" id="alert-panel">
+        <h4 data-i18n="alerts_title">التنبيهات والإشعارات</h4>
         <p class="alert-note" data-i18n="alerts_note"></p>
-        <label class="alert-row"><input type="checkbox" id="al-notif"> <span data-i18n="notif_master"></span></label>
-        <label class="alert-row"><input type="checkbox" id="al-sound"> <span data-i18n="sound_master"></span></label>
+        <label class="alert-row"><input type="checkbox" id="al-notif"> <span data-i18n="notif_master">إشعارات</span></label>
+        <label class="alert-row"><input type="checkbox" id="al-sound"> <span data-i18n="sound_master">صوت</span></label>
         <div class="alert-divider"></div>
-        <label class="alert-row"><input type="checkbox" id="al-ev-new_setup"> <span data-i18n="ev_new"></span></label>
-        <label class="alert-row"><input type="checkbox" id="al-ev-ready"> <span data-i18n="ev_ready"></span></label>
-        <label class="alert-row"><input type="checkbox" id="al-ev-triggered"> <span data-i18n="ev_triggered"></span></label>
-        <label class="alert-row"><input type="checkbox" id="al-ev-tp_hit"> <span data-i18n="ev_tp"></span></label>
-        <label class="alert-row"><input type="checkbox" id="al-ev-stopped"> <span data-i18n="ev_stopped"></span></label>
-        <label class="alert-row"><input type="checkbox" id="al-ev-expired"> <span data-i18n="ev_expired"></span></label>
-        <label class="alert-row"><input type="checkbox" id="al-ev-invalidated"> <span data-i18n="ev_invalidated"></span></label>
-        <button class="btn small" id="al-test" data-i18n="test_sound">Test sound</button>
+        <label class="alert-row"><input type="checkbox" id="al-ev-new_setup"> <span data-i18n="ev_new">فرصة جديدة</span></label>
+        <label class="alert-row"><input type="checkbox" id="al-ev-ready"> <span data-i18n="ev_ready">جاهز للدخول</span></label>
+        <label class="alert-row"><input type="checkbox" id="al-ev-triggered"> <span data-i18n="ev_triggered">تم الدخول</span></label>
+        <label class="alert-row"><input type="checkbox" id="al-ev-tp_hit"> <span data-i18n="ev_tp">تحقيق الهدف</span></label>
+        <label class="alert-row"><input type="checkbox" id="al-ev-stopped"> <span data-i18n="ev_stopped">وقف الخسارة</span></label>
+        <label class="alert-row"><input type="checkbox" id="al-ev-expired"> <span data-i18n="ev_expired">منتهي الصلاحية</span></label>
+        <label class="alert-row"><input type="checkbox" id="al-ev-invalidated"> <span data-i18n="ev_invalidated">ملغي</span></label>
+        <button class="btn small" id="al-test" data-i18n="test_sound">اختبار الصوت</button>
       </div>
     </div>
     <div class="alert-wrap">
-      <button class="lang-btn" id="settings-btn" title="Settings">⚙️</button>
+      <button class="lang-btn" id="settings-btn" title="الإعدادات">⚙️</button>
       <div class="alert-panel hidden" id="settings-panel">
-        <h4 data-i18n="settings_title">Settings</h4>
+        <h4 data-i18n="settings_title">الإعدادات</h4>
         <p class="alert-note" data-i18n="settings_note"></p>
         <label class="alert-row"><span data-i18n="theme_label" style="flex:1"></span>
-          <select id="set-theme" class="mini-select"><option value="dark" data-i18n="theme_dark">Dark</option><option value="light" data-i18n="theme_light">Light</option></select></label>
+          <select id="set-theme" class="mini-select"><option value="dark" data-i18n="theme_dark">داكن</option><option value="light" data-i18n="theme_light">فاتح</option></select></label>
         <label class="alert-row"><span data-i18n="lang_label" style="flex:1"></span>
-          <select id="set-lang" class="mini-select"><option value="en">English</option><option value="ar">العربية</option></select></label>
+          <select id="set-lang" class="mini-select"><option value="ar">العربية</option><option value="en">English</option></select></label>
         <div class="alert-divider"></div>
         <label class="alert-row"><span data-i18n="live_prices" style="flex:1"></span><input type="checkbox" id="set-live"></label>
         <label class="alert-row"><span data-i18n="ez_alerts" style="flex:1"></span><input type="checkbox" id="set-ez"></label>
@@ -66,87 +67,213 @@
           <input type="number" id="set-minscore" min="0" max="100" step="5" class="mini-input" value="0"></label>
         <label class="alert-row"><span data-i18n="max_cards_disp" style="flex:1"></span>
           <input type="number" id="set-maxcards" min="1" max="50" step="1" class="mini-input" value="20"></label>
-        <button class="btn small" id="set-reset" data-i18n="reset_prefs">Reset</button>
+        <button class="btn small" id="set-reset" data-i18n="reset_prefs">إعادة تعيين</button>
       </div>
     </div>
-    <button class="lang-btn" id="theme-btn">🌙</button>
-    <button class="lang-btn" id="lang-btn">العربية</button>
+    <button class="lang-btn" id="theme-btn">☀️</button>
+    <button class="lang-btn" id="lang-btn">EN</button>
   </div>
 </header>
 
 <section class="statusbar">
-  <div class="stat"><span data-i18n="last_update">Last Market Update</span><b id="last-update">—</b></div>
-  <div class="stat"><span data-i18n="next_update">Next Update</span><b id="next-update">—</b></div>
-  <div class="stat"><span data-i18n="data_age">Data Age</span><b id="data-age">—</b></div>
+  <div class="stat"><span data-i18n="last_update">آخر تحديث</span><b id="last-update">—</b></div>
+  <div class="stat"><span data-i18n="next_update">التحديث التالي</span><b id="next-update">—</b></div>
+  <div class="stat"><span data-i18n="data_age">عمر البيانات</span><b id="data-age">—</b></div>
   <div class="stat"><span data-i18n="btc_price">BTC / USDT</span><b id="btc-price" data-live-sym="BTCUSDT">—</b></div>
-  <div class="stat"><span data-i18n="breadth">Breadth (top30 &gt; EMA50)</span><b id="breadth">—</b></div>
-  <div class="stat"><span data-i18n="source">Data Source</span><b id="source">—</b></div>
+  <div class="stat"><span data-i18n="breadth">الاتساع</span><b id="breadth">—</b></div>
+  <div class="stat"><span data-i18n="source">المصدر</span><b id="source">—</b></div>
 </section>
 
 <div id="error-banner" class="error-banner hidden">
   <div>
-    <b data-i18n="source_error">DATA SOURCE ERROR</b>
+    <b data-i18n="source_error">خطأ في مصدر البيانات</b>
     <span id="error-banner-text"></span>
   </div>
   <div class="error-meta" id="error-meta"></div>
 </div>
 
+<!-- Main Tabs -->
 <div class="tabs" id="tabs">
-  <button class="tab active" data-tab="opportunities"><span data-i18n="tab_opps">Opportunities</span><span class="tab-count" id="opp-count">0</span></button>
-  <button class="tab" data-tab="agent"><span data-i18n="tab_agent">Quant Agent</span><span class="tab-count" id="agent-count">0</span></button>
-  <button class="tab" data-tab="supertrend"><span data-i18n="tab_st">SuperTrend</span><span class="tab-count" id="st-count">0</span></button>
-  <button class="tab" data-tab="analyzer"><span data-i18n="tab_analyzer">Analyzer</span></button>
-  <button class="tab" data-tab="market"><span data-i18n="tab_market">Market</span></button>
-  <button class="tab" data-tab="performance"><span data-i18n="tab_perf">Performance</span></button>
-  <button class="tab" data-tab="about"><span data-i18n="tab_about">About</span></button>
+  <button class="tab active" data-tab="unified"><span data-i18n="tab_unified">🎯 إشارة موحدة</span><span class="tab-count" id="uni-count">0</span></button>
+  <button class="tab" data-tab="smc"><span data-i18n="tab_smc">🏛️ أموال ذكية</span><span class="tab-count" id="smc-count">0</span></button>
+  <button class="tab" data-tab="confluence"><span data-i18n="tab_confluence">📈 ت trends</span><span class="tab-count" id="conf-count">0</span></button>
+  <button class="tab" data-tab="momentum"><span data-i18n="tab_momentum">⚡ الزخم</span><span class="tab-count" id="mom-count">0</span></button>
+  <button class="tab" data-tab="liquidity"><span data-i18n="tab_liquidity">💧 السيولة</span><span class="tab-count" id="liq-count">0</span></button>
+  <button class="tab" data-tab="adaptive"><span data-i18n="tab_adaptive">🧠 ذكاء اصطناعي</span><span class="tab-count" id="ada-count">0</span></button>
+  <button class="tab" data-tab="volume"><span data-i18n="tab_volume">📊 الحجم</span><span class="tab-count" id="vol-count">0</span></button>
+  <button class="tab" data-tab="opportunities"><span data-i18n="tab_opps">📋 الفرص</span><span class="tab-count" id="opp-count">0</span></button>
+  <button class="tab" data-tab="agent"><span data-i18n="tab_agent">🤖 الوكيل</span><span class="tab-count" id="agent-count">0</span></button>
+  <button class="tab" data-tab="supertrend"><span data-i18n="tab_st">📊 SuperTrend</span><span class="tab-count" id="st-count">0</span></button>
+  <button class="tab" data-tab="market"><span data-i18n="tab_market">🌍 السوق</span></button>
+  <button class="tab" data-tab="about"><span data-i18n="tab_about">ℹ️ حول</span></button>
 </div>
 
 <main>
-  <section id="tab-opportunities" class="tab-panel active">
+  <!-- ============ UNIFIED SIGNAL TAB ============ -->
+  <section id="tab-unified" class="tab-panel active">
+    <div class="indicator-header unified-header">
+      <div>
+        <h2 data-i18n="uni_title">🎯 الإشارة الموحدة</h2>
+        <p data-i18n="uni_desc">خلاصة 6 مؤشرات متقدمة — كل مؤشر يصوت والنتيجة هي الإجماعweighted</p>
+      </div>
+      <div class="indicator-badge unified-badge" id="uni-overall">—</div>
+    </div>
+    <div id="uni-breakdown" class="indicator-breakdown"></div>
+    <div id="uni-grid" class="grid"></div>
+    <div id="uni-empty" class="empty hidden">
+      <div class="empty-icon">🎯</div>
+      <h2 data-i18n="uni_no_signals">لا توجد إشارات موحدة قوية</h2>
+      <p data-i18n="uni_no_signals_sub">يجب أن يتفق 60%+ من المؤشرات على نفس الاتجاه</p>
+    </div>
+  </section>
+
+  <!-- ============ SMC TAB ============ -->
+  <section id="tab-smc" class="tab-panel">
+    <div class="indicator-header smc-header">
+      <div>
+        <h2 data-i18n="smc_title">🏛️ أموال ذكية (SMC)</h2>
+        <p data-i18n="smc_desc">مستوحى من LuxAlgo و Quantum Algo — كشف Order Blocks + FVG + BOS/CHoCH + Liquidity Sweep</p>
+      </div>
+      <div class="indicator-badge smc-badge" id="smc-overall">—</div>
+    </div>
+    <div id="smc-grid" class="grid"></div>
+    <div id="smc-empty" class="empty hidden">
+      <div class="empty-icon">🏛️</div>
+      <h2 data-i18n="smc_no_signals">لا توجد إشارات SMC قوية</h2>
+      <p data-i18n="smc_no_signals_sub">يجب أن تكون ثقة المؤشر 45%+ لعرض الإشارة</p>
+    </div>
+  </section>
+
+  <!-- ============ CONFLUENCE TAB ============ -->
+  <section id="tab-confluence" class="tab-panel">
+    <div class="indicator-header conf-header">
+      <div>
+        <h2 data-i18n="conf_title">📈 ت kesesristan الترند</h2>
+        <p data-i18n="conf_desc">مستوحى من ChartPrime و Infinity Algo — تأكيد من 7 مؤشرات: EMA + SuperTrend + ADX + MACD + Volume + RSI</p>
+      </div>
+      <div class="indicator-badge conf-badge" id="conf-overall">—</div>
+    </div>
+    <div id="conf-grid" class="grid"></div>
+    <div id="conf-empty" class="empty hidden">
+      <div class="empty-icon">📈</div>
+      <h2 data-i18n="conf_no_signals">لا توجد إشارات ترند قوية</h2>
+      <p data-i18n="conf_no_signals_sub">يجب أن يتجاوز التصنيف 45 نقطة</p>
+    </div>
+  </section>
+
+  <!-- ============ MOMENTUM TAB ============ -->
+  <section id="tab-momentum" class="tab-panel">
+    <div class="indicator-header mom-header">
+      <div>
+        <h2 data-i18n="mom_title">⚡ الزخم المتقدم</h2>
+        <p data-i18n="mom_desc">مستوحى من Market Cipher و Quantzee — RSI Divergence + MACD + Stochastic + WaveTrend + ROC</p>
+      </div>
+      <div class="indicator-badge mom-badge" id="mom-overall">—</div>
+    </div>
+    <div id="mom-grid" class="grid"></div>
+    <div id="mom-empty" class="empty hidden">
+      <div class="empty-icon">⚡</div>
+      <h2 data-i18n="mom_no_signals">لا توجد إشارات زخم قوية</h2>
+      <p data-i18n="mom_no_signals_sub">يجب أن يتجاوز التصنيف 40 نقطة</p>
+    </div>
+  </section>
+
+  <!-- ============ LIQUIDITY TAB ============ -->
+  <section id="tab-liquidity" class="tab-panel">
+    <div class="indicator-header liq-header">
+      <div>
+        <h2 data-i18n="liq_title">💧 مناطق السيولة</h2>
+        <p data-i18n="liq_desc">مستوحى من Zeiierman و AlgoAlpha — Swing levels + Equal highs/lows + Stop hunts + Liquidity grabs</p>
+      </div>
+      <div class="indicator-badge liq-badge" id="liq-overall">—</div>
+    </div>
+    <div id="liq-grid" class="grid"></div>
+    <div id="liq-empty" class="empty hidden">
+      <div class="empty-icon">💧</div>
+      <h2 data-i18n="liq_no_signals">لا توجد مناطق سيولة قوية</h2>
+      <p data-i18n="liq_no_signals_sub">يجب أن تكون ثقة المؤشر 40%+</p>
+    </div>
+  </section>
+
+  <!-- ============ ADAPTIVE TAB ============ -->
+  <section id="tab-adaptive" class="tab-panel">
+    <div class="indicator-header ada-header">
+      <div>
+        <h2 data-i18n="ada_title">🧠 الذكاء الاصطناعي التكيّفي</h2>
+        <p data-i18n="ada_desc">مستوحى من Quantzee و Lorentzian — KNN Classification + Adaptive EMA + Multi-TF Confirmation</p>
+      </div>
+      <div class="indicator-badge ada-badge" id="ada-overall">—</div>
+    </div>
+    <div id="ada-grid" class="grid"></div>
+    <div id="ada-empty" class="empty hidden">
+      <div class="empty-icon">🧠</div>
+      <h2 data-i18n="ada_no_signals">لا توجد إشارات ذكاء اصطناعي قوية</h2>
+      <p data-i18n="ada_no_signals_sub">يجب أن يتجاوز التصنيف 45 نقطة</p>
+    </div>
+  </section>
+
+  <!-- ============ VOLUME TAB ============ -->
+  <section id="tab-volume" class="tab-panel">
+    <div class="indicator-header vol-header">
+      <div>
+        <h2 data-i18n="vol_title">📊 ملف الحجم</h2>
+        <p data-i18n="vol_desc">مستوحى من AlgoAlpha و EXCAVO — POC + VAH/VAL + HVN/LVN + Volume Trend + Momentum</p>
+      </div>
+      <div class="indicator-badge vol-badge" id="vol-overall">—</div>
+    </div>
+    <div id="vol-grid" class="grid"></div>
+    <div id="vol-empty" class="empty hidden">
+      <div class="empty-icon">📊</div>
+      <h2 data-i18n="vol_no_signals">لا توجد إشارات حجم قوية</h2>
+      <p data-i18n="vol_no_signals_sub">يجب أن يتجاوز التصنيف 45 نقطة</p>
+    </div>
+  </section>
+
+  <!-- ============ OPPORTUNITIES TAB ============ -->
+  <section id="tab-opportunities" class="tab-panel">
     <div class="filters" id="filters">
-      <input type="text" id="search" class="search" data-i18n-ph="search_ph" placeholder="Search coin…">
+      <input type="text" id="search" class="search" data-i18n-ph="search_ph" placeholder="بحث عن عملة…">
       <select id="f-direction">
-        <option value="ALL" data-i18n="f_all_dir">ALL</option>
+        <option value="ALL" data-i18n="f_all_dir">الكل</option>
         <option value="LONG">LONG</option>
         <option value="SHORT">SHORT</option>
       </select>
       <select id="f-status">
-        <option value="ALL" data-i18n="f_all_status">ALL STATUS</option>
-        <option value="READY">READY</option>
-        <option value="WAITING_CONFIRMATION">WAITING</option>
-        <option value="TRIGGERED">TRIGGERED</option>
-        <option value="TP1_HIT">TP1 HIT</option>
-        <option value="TP2_HIT">TP2 HIT</option>
-        <option value="STOPPED">STOPPED</option>
+        <option value="ALL" data-i18n="f_all_status">كل الحالات</option>
+        <option value="READY">جاهز</option>
+        <option value="WAITING_CONFIRMATION">انتظار</option>
+        <option value="TRIGGERED">تم الدخول</option>
+        <option value="TP1_HIT">هدف 1</option>
+        <option value="TP2_HIT">هدف 2</option>
+        <option value="STOPPED">وقف</option>
       </select>
       <select id="f-sort">
-        <option value="score" data-i18n="sort_score">Sort: Score</option>
-        <option value="rr" data-i18n="sort_rr">Sort: Risk/Reward</option>
-        <option value="profit" data-i18n="sort_profit">Sort: Potential Profit</option>
-        <option value="volume" data-i18n="sort_volume">Sort: Volume</option>
-        <option value="updated" data-i18n="sort_updated">Sort: Updated Time</option>
+        <option value="score" data-i18n="sort_score">التصنيف</option>
+        <option value="rr" data-i18n="sort_rr">المخاطرة/العائد</option>
+        <option value="profit" data-i18n="sort_profit">الربح المحتمل</option>
+        <option value="volume" data-i18n="sort_volume">الحجم</option>
+        <option value="updated" data-i18n="sort_updated">الوقت</option>
       </select>
-      <button class="chip" id="chip-high" data-i18n="chip_high">HIGH SCORE ≥ 85</button>
-      <button class="chip" id="chip-watch" data-i18n="watchlist">⭐ Watchlist</button>
-      <button class="chip" id="chip-ready">READY</button>
+      <button class="chip" id="chip-high" data-i18n="chip_high">تصنيف عالي ≥ 85</button>
+      <button class="chip" id="chip-watch" data-i18n="watchlist">⭐ المراقبة</button>
+      <button class="chip" id="chip-ready">جاهز</button>
       <button class="chip" id="chip-long">LONG</button>
     </div>
-
     <div id="watch-bar" class="watch-bar hidden"></div>
-
     <div id="opps-grid" class="grid"></div>
     <div id="empty-state" class="empty hidden">
       <div class="empty-icon">∅</div>
-      <h2 data-i18n="no_setups">No High-Quality Setup Found</h2>
-      <p data-i18n="no_setups_sub">The scanner intentionally shows nothing when no opportunity scores above the quality threshold.</p>
+      <h2 data-i18n="no_setups">لا توجد فرص عالية الجودة</h2>
+      <p data-i18n="no_setups_sub">المسح لا يعرض شيئاً عندما لا توجد فرصة تتجاوز عتبة الجودة.</p>
     </div>
   </section>
 
+  <!-- ============ AGENT TAB ============ -->
   <section id="tab-agent" class="tab-panel">
     <div class="agent-head">
       <div>
-        <h2 data-i18n="agent_title">SuperTrend Quant Agent</h2>
-        <p data-i18n="agent_subtitle">Deterministic opportunity scan on 15m, 1h and 4h: EMA200, SuperTrend (10,3), price action and strict risk/reward.</p>
+        <h2 data-i18n="agent_title">وكيل SuperTrend الكمي</h2>
+        <p data-i18n="agent_subtitle">مسح حتمي على 15 دقيقة + 1 ساعة + 4 ساعات: EMA200 + SuperTrend + هيكل السعر + مخاطرة/عائد صارم.</p>
       </div>
       <div class="agent-status" id="agent-status">—</div>
     </div>
@@ -154,64 +281,54 @@
     <div id="agent-grid" class="grid"></div>
     <div id="agent-empty" class="empty hidden">
       <div class="empty-icon">∅</div>
-      <h2 data-i18n="agent_no_signals">No qualifying scalp signal</h2>
-      <p id="agent-empty-reason" data-i18n="agent_no_signals_sub">The agent publishes nothing unless every mechanical filter passes.</p>
+      <h2 data-i18n="agent_no_signals">لا توجد إشارات سكالبنج مؤهلة</h2>
+      <p id="agent-empty-reason" data-i18n="agent_no_signals_sub">الوكيل لا ينشر شيئاً ما لم تمر كل الفلاتر الميكانيكية.</p>
     </div>
     <details id="agent-rejections" class="agent-rejections hidden">
-      <summary data-i18n="agent_rejections">Rejection summary</summary>
+      <summary data-i18n="agent_rejections">ملخص الرفض</summary>
       <div id="agent-rejection-list"></div>
     </details>
     <details id="agent-hist-recent" class="agent-rejections hidden">
-      <summary data-i18n="agent_history">Recent agent signals (incl. closed)</summary>
+      <summary data-i18n="agent_history">إشارات الوكيل الأخيرة</summary>
       <div id="agent-history-list"></div>
     </details>
   </section>
 
+  <!-- ============ SUPERTREND TAB ============ -->
   <section id="tab-supertrend" class="tab-panel">
     <div class="mcell">
-      <div class="mcell-head"><span data-i18n="stb_head">SuperTrend BUY Signals (Daily)</span><b id="st-updated">—</b></div>
+      <div class="mcell-head"><span data-i18n="stb_head">إشارات شراء SuperTrend (يومي)</span><b id="st-updated">—</b></div>
       <p class="alert-note" data-i18n="stb_note"></p>
       <div class="table-wrap" id="st-table-wrap">
         <table id="st-table">
           <thead><tr>
-            <th data-i18n="h_pair">Pair</th>
-            <th data-i18n="stb_since">Signal Since</th>
-            <th data-i18n="stb_days">Days</th>
-            <th data-i18n="stb_price_sig">Price @ Signal</th>
-            <th data-i18n="stb_price_now">Now</th>
-            <th data-i18n="stb_change">Since Signal</th>
+            <th data-i18n="h_pair">العملة</th>
+            <th data-i18n="stb_since">منذ</th>
+            <th data-i18n="stb_days">الأيام</th>
+            <th data-i18n="stb_price_sig">السعر عند الإشارة</th>
+            <th data-i18n="stb_price_now">الآن</th>
+            <th data-i18n="stb_change">التغيير</th>
             <th>RSI</th>
-            <th data-i18n="stb_support">Support</th>
+            <th data-i18n="stb_support">الدعم</th>
           </tr></thead>
           <tbody id="st-body"></tbody>
         </table>
       </div>
       <div id="st-empty" class="empty hidden">
         <div class="empty-icon">∅</div>
-        <h2 data-i18n="stb_none_t">No Active BUY Signals</h2>
-        <p data-i18n="stb_none">No coin currently has an active Daily SuperTrend buy signal.</p>
+        <h2 data-i18n="stb_none_t">لا توجد إشارات شراء نشطة</h2>
+        <p data-i18n="stb_none">لا توجد عملة حالياً بإشارة شراء يومية من SuperTrend.</p>
       </div>
     </div>
   </section>
 
-  <section id="tab-analyzer" class="tab-panel">
-    <div class="analyzer-head">
-      <div class="analyzer-input-wrap">
-        <input type="text" id="ana-input" class="search" data-i18n-ph="ana_placeholder" placeholder="SOLUSDT / SOL …" autocomplete="off" spellcheck="false">
-        <div id="ana-suggest" class="ana-suggest hidden"></div>
-      </div>
-      <button class="btn" id="ana-run" data-i18n="ana_btn">Analyze</button>
-    </div>
-    <div id="ana-status" class="analyzer-note hidden"></div>
-    <div id="ana-result"></div>
-  </section>
-
+  <!-- ============ MARKET TAB ============ -->
   <section id="tab-market" class="tab-panel">
     <div class="market-stats" id="market-stats"></div>
     <div class="mcell" style="margin-top:16px" id="fear-greed"></div>
     <div class="market-charts" style="margin-top:16px">
       <div class="mcell">
-        <div class="mcell-head"><span data-i18n="breadth_chart">Market Breadth (% above EMA50)</span><b id="breadth-now">—</b></div>
+        <div class="mcell-head"><span data-i18n="breadth_chart">اتساع السوق (% فوق EMA50)</span><b id="breadth-now">—</b></div>
         <div class="chart-wrap"><canvas id="breadth-chart" style="width:100%"></canvas></div>
       </div>
       <div class="mcell">
@@ -220,49 +337,28 @@
       </div>
     </div>
     <div class="mcell" style="margin-top:16px">
-      <div class="mcell-head"><span data-i18n="heatmap">Market Heatmap (24h % change, top by volume)</span></div>
+      <div class="mcell-head"><span data-i18n="heatmap">خريطة حرارية (变化 24 ساعة)</span></div>
       <div id="heatmap-grid" class="heatmap-grid"></div>
     </div>
     <div class="mcell" style="margin-top:16px">
-      <div class="mcell-head"><span data-i18n="pipeline_health">Pipeline Health (last 24h)</span><b id="health-summary">—</b></div>
+      <div class="mcell-head"><span data-i18n="pipeline_health">صحة الماسورة (24 ساعة)</span><b id="health-summary">—</b></div>
       <div class="health-grid" id="health-grid"></div>
     </div>
     <div class="mcell" style="margin-top:16px">
-      <div class="mcell-head"><span data-i18n="update_log">Pipeline Log</span></div>
+      <div class="mcell-head"><span data-i18n="update_log">سجل التحديثات</span></div>
       <div class="update-log" id="update-log"></div>
     </div>
   </section>
 
-  <section id="tab-performance" class="tab-panel">
-    <div class="perf-grid" id="perf-grid"></div>
-    <div class="perf-note">⚠ <span data-i18n="perf_disclaimer">These statistics describe the scanner's own history. They are NOT a promise of future performance. Past results never guarantee future outcomes.</span></div>
-    <h3 data-i18n="closed_setups">Closed Setups History</h3>
-    <div class="table-wrap">
-      <table id="history-table">
-        <thead><tr>
-          <th data-i18n="h_pair">Pair</th><th data-i18n="h_dir">Dir</th><th data-i18n="h_setup">Setup</th>
-          <th data-i18n="h_entry">Entry</th><th data-i18n="h_result">Result</th><th data-i18n="h_score">Score</th>
-          <th data-i18n="h_hold">Hold</th><th data-i18n="h_closed">Closed</th>
-        </tr></thead>
-        <tbody id="history-body"></tbody>
-      </table>
-    </div>
-    <div id="history-empty" class="empty hidden">
-      <p data-i18n="no_history">No closed setups yet — history builds up as opportunities play out.</p>
-    </div>
-
-    <!-- historical backtest + score calibration (seeded daily by GitHub Actions) -->
-    <div id="bt-section" style="margin-top:34px"></div>
-  </section>
-
+  <!-- ============ ABOUT TAB ============ -->
   <section id="tab-about" class="tab-panel">
     <div class="about-box">
-      <h2 data-i18n="about_title">How this system works</h2>
-      <p data-i18n="about_p1">Every 15 minutes a GitHub Actions workflow pulls live public Binance market data, screens hundreds of USDT spot pairs, runs deterministic multi-timeframe technical analysis (15m/1h/4h/1d: EMA 20/50/200, RSI, MACD, ATR, VWAP, structure, breakout detection), computes entry zones, stop losses and targets, scores each plan out of 100, tracks the lifecycle of published setups, and commits the results as JSON.</p>
-      <p data-i18n="about_p2">The dashboard is a static page that reads those JSON files — nothing is invented, no LLM produces any price or level, and the system never places orders. It is 100% read-only.</p>
-      <p data-i18n="about_p3">The page updates itself automatically: a countdown shows the time left until the next data cycle, fresh data is pulled and rendered without a manual reload, and you can switch between dark and light themes.</p>
+      <h2 data-i18n="about_title">كيف يعمل النظام</h2>
+      <p data-i18n="about_p1">كل 15 دقيقة يقوم نظام GitHub Actions بجلب بيانات البورصة الحية من Binance، وفحص مئات أزواج USDT، وتحليل فني متعدد الإطارات الزمنية (15 دقيقة / 1 ساعة / 4 ساعات / يومي: EMA 20/50/200، RSI، MACD، ATR، VWAP، هيكل السوق، كشف الاختراق)، وحساب مناطق الدخول ووقف الخسارة والأهداف، وتصنيف كل خطة من 100، وتتبع دورة حياة الفرص المنشورة، وحفظ النتائج كـ JSON.</p>
+      <p data-i18n="about_p2">لوحة التحكم هي صفحة ثابتة تقرأ ملفات JSON هذه — لا شيء مخترع، ولا نموذج ذكاء اصطناعي ينتج أي سعر أو مستوى، والنظام لا يضع أبداً أي صفقات. هو 100% للقراءة فقط.</p>
+      <p data-i18n="about_p3">الصفحة تتحدث تلقائياً: عد تنازلي يُظهر الوقت المتبقي للدورة التالية، والبيانات الجديدة تُسحب وتُعرض بدون إعادة تحميل يدوية، ويمكنك التبديل بين الأوضاع الداكنة والفاتحة.</p>
       <div class="about-stats" id="about-stats"></div>
-      <p class="legal" data-i18n="about_legal">Trading digital assets carries high risk. This tool is for informational and educational purposes only and is not financial advice.</p>
+      <p class="legal" data-i18n="about_legal">تداول العملات الرقمية ينطوي على مخاطر عالية. هذه الأداة لأغراض معلوماتية وتعليمية فقط وليست نصيحة مالية.</p>
     </div>
   </section>
 </main>
@@ -285,12 +381,11 @@
 <div id="toasts" class="toasts"></div>
 
 <footer class="footer">
-  <span data-i18n="footer1">Read-only market analysis. No orders, no withdrawals, no API keys.</span>
+  <span data-i18n="footer1">تحليل أسواق للقراءة فقط. لا صفقات، لا سحوبات، لا مفاتيح API.</span>
   <span id="footer-version"></span>
 </footer>
 
 <script>
-// Embedded snapshot fallback (injected by scripts/build_static.py)
 window.__EMBEDDED__ = window.__EMBEDDED__ || null;
 </script>
 <script src="js/i18n.js"></script>
