@@ -84,10 +84,10 @@ def filter_new_st_signals(st_board, max_fresh_hours=None, max_age_bars=None):
 
 
 def _signal_key(sig):
-    """Unique key for a signal: symbol|bars_held|signal_at."""
-    return "{}|{}|{}".format(
+    """Unique key for a signal: symbol|signal_at (bars_held excluded so
+    the same signal is not re-sent as candles close)."""
+    return "{}|{}".format(
         sig.get("symbol", ""),
-        sig.get("bars_held", 0),
         sig.get("signal_at", ""))
 
 
