@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-07T01:55:41Z",
- "source_data_timestamp": "2026-09-07T01:55:41Z",
+ "scan_timestamp": "2026-09-07T02:00:56Z",
+ "source_data_timestamp": "2026-09-07T02:00:56Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -15,13 +15,506 @@
  ],
  "symbols_scanned": 61,
  "total_scanned": 183,
- "opportunities_found": 0,
+ "opportunities_found": 4,
  "opportunities_by_timeframe": {
-  "15m": 0,
+  "15m": 4,
   "1h": 0,
   "4h": 0
  },
- "signals": [],
+ "signals": [
+  {
+   "opportunity_id": "ADAUSDT_LONG_SUPERTREND_15M_2026-09-07T0200",
+   "symbol": "ADAUSDT",
+   "pair": "ADA/USDT",
+   "direction": "LONG",
+   "setup_type": "SCALP_SUPERTREND",
+   "setup_label": "SuperTrend opportunity (15m)",
+   "status": "READY",
+   "decision": "FAVORABLE",
+   "score": 92,
+   "grade": "EXCELLENT",
+   "current_price": 0.2217,
+   "entry_mid": 0.2217,
+   "entry_zone": [
+    0.22136745,
+    0.22203255
+   ],
+   "stop_loss": 0.22084421,
+   "tp1": 0.2243604,
+   "tp2": 0.2264,
+   "tp3": 0.23112225,
+   "rr_tp1": 3.11,
+   "rr_tp2": 5.49,
+   "rr_tp3": 11.01,
+   "sl_distance_pct": 0.39,
+   "profit_pct_tp1": 1.2,
+   "profit_pct_tp2": 2.12,
+   "profit_pct_tp3": 4.25,
+   "primary_timeframe": "15m",
+   "confirmation_timeframes": [
+    "1h",
+    "4h"
+   ],
+   "timeframes": [
+    "15m",
+    "1h",
+    "4h"
+   ],
+   "supertrend_status": {
+    "15m": "UP",
+    "1h": "UP",
+    "4h": "UP"
+   },
+   "ema200_status": {
+    "15m": "ABOVE",
+    "1h": "ABOVE",
+    "4h": "ABOVE"
+   },
+   "score_breakdown": {
+    "trend_alignment": 25,
+    "price_action": 18,
+    "entry_quality": 15,
+    "risk_reward": 15,
+    "momentum": 8.5,
+    "volume": 6,
+    "liquidity": 4
+   },
+   "score_breakdown_labels": {
+    "trend_alignment": "Trend & SuperTrend Alignment",
+    "price_action": "Price Action Quality",
+    "entry_quality": "EMA200 Extension / Entry Quality",
+    "risk_reward": "Risk / Reward",
+    "momentum": "Momentum",
+    "volume": "Volume",
+    "liquidity": "Liquidity"
+   },
+   "reason": {
+    "ar": "فرصة على إطار 15 دقيقة: SuperTrend صاعد على 15 دقيقة وساعة و4 ساعات، والسعر فوق EMA200 مع ارتداد مؤكد من خط SuperTrend دون مطاردة سعرية.",
+    "en": "15m opportunity: SuperTrend is bullish on 15m, 1h, 4h; price is above EMA200 with a confirmed SuperTrend bounce and no excessive extension."
+   },
+   "sl_reason": {
+    "ar": "الوقف أسفل أقرب دعم صالح على إطار 15 دقيقة من خط SuperTrend وقيعان آخر شمعتين صاعدتين مع هامش ATR صغير.",
+    "en": "The stop sits below the nearest valid 15m SuperTrend/two-bullish-candle support with a small ATR buffer."
+   },
+   "tp_reason": {
+    "ar": "الأهداف ضمن نطاقات الاستراتيجية، مع تفضيل مقاومة هيكلية عندما تقع داخل النطاق المحدد.",
+    "en": "Targets use the configured bands, preferring a structural resistance when it falls inside the band."
+   },
+   "risk_notes": {
+    "ar": [
+     "إشارة على إطار 15 دقيقة؛ ألغِ الفكرة عند كسر الوقف.",
+     "الدرجة ليست احتمالًا مضمونًا للربح."
+    ],
+    "en": [
+     "15m signal; invalidate it if the stop breaks.",
+     "The score is not a guaranteed probability of profit."
+    ]
+   },
+   "invalidation_level": 0.22084421,
+   "invalidation_reason": {
+    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 0.22084421.",
+    "en": "The idea is invalidated by a 15m close below 0.22084421."
+   },
+   "confirmation": {
+    "ar": "شروط إطار 15 دقيقة وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
+    "en": "The 15m conditions and higher-frame confirmations pass; price is inside the entry zone at scan time."
+   },
+   "execution_note": {
+    "ar": "الفرصة مستوفية للشروط حاليًا؛ التزم بالوقف ولا تطارد السعر إذا غادر منطقة الدخول.",
+    "en": "Conditions currently pass; respect the stop and do not chase price outside the entry zone."
+   },
+   "diagnostics": {
+    "primary_timeframe": "15m",
+    "confirmation_timeframes": [
+     "1h",
+     "4h"
+    ],
+    "ema200_distance_pct": 1.49,
+    "live_chase_atr": 0.128,
+    "supertrend_last_3": [
+     "UP",
+     "UP",
+     "UP"
+    ],
+    "upper_wick_rejection": false,
+    "lower_highs_detected": false,
+    "entry_trigger": "SUPERTREND_BOUNCE"
+   },
+   "change_24h": 0.09,
+   "quote_volume_24h": 29953618.24,
+   "spread_pct": 0.04511,
+   "data_timestamp": "2026-09-07T02:00:56Z"
+  },
+  {
+   "opportunity_id": "XLMUSDT_LONG_SUPERTREND_15M_2026-09-07T0200",
+   "symbol": "XLMUSDT",
+   "pair": "XLM/USDT",
+   "direction": "LONG",
+   "setup_type": "SCALP_SUPERTREND",
+   "setup_label": "SuperTrend opportunity (15m)",
+   "status": "READY",
+   "decision": "FAVORABLE",
+   "score": 88,
+   "grade": "STRONG",
+   "current_price": 0.1866,
+   "entry_mid": 0.1866,
+   "entry_zone": [
+    0.1863201,
+    0.1868799
+   ],
+   "stop_loss": 0.18597976,
+   "tp1": 0.1888392,
+   "tp2": 0.1907985,
+   "tp3": 0.1945305,
+   "rr_tp1": 3.61,
+   "rr_tp2": 6.77,
+   "rr_tp3": 12.79,
+   "sl_distance_pct": 0.33,
+   "profit_pct_tp1": 1.2,
+   "profit_pct_tp2": 2.25,
+   "profit_pct_tp3": 4.25,
+   "primary_timeframe": "15m",
+   "confirmation_timeframes": [
+    "1h",
+    "4h"
+   ],
+   "timeframes": [
+    "15m",
+    "1h",
+    "4h"
+   ],
+   "supertrend_status": {
+    "15m": "UP",
+    "1h": "UP",
+    "4h": "UP"
+   },
+   "ema200_status": {
+    "15m": "ABOVE",
+    "1h": "ABOVE",
+    "4h": "ABOVE"
+   },
+   "score_breakdown": {
+    "trend_alignment": 25,
+    "price_action": 18,
+    "entry_quality": 15,
+    "risk_reward": 15,
+    "momentum": 8.5,
+    "volume": 3,
+    "liquidity": 4
+   },
+   "score_breakdown_labels": {
+    "trend_alignment": "Trend & SuperTrend Alignment",
+    "price_action": "Price Action Quality",
+    "entry_quality": "EMA200 Extension / Entry Quality",
+    "risk_reward": "Risk / Reward",
+    "momentum": "Momentum",
+    "volume": "Volume",
+    "liquidity": "Liquidity"
+   },
+   "reason": {
+    "ar": "فرصة على إطار 15 دقيقة: SuperTrend صاعد على 15 دقيقة وساعة و4 ساعات، والسعر فوق EMA200 مع ارتداد مؤكد من خط SuperTrend دون مطاردة سعرية.",
+    "en": "15m opportunity: SuperTrend is bullish on 15m, 1h, 4h; price is above EMA200 with a confirmed SuperTrend bounce and no excessive extension."
+   },
+   "sl_reason": {
+    "ar": "الوقف أسفل أقرب دعم صالح على إطار 15 دقيقة من خط SuperTrend وقيعان آخر شمعتين صاعدتين مع هامش ATR صغير.",
+    "en": "The stop sits below the nearest valid 15m SuperTrend/two-bullish-candle support with a small ATR buffer."
+   },
+   "tp_reason": {
+    "ar": "الأهداف ضمن نطاقات الاستراتيجية، مع تفضيل مقاومة هيكلية عندما تقع داخل النطاق المحدد.",
+    "en": "Targets use the configured bands, preferring a structural resistance when it falls inside the band."
+   },
+   "risk_notes": {
+    "ar": [
+     "إشارة على إطار 15 دقيقة؛ ألغِ الفكرة عند كسر الوقف.",
+     "الدرجة ليست احتمالًا مضمونًا للربح."
+    ],
+    "en": [
+     "15m signal; invalidate it if the stop breaks.",
+     "The score is not a guaranteed probability of profit."
+    ]
+   },
+   "invalidation_level": 0.18597976,
+   "invalidation_reason": {
+    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 0.18597976.",
+    "en": "The idea is invalidated by a 15m close below 0.18597976."
+   },
+   "confirmation": {
+    "ar": "شروط إطار 15 دقيقة وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
+    "en": "The 15m conditions and higher-frame confirmations pass; price is inside the entry zone at scan time."
+   },
+   "execution_note": {
+    "ar": "الفرصة مستوفية للشروط حاليًا؛ التزم بالوقف ولا تطارد السعر إذا غادر منطقة الدخول.",
+    "en": "Conditions currently pass; respect the stop and do not chase price outside the entry zone."
+   },
+   "diagnostics": {
+    "primary_timeframe": "15m",
+    "confirmation_timeframes": [
+     "1h",
+     "4h"
+    ],
+    "ema200_distance_pct": 1.165,
+    "live_chase_atr": 0.166,
+    "supertrend_last_3": [
+     "UP",
+     "UP",
+     "UP"
+    ],
+    "upper_wick_rejection": false,
+    "lower_highs_detected": false,
+    "entry_trigger": "SUPERTREND_BOUNCE"
+   },
+   "change_24h": 0.539,
+   "quote_volume_24h": 13131736.08,
+   "spread_pct": 0.05359,
+   "data_timestamp": "2026-09-07T02:00:56Z"
+  },
+  {
+   "opportunity_id": "AVAXUSDT_LONG_SUPERTREND_15M_2026-09-07T0200",
+   "symbol": "AVAXUSDT",
+   "pair": "AVAX/USDT",
+   "direction": "LONG",
+   "setup_type": "SCALP_SUPERTREND",
+   "setup_label": "SuperTrend opportunity (15m)",
+   "status": "READY",
+   "decision": "FAVORABLE",
+   "score": 86,
+   "grade": "STRONG",
+   "current_price": 7.829,
+   "entry_mid": 7.829,
+   "entry_zone": [
+    7.81726,
+    7.84074
+   ],
+   "stop_loss": 7.78619,
+   "tp1": 7.92295,
+   "tp2": 8.00515,
+   "tp3": 8.16173,
+   "rr_tp1": 2.19,
+   "rr_tp2": 4.11,
+   "rr_tp3": 7.77,
+   "sl_distance_pct": 0.55,
+   "profit_pct_tp1": 1.2,
+   "profit_pct_tp2": 2.25,
+   "profit_pct_tp3": 4.25,
+   "primary_timeframe": "15m",
+   "confirmation_timeframes": [
+    "1h",
+    "4h"
+   ],
+   "timeframes": [
+    "15m",
+    "1h",
+    "4h"
+   ],
+   "supertrend_status": {
+    "15m": "UP",
+    "1h": "UP",
+    "4h": "UP"
+   },
+   "ema200_status": {
+    "15m": "ABOVE",
+    "1h": "ABOVE",
+    "4h": "ABOVE"
+   },
+   "score_breakdown": {
+    "trend_alignment": 25,
+    "price_action": 18,
+    "entry_quality": 12,
+    "risk_reward": 15,
+    "momentum": 8.5,
+    "volume": 3,
+    "liquidity": 5
+   },
+   "score_breakdown_labels": {
+    "trend_alignment": "Trend & SuperTrend Alignment",
+    "price_action": "Price Action Quality",
+    "entry_quality": "EMA200 Extension / Entry Quality",
+    "risk_reward": "Risk / Reward",
+    "momentum": "Momentum",
+    "volume": "Volume",
+    "liquidity": "Liquidity"
+   },
+   "reason": {
+    "ar": "فرصة على إطار 15 دقيقة: SuperTrend صاعد على 15 دقيقة وساعة و4 ساعات، والسعر فوق EMA200 مع ارتداد مؤكد من خط SuperTrend دون مطاردة سعرية.",
+    "en": "15m opportunity: SuperTrend is bullish on 15m, 1h, 4h; price is above EMA200 with a confirmed SuperTrend bounce and no excessive extension."
+   },
+   "sl_reason": {
+    "ar": "الوقف أسفل أقرب دعم صالح على إطار 15 دقيقة من خط SuperTrend وقيعان آخر شمعتين صاعدتين مع هامش ATR صغير.",
+    "en": "The stop sits below the nearest valid 15m SuperTrend/two-bullish-candle support with a small ATR buffer."
+   },
+   "tp_reason": {
+    "ar": "الأهداف ضمن نطاقات الاستراتيجية، مع تفضيل مقاومة هيكلية عندما تقع داخل النطاق المحدد.",
+    "en": "Targets use the configured bands, preferring a structural resistance when it falls inside the band."
+   },
+   "risk_notes": {
+    "ar": [
+     "إشارة على إطار 15 دقيقة؛ ألغِ الفكرة عند كسر الوقف.",
+     "الدرجة ليست احتمالًا مضمونًا للربح."
+    ],
+    "en": [
+     "15m signal; invalidate it if the stop breaks.",
+     "The score is not a guaranteed probability of profit."
+    ]
+   },
+   "invalidation_level": 7.78619,
+   "invalidation_reason": {
+    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 7.78619.",
+    "en": "The idea is invalidated by a 15m close below 7.78619."
+   },
+   "confirmation": {
+    "ar": "شروط إطار 15 دقيقة وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
+    "en": "The 15m conditions and higher-frame confirmations pass; price is inside the entry zone at scan time."
+   },
+   "execution_note": {
+    "ar": "الفرصة مستوفية للشروط حاليًا؛ التزم بالوقف ولا تطارد السعر إذا غادر منطقة الدخول.",
+    "en": "Conditions currently pass; respect the stop and do not chase price outside the entry zone."
+   },
+   "diagnostics": {
+    "primary_timeframe": "15m",
+    "confirmation_timeframes": [
+     "1h",
+     "4h"
+    ],
+    "ema200_distance_pct": 2.656,
+    "live_chase_atr": 0.062,
+    "supertrend_last_3": [
+     "UP",
+     "UP",
+     "UP"
+    ],
+    "upper_wick_rejection": false,
+    "lower_highs_detected": false,
+    "entry_trigger": "SUPERTREND_BOUNCE"
+   },
+   "change_24h": 1.702,
+   "quote_volume_24h": 19945043.57,
+   "spread_pct": 0.01277,
+   "data_timestamp": "2026-09-07T02:00:56Z"
+  },
+  {
+   "opportunity_id": "CAKEUSDT_LONG_SUPERTREND_15M_2026-09-07T0200",
+   "symbol": "CAKEUSDT",
+   "pair": "CAKE/USDT",
+   "direction": "LONG",
+   "setup_type": "SCALP_SUPERTREND",
+   "setup_label": "SuperTrend opportunity (15m)",
+   "status": "READY",
+   "decision": "FAVORABLE",
+   "score": 84,
+   "grade": "STRONG",
+   "current_price": 2.226,
+   "entry_mid": 2.226,
+   "entry_zone": [
+    2.22266,
+    2.22934
+   ],
+   "stop_loss": 2.21093,
+   "tp1": 2.25271,
+   "tp2": 2.27608,
+   "tp3": 2.32061,
+   "rr_tp1": 1.77,
+   "rr_tp2": 3.32,
+   "rr_tp3": 6.28,
+   "sl_distance_pct": 0.68,
+   "profit_pct_tp1": 1.2,
+   "profit_pct_tp2": 2.25,
+   "profit_pct_tp3": 4.25,
+   "primary_timeframe": "15m",
+   "confirmation_timeframes": [
+    "1h",
+    "4h"
+   ],
+   "timeframes": [
+    "15m",
+    "1h",
+    "4h"
+   ],
+   "supertrend_status": {
+    "15m": "UP",
+    "1h": "UP",
+    "4h": "UP"
+   },
+   "ema200_status": {
+    "15m": "ABOVE",
+    "1h": "ABOVE",
+    "4h": "ABOVE"
+   },
+   "score_breakdown": {
+    "trend_alignment": 25,
+    "price_action": 18,
+    "entry_quality": 12,
+    "risk_reward": 13,
+    "momentum": 8.5,
+    "volume": 3,
+    "liquidity": 4
+   },
+   "score_breakdown_labels": {
+    "trend_alignment": "Trend & SuperTrend Alignment",
+    "price_action": "Price Action Quality",
+    "entry_quality": "EMA200 Extension / Entry Quality",
+    "risk_reward": "Risk / Reward",
+    "momentum": "Momentum",
+    "volume": "Volume",
+    "liquidity": "Liquidity"
+   },
+   "reason": {
+    "ar": "فرصة على إطار 15 دقيقة: SuperTrend صاعد على 15 دقيقة وساعة و4 ساعات، والسعر فوق EMA200 مع ارتداد مؤكد من خط SuperTrend دون مطاردة سعرية.",
+    "en": "15m opportunity: SuperTrend is bullish on 15m, 1h, 4h; price is above EMA200 with a confirmed SuperTrend bounce and no excessive extension."
+   },
+   "sl_reason": {
+    "ar": "الوقف أسفل أقرب دعم صالح على إطار 15 دقيقة من خط SuperTrend وقيعان آخر شمعتين صاعدتين مع هامش ATR صغير.",
+    "en": "The stop sits below the nearest valid 15m SuperTrend/two-bullish-candle support with a small ATR buffer."
+   },
+   "tp_reason": {
+    "ar": "الأهداف ضمن نطاقات الاستراتيجية، مع تفضيل مقاومة هيكلية عندما تقع داخل النطاق المحدد.",
+    "en": "Targets use the configured bands, preferring a structural resistance when it falls inside the band."
+   },
+   "risk_notes": {
+    "ar": [
+     "إشارة على إطار 15 دقيقة؛ ألغِ الفكرة عند كسر الوقف.",
+     "الدرجة ليست احتمالًا مضمونًا للربح."
+    ],
+    "en": [
+     "15m signal; invalidate it if the stop breaks.",
+     "The score is not a guaranteed probability of profit."
+    ]
+   },
+   "invalidation_level": 2.21093,
+   "invalidation_reason": {
+    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 2.21093.",
+    "en": "The idea is invalidated by a 15m close below 2.21093."
+   },
+   "confirmation": {
+    "ar": "شروط إطار 15 دقيقة وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
+    "en": "The 15m conditions and higher-frame confirmations pass; price is inside the entry zone at scan time."
+   },
+   "execution_note": {
+    "ar": "الفرصة مستوفية للشروط حاليًا؛ التزم بالوقف ولا تطارد السعر إذا غادر منطقة الدخول.",
+    "en": "Conditions currently pass; respect the stop and do not chase price outside the entry zone."
+   },
+   "diagnostics": {
+    "primary_timeframe": "15m",
+    "confirmation_timeframes": [
+     "1h",
+     "4h"
+    ],
+    "ema200_distance_pct": 2.8,
+    "live_chase_atr": 0.653,
+    "supertrend_last_3": [
+     "UP",
+     "UP",
+     "UP"
+    ],
+    "upper_wick_rejection": false,
+    "lower_highs_detected": false,
+    "entry_trigger": "SUPERTREND_BOUNCE"
+   },
+   "change_24h": -1.023,
+   "quote_volume_24h": 9540732.85,
+   "spread_pct": 0.04492,
+   "data_timestamp": "2026-09-07T02:00:56Z"
+  }
+ ],
  "rejections": [
   {
    "symbol": "BTCUSDT",
@@ -161,10 +654,10 @@
   {
    "symbol": "BNBUSDT",
    "codes": [
-    "EMA200_NOT_CONFIRMED"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -242,10 +735,10 @@
   {
    "symbol": "DOGEUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -269,10 +762,10 @@
   {
    "symbol": "UNIUSDT",
    "codes": [
-    "BREAKOUT_NOT_HOLDING"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -458,15 +951,6 @@
   {
    "symbol": "ADAUSDT",
    "codes": [
-    "BREAKOUT_NOT_HOLDING"
-   ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "ADAUSDT",
-   "codes": [
     "HTF_TREND_CONFLICT"
    ],
    "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
@@ -539,10 +1023,10 @@
   {
    "symbol": "ASTERUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -566,19 +1050,10 @@
   {
    "symbol": "AVAXUSDT",
    "codes": [
-    "BREAKOUT_NOT_HOLDING"
+    "EMA200_OVEREXTENDED"
    ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "AVAXUSDT",
-   "codes": [
-    "HTF_TREND_CONFLICT"
-   ],
-   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
-   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "1h"
   },
   {
@@ -683,10 +1158,10 @@
   {
    "symbol": "ZAMAUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "1h"
   },
   {
@@ -753,6 +1228,24 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "XLMUSDT",
+   "codes": [
+    "HTF_TREND_CONFLICT"
+   ],
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "XLMUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "COTIUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
@@ -777,33 +1270,6 @@
    ],
    "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
    "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "XLMUSDT",
-   "codes": [
-    "BREAKOUT_NOT_HOLDING"
-   ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "XLMUSDT",
-   "codes": [
-    "HTF_TREND_CONFLICT"
-   ],
-   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
-   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "XLMUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "4h"
   },
   {
@@ -1023,6 +1489,24 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "CAKEUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "CAKEUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "SUSHIUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
@@ -1042,33 +1526,6 @@
   },
   {
    "symbol": "SUSHIUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "CAKEUSDT",
-   "codes": [
-    "LIVE_PRICE_CHASE"
-   ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "CAKEUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "CAKEUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -1196,10 +1653,10 @@
   {
    "symbol": "VIRTUALUSDT",
    "codes": [
-    "RR_BELOW_MINIMUM"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "العائد إلى المخاطرة للهدف الأول أقل من الحد الأدنى.",
-   "reason_en": "TP1 risk/reward is below the configured minimum.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "1h"
   },
   {
@@ -1214,10 +1671,10 @@
   {
    "symbol": "SNDKBUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -1538,10 +1995,10 @@
   {
    "symbol": "GRAMUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -1619,10 +2076,10 @@
   {
    "symbol": "CRVUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -1671,10 +2128,7 @@
    "primary_timeframe": "4h"
   }
  ],
- "no_opportunity_reason": {
-  "ar": "لا توجد فرصة مطابقة حاليًا على أطر 15 دقيقة والساعة و4 ساعات. السبب الأبرز: السعر مبتعد أكثر من المسموح عن EMA200.",
-  "en": "No qualifying 15m, 1h or 4h opportunity now. Main reason: Price is overextended from EMA200."
- },
+ "no_opportunity_reason": null,
  "config": {
   "enabled": true,
   "timeframes": [
