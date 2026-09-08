@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-08T09:00:53Z",
- "source_data_timestamp": "2026-09-08T09:00:53Z",
+ "scan_timestamp": "2026-09-08T09:05:42Z",
+ "source_data_timestamp": "2026-09-08T09:05:42Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -13,8 +13,8 @@
   "1h",
   "4h"
  ],
- "symbols_scanned": 56,
- "total_scanned": 168,
+ "symbols_scanned": 55,
+ "total_scanned": 165,
  "opportunities_found": 1,
  "opportunities_by_timeframe": {
   "15m": 1,
@@ -23,7 +23,7 @@
  },
  "signals": [
   {
-   "opportunity_id": "SAHARAUSDT_LONG_SUPERTREND_15M_2026-09-08T0900",
+   "opportunity_id": "SAHARAUSDT_LONG_SUPERTREND_15M_2026-09-08T0905",
    "symbol": "SAHARAUSDT",
    "pair": "SAHARA/USDT",
    "direction": "LONG",
@@ -33,20 +33,20 @@
    "decision": "FAVORABLE",
    "score": 96,
    "grade": "EXCELLENT",
-   "current_price": 0.00932,
-   "entry_mid": 0.00932,
+   "current_price": 0.00931,
+   "entry_mid": 0.00931,
    "entry_zone": [
-    0.00930602,
-    0.00933398
+    0.00929604,
+    0.00932397
    ],
    "stop_loss": 0.00927536,
-   "tp1": 0.00943184,
-   "tp2": 0.0095297,
-   "tp3": 0.0097161,
-   "rr_tp1": 2.51,
-   "rr_tp2": 4.7,
-   "rr_tp3": 8.87,
-   "sl_distance_pct": 0.48,
+   "tp1": 0.00942172,
+   "tp2": 0.00951947,
+   "tp3": 0.00970568,
+   "rr_tp1": 3.22,
+   "rr_tp2": 6.05,
+   "rr_tp3": 11.42,
+   "sl_distance_pct": 0.37,
    "profit_pct_tp1": 1.2,
    "profit_pct_tp2": 2.25,
    "profit_pct_tp3": 4.25,
@@ -129,8 +129,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 0.449,
-    "live_chase_atr": -0.431,
+    "ema200_distance_pct": 0.341,
+    "live_chase_atr": -0.646,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +140,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": 1.858,
-   "quote_volume_24h": 16839932.3,
-   "spread_pct": 0.1073,
-   "data_timestamp": "2026-09-08T09:00:53Z"
+   "change_24h": 1.972,
+   "quote_volume_24h": 16990320.85,
+   "spread_pct": 0.10741,
+   "data_timestamp": "2026-09-08T09:05:42Z"
   }
  ],
  "rejections": [
@@ -634,6 +634,33 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "TRXUSDT",
+   "codes": [
+    "LIVE_PRICE_CHASE"
+   ],
+   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
+   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "TRXUSDT",
+   "codes": [
+    "HTF_TREND_CONFLICT"
+   ],
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "TRXUSDT",
+   "codes": [
+    "SUPERTREND_BEARISH"
+   ],
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "TAOUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
@@ -645,10 +672,10 @@
   {
    "symbol": "TAOUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "MISSING_DATA"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
+   "reason_en": "Candle or indicator data is incomplete.",
    "primary_timeframe": "1h"
   },
   {
@@ -658,33 +685,6 @@
    ],
    "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
    "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "TRXUSDT",
-   "codes": [
-    "LIVE_PRICE_CHASE"
-   ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "TRXUSDT",
-   "codes": [
-    "LIVE_PRICE_CHASE"
-   ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "TRXUSDT",
-   "codes": [
-    "SUPERTREND_BEARISH"
-   ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "4h"
   },
   {
@@ -1219,33 +1219,6 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "PROMUSDT",
-   "codes": [
-    "HTF_TREND_CONFLICT"
-   ],
-   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
-   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "PROMUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "PROMUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "4h"
-  },
-  {
    "symbol": "VIRTUALUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
@@ -1273,6 +1246,33 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "PROMUSDT",
+   "codes": [
+    "HTF_TREND_CONFLICT"
+   ],
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "PROMUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "PROMUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "CRCLBUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
@@ -1545,10 +1545,10 @@
   {
    "symbol": "ZROUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -1621,33 +1621,6 @@
    ],
    "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
    "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "ORCAUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "ORCAUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "ORCAUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "4h"
   }
  ],
