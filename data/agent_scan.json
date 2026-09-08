@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-08T20:40:41Z",
- "source_data_timestamp": "2026-09-08T20:40:41Z",
+ "scan_timestamp": "2026-09-08T20:44:00Z",
+ "source_data_timestamp": "2026-09-08T20:44:00Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -13,8 +13,8 @@
   "1h",
   "4h"
  ],
- "symbols_scanned": 59,
- "total_scanned": 177,
+ "symbols_scanned": 60,
+ "total_scanned": 180,
  "opportunities_found": 1,
  "opportunities_by_timeframe": {
   "15m": 1,
@@ -23,7 +23,7 @@
  },
  "signals": [
   {
-   "opportunity_id": "SKHYBUSDT_LONG_SUPERTREND_15M_2026-09-08T2040",
+   "opportunity_id": "SKHYBUSDT_LONG_SUPERTREND_15M_2026-09-08T2044",
    "symbol": "SKHYBUSDT",
    "pair": "SKHYB/USDT",
    "direction": "LONG",
@@ -33,22 +33,22 @@
    "decision": "FAVORABLE",
    "score": 92,
    "grade": "EXCELLENT",
-   "current_price": 185.3,
-   "entry_mid": 185.3,
+   "current_price": 185.26,
+   "entry_mid": 185.26,
    "entry_zone": [
-    185.022,
-    185.578
+    184.982,
+    185.538
    ],
    "stop_loss": 184.22,
-   "tp1": 187.524,
+   "tp1": 187.483,
    "tp2": 189.75,
-   "tp3": 193.175,
-   "rr_tp1": 2.06,
-   "rr_tp2": 4.12,
-   "rr_tp3": 7.29,
-   "sl_distance_pct": 0.58,
+   "tp3": 193.134,
+   "rr_tp1": 2.14,
+   "rr_tp2": 4.32,
+   "rr_tp3": 7.57,
+   "sl_distance_pct": 0.56,
    "profit_pct_tp1": 1.2,
-   "profit_pct_tp2": 2.4,
+   "profit_pct_tp2": 2.42,
    "profit_pct_tp3": 4.25,
    "primary_timeframe": "15m",
    "confirmation_timeframes": [
@@ -129,8 +129,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 1.853,
-    "live_chase_atr": 0.186,
+    "ema200_distance_pct": 1.831,
+    "live_chase_atr": 0.149,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +140,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": 1.998,
-   "quote_volume_24h": 7732677.3,
+   "change_24h": 1.976,
+   "quote_volume_24h": 7732576.24,
    "spread_pct": 0.0054,
-   "data_timestamp": "2026-09-08T20:40:41Z"
+   "data_timestamp": "2026-09-08T20:44:00Z"
   }
  ],
  "rejections": [
@@ -329,6 +329,33 @@
   },
   {
    "symbol": "DOGEUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "SOPHUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "SOPHUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "SOPHUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -825,10 +852,10 @@
   {
    "symbol": "XPLUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
