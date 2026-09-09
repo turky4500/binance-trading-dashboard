@@ -43,7 +43,7 @@ async function loadAll() {
   // embedded snapshot unless there is no data at all.
   const hadMeta = !!state.meta;
   const prevOpps = window.__dashDataSeeded ? state.opps.slice() : null;
-  const [m, mk, o, qa, p, h, bt, bh, ul, syms, ecfg, stb, fg, ah] = await Promise.allSettled([
+  const [m, mk, o, qa, p, h, bt, bh, ul, syms, ecfg, stb, fg, ah, aiSigs] = await Promise.allSettled([
     fetchJSON('data/meta.json'),
     fetchJSON('data/market.json'),
     fetchJSON('data/opportunities.json'),
@@ -58,6 +58,7 @@ async function loadAll() {
     fetchJSON('data/st_signals.json'),
     fetchJSON('data/fear_greed.json'),
     fetchJSON('data/agent_history.json'),
+    fetchJSON('data/ai_signals.json'),
   ]);
   if (m.status === 'fulfilled') {
     state.meta = m.value;
@@ -89,6 +90,7 @@ async function loadAll() {
   if (stb.status === 'fulfilled' && stb.value) state.st = stb.value;
   if (fg.status === 'fulfilled' && fg.value) state.fg = fg.value;
   if (ah.status === 'fulfilled' && ah.value) state.ah = ah.value;
+  if (aiSigs.status === 'fulfilled' && aiSigs.value) state.ai = aiSigs.value;
   // lifecycle alerts: diff vs previously displayed data (skipped on first seed)
   if (window.Alerts && prevOpps && prevOpps.length && o.status === 'fulfilled') {
     window.Alerts.diffEvents(prevOpps, state.opps).forEach(ev => window.Alerts.emit(ev));
@@ -100,7 +102,8 @@ async function loadAll() {
   if (window.LivePrices) {
     const agentSymbols = state.agent && Array.isArray(state.agent.signals) ? state.agent.signals.map(s => s.symbol) : [];
     const stSymbols = (state.st && Array.isArray(state.st.signals)) ? state.st.signals.map(s => s.symbol) : [];
-    LivePrices.subscribe(state.opps.map(o => o.symbol).concat(agentSymbols, stSymbols, window.Watchlist ? window.Watchlist.list() : []));
+    const aiSymbols = (state.ai && Array.isArray(state.ai.signals)) ? state.ai.signals.map(s => s.symbol) : [];
+    LivePrices.subscribe(state.opps.map(o => o.symbol).concat(agentSymbols, stSymbols, aiSymbols, window.Watchlist ? window.Watchlist.list() : []));
   }
 }
 
@@ -1389,12 +1392,50 @@ function renderStTab() {
   }).join('');
 }
 
+function renderAiTab() {
+  const countEl = document.getElementById('ai-count');
+  const body = document.getElementById('ai-body');
+  const empty = document.getElementById('ai-empty');
+  const wrap = document.getElementById('ai-table-wrap');
+  const upd = document.getElementById('ai-updated');
+  if (!body) return;
+  const data = state.ai;
+  const sigs = (data && Array.isArray(data.signals)) ? data.signals : [];
+  if (countEl) countEl.textContent = sigs.length;
+  if (upd) upd.textContent = (data && data.updated_at) ? locTime(data.updated_at) : '—';
+  if (!sigs.length) {
+    body.innerHTML = '';
+    if (wrap) wrap.classList.add('hidden');
+    if (empty) empty.classList.remove('hidden');
+    return;
+  }
+  if (empty) empty.classList.add('hidden');
+  if (wrap) wrap.classList.remove('hidden');
+  body.innerHTML = sigs.map(s => {
+    const conf = s.confidence != null ? (s.confidence * 100).toFixed(1) + '%' : '—';
+    const trend = s.ema_trend === 'bullish' ? '🟢 صاعد' : '🔴 هابط';
+    const vol = s.volume_ok ? '✅' : '❌';
+    return `<tr>
+      <td><b>${esc(s.pair || s.symbol)}</b></td>
+      <td>${locTime(s.signal_at)} · ${relTime(s.signal_at)}</td>
+      <td data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</td>
+      <td>${conf}</td>
+      <td>${trend}</td>
+      <td>${vol}</td>
+      <td>${s.stop_loss ? fmtPrice(s.stop_loss) : '—'}</td>
+      <td>${s.tp1 ? fmtPrice(s.tp1) : '—'}</td>
+      <td>${s.tp2 ? fmtPrice(s.tp2) : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
 /* ---------------- render all ---------------- */
 window.renderAll = function () {
   renderHeader();
   renderCards();
   renderQuantAgent();
   renderStTab();
+  renderAiTab();
   renderWatchBar();
   renderMarketTab();
   renderPerformance();
