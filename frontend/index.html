@@ -199,20 +199,25 @@ class="tab-count" id="ai-count">0</span></button>
 
   <section id="tab-ai-reader" class="tab-panel">
     <div class="mcell">
-      <div class="mcell-head"><span>AI Market Reader — BUY Signals (1H)</span><b id="ai-updated">—</b></div>
-      <p class="alert-note">إشارات شراء من نموذج AI Market Reader على فريم الساعة</p>
+      <div class="mcell-head"><span>AI Market Reader — إشارات الشراء (1H)</span><b id="ai-updated">—</b></div>
+      <p class="alert-note">إشارات شراء من نموذج AI Market Reader على فريم الساعة — كشف عبر k-NN ML بـ 8 ميزات</p>
       <div class="table-wrap" id="ai-table-wrap">
         <table id="ai-table">
           <thead><tr>
             <th>العملة</th>
-            <th>وقت الإشارة</th>
+            <th>وقت بداية الإشارة</th>
+            <th>عمر الإشارة</th>
+            <th>سعر رصد الإشارة</th>
             <th>السعر الحالي</th>
+            <th>التغيير</th>
             <th>ثقة AI</th>
             <th>اتجاه EMA</th>
             <th>حجم التداول</th>
             <th>وقف الخسارة</th>
             <th>TP1</th>
             <th>TP2</th>
+            <th>TP3</th>
+            <th>R:R</th>
           </tr></thead>
           <tbody id="ai-body"></tbody>
         </table>
@@ -220,7 +225,7 @@ class="tab-count" id="ai-count">0</span></button>
       <div id="ai-empty" class="empty hidden">
         <div class="empty-icon">🤖</div>
         <h2>لا توجد إشارات AI حالياً</h2>
-        <p>لم يكتشف النموذج أي إشارة شراء جديدة.</p>
+        <p>لم يكتشف النموذج أي إشارة شراء جديدة — يُعاد الفحص كل 5 دقائق.</p>
       </div>
     </div>
   </section>

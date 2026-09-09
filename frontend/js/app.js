@@ -1412,19 +1412,28 @@ function renderAiTab() {
   if (empty) empty.classList.add('hidden');
   if (wrap) wrap.classList.remove('hidden');
   body.innerHTML = sigs.map(s => {
+    const chg = s.change_pct;
+    const chgCls = chg == null ? '' : chg >= 0 ? 'pos' : 'neg';
+    const chgTxt = chg == null ? '—' : (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
     const conf = s.confidence != null ? (s.confidence * 100).toFixed(1) + '%' : '—';
     const trend = s.ema_trend === 'bullish' ? '🟢 صاعد' : '🔴 هابط';
     const vol = s.volume_ok ? '✅' : '❌';
+    const rr = s.rr_tp1 != null ? '1:' + s.rr_tp1 : '—';
     return `<tr>
       <td><b>${esc(s.pair || s.symbol)}</b></td>
       <td>${locTime(s.signal_at)} · ${relTime(s.signal_at)}</td>
+      <td>${s.bars_held != null ? s.bars_held + ' س' : '—'}</td>
+      <td>${fmtPrice(s.price_at_signal)}</td>
       <td data-live-sym="${esc(s.symbol)}">${fmtPrice(s.current_price)}</td>
-      <td>${conf}</td>
+      <td class="${chgCls}">${chgTxt}</td>
+      <td><b>${conf}</b></td>
       <td>${trend}</td>
       <td>${vol}</td>
-      <td>${s.stop_loss ? fmtPrice(s.stop_loss) : '—'}</td>
-      <td>${s.tp1 ? fmtPrice(s.tp1) : '—'}</td>
-      <td>${s.tp2 ? fmtPrice(s.tp2) : '—'}</td>
+      <td class="neg">${s.stop_loss ? fmtPrice(s.stop_loss) : '—'}</td>
+      <td class="pos">${s.tp1 ? fmtPrice(s.tp1) : '—'}</td>
+      <td class="pos">${s.tp2 ? fmtPrice(s.tp2) : '—'}</td>
+      <td class="pos">${s.tp3 ? fmtPrice(s.tp3) : '—'}</td>
+      <td>${rr}</td>
     </tr>`;
   }).join('');
 }
