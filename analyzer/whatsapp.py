@@ -296,6 +296,92 @@ def st_signal_text(sig):
     return "\n".join(lines)
 
 
+AI_SENT_FILE = "ai_sent.json"
+
+
+def ai_signal_text(sig):
+    """Format a new AI Market Reader signal for WhatsApp — improved design."""
+    pair = sig.get("pair") or (sig.get("symbol") or "").replace("USDT", "/USDT")
+    confidence = sig.get("confidence")
+    conf_pct = f"{confidence * 100:.1f}%" if confidence else "—"
+    sl = sig.get("stop_loss")
+    tp1 = sig.get("tp1")
+    tp2 = sig.get("tp2")
+    tp3 = sig.get("tp3")
+    cur = sig.get("current_price", 0)
+    sl_pct = round(abs(cur - sl) / cur * 100, 2) if sl and cur else None
+
+    lines = [
+        "🤖 إشارة شراء — AI Market Reader",
+        "",
+        f"🪙 {pair}",
+        f"📊 الفريم: 1H",
+        f"📌 المؤشر: AI Market Reader",
+        f"🟢 الإشارة: BUY / LONG",
+        "",
+        f"💰 السعر الحالي: {cur}",
+    ]
+    if confidence is not None:
+        lines.append(f"🎯 ثقة النموذج: {conf_pct}")
+    lines.append("")
+    if sl and tp1 and tp2 and tp3:
+        lines += [
+            "📊 الأهداف:",
+            f"🛑 وقف الخسارة: {sl} (-{sl_pct}%)" if sl_pct else f"🛑 وقف الخسارة: {sl}",
+            f"🎯 TP1: {tp1} ({sig.get('rr_tp1', '—')}R)",
+            f"🎯 TP2: {tp2} ({sig.get('rr_tp2', '—')}R)",
+            f"🎯 TP3: {tp3}",
+            "",
+        ]
+    trend = sig.get("ema_trend", "—")
+    vol_ok = "✅" if sig.get("volume_ok") else "❌"
+    lines += [
+        f"📈 اتجاه EMA: {'صاعد ✅' if trend == 'bullish' else 'هابط ❌'}",
+        f"📊 حجم التداول: {vol_ok}",
+        "",
+        f"🕐 {_fmt_signal_time(sig.get('signal_at'))}",
+    ]
+    return "\n".join(lines)
+
+
+def filter_new_ai_signals(ai_board, max_age_bars=None):
+    """Return AI Market Reader signals that haven't been sent yet."""
+    sent = _load_ai_sent()
+    sigs = (ai_board or {}).get("signals") or []
+    return [s for s in sigs
+            if s.get("symbol")
+            and _ai_signal_key(s) not in sent
+            and (max_age_bars is None
+                 or int(s.get("bars_held") or 0) <= int(max_age_bars))]
+
+
+def _ai_signal_key(sig):
+    return "{}|{}".format(sig.get("symbol", ""), sig.get("signal_at", ""))
+
+
+def _load_ai_sent():
+    try:
+        data = load_json(data_path(AI_SENT_FILE), [])
+        return set(data) if isinstance(data, list) else set()
+    except Exception:
+        return set()
+
+
+def _save_ai_sent(keys):
+    save_json(data_path(AI_SENT_FILE), sorted(keys))
+
+
+def mark_ai_sent(signals):
+    """Record that AI signals were successfully sent."""
+    sent = _load_ai_sent()
+    for s in signals:
+        if isinstance(s, dict):
+            sent.add(_ai_signal_key(s))
+        else:
+            sent.add("{}|*".format(s))
+    _save_ai_sent(sent)
+
+
 def opportunity_text(op):
     """Format a newly-confirmed READY opportunity for WhatsApp."""
     pair = op.get("pair") or (op.get("symbol") or "").replace("USDT", "/USDT")

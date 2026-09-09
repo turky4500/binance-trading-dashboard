@@ -214,6 +214,27 @@ def _send_whatsapp_alerts(events, cfg, ops):
         if sent_sigs:
             whatsapp.mark_st_sent(sent_sigs)
 
+    # AI Market Reader signals
+    if notify.get("new_ai_signal", True):
+        ai_board = load_json(data_path("ai_signals.json"), {})
+        ai_cfg = cfg.get('ai_reader', {})
+        ai_max_age = int(ai_cfg.get('max_signal_age_days', 30)) * 24
+        ai_cands = whatsapp.filter_new_ai_signals(ai_board, max_age_bars=ai_max_age)
+        rep["new_ai_candidates"] = len(ai_cands)
+        ai_sent = []
+        for s in ai_cands:
+            s = dict(s)
+            ok, err = whatsapp.send_whatsapp_diag(
+                whatsapp.ai_signal_text(s), cfg)
+            if ok:
+                sent += 1
+                ai_sent.append(s)
+            else:
+                rep.setdefault("failures", []).append(
+                    "ai {}: {}".format(s.get("symbol"), err))
+        if ai_sent:
+            whatsapp.mark_ai_sent(ai_sent)
+
     rep["delivered"] = sent
     save_json(data_path("whatsapp_delivery.json"), rep)
     return sent

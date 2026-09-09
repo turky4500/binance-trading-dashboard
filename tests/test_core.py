@@ -955,3 +955,37 @@ def test_whatsapp_send_multiple_recipients(tmp_path, monkeypatch):
     cfg = {'whatsapp': {'enabled': True, 'endpoint': 'https://wa.example/api/v1/send'}}
     assert wa.send_whatsapp('test', cfg) is True
     assert sent_to == ['111', '222', '333']
+
+
+def test_ai_market_reader_produces_buy_signal():
+    import numpy as np
+    from analyzer.ai_market_reader import compute
+    np.random.seed(42)
+    n = 350
+    c = np.cumsum(np.random.randn(n) * 0.5) + 100
+    h = c + np.abs(np.random.randn(n)) * 0.3
+    l = c - np.abs(np.random.randn(n)) * 0.3
+    o = c + np.random.randn(n) * 0.1
+    v = np.abs(np.random.randn(n)) * 1000 + 5000
+    cfg = {'min_ai_score': 0.50, 'neighbors_count': 5, 'max_window': 200}
+    res = compute(h, l, c, o, v, cfg)
+    assert 'buy_signal' in res
+    assert 'ai_bull_prob' in res
+    assert 0.0 <= res['ai_bull_prob'] <= 1.0
+
+
+def test_ai_market_reader_dedup(tmp_path, monkeypatch):
+    from analyzer import whatsapp as wa
+    from analyzer import storage as st
+    monkeypatch.setattr(st, 'DATA_DIR', str(tmp_path))
+    now = '2026-09-07T16:00:00+00:00'
+    sigs = [{'symbol': 'BTCUSDT', 'signal_at': now, 'bars_held': 1}]
+    board = {'signals': sigs}
+    # First time: signal is new
+    new1 = wa.filter_new_ai_signals(board)
+    assert len(new1) == 1
+    # Mark as sent
+    wa.mark_ai_sent(sigs)
+    # Second time: signal is filtered out
+    new2 = wa.filter_new_ai_signals(board)
+    assert len(new2) == 0

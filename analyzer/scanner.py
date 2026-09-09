@@ -429,6 +429,16 @@ def scan(cfg, now_iso=None, verbose=True):
     save_json(data_path('history.json'), hist)
     save_json(data_path('market.json'), market)
     save_json(data_path('st_signals.json'), st_board)
+
+    # AI Market Reader signals
+    ai_cfg = cfg.get('ai_reader', {})
+    ai_board = _build_ai_signals(st_hourly, meta_by_sym, now_iso,
+                                 max_age=int(ai_cfg.get('max_signal_age_days', 30)) * 24,
+                                 price_prec=price_prec, ai_cfg=ai_cfg)
+    if verbose:
+        print(f"[AI] AI Market Reader BUY signals: {ai_board['count']}")
+    save_json(data_path('ai_signals.json'), ai_board)
+
     save_json(data_path('fear_greed.json'), _fetch_fear_greed(now_iso))
     save_json(data_path('performance.json'), performance_stats(hist))
     # engine config for the in-browser Coin Analyzer (JS mirror must match)
@@ -867,6 +877,77 @@ def _build_st_signals(frames, meta_by_sym, now_iso, cap=120, max_age=None,
         except Exception:
             continue
     signals.sort(key=lambda s: s['signal_at'], reverse=True)
+    return {
+        'updated_at': now_iso,
+        'timeframe': timeframe,
+        'count': len(signals),
+        'signals': signals[:cap],
+    }
+
+
+def _build_ai_signals(frames, meta_by_sym, now_iso, cap=120, max_age=None,
+                      timeframe='1h', period_seconds=3600, min_bars=200,
+                      price_prec=None, ai_cfg=None):
+    """AI Market Reader board: every screened symbol whose AI classifier
+    fires a BUY on the last closed 1H candle."""
+    from . import ai_market_reader
+    signals = []
+    prec = price_prec or {}
+    cfg = ai_cfg or {}
+    for sym, df in frames.items():
+        try:
+            df = _closed_tf(df, period_seconds)
+            if len(df) < min_bars:
+                continue
+            ai_res = ai_market_reader.compute(
+                df['h'], df['l'], df['c'], df['o'], df['v'], cfg)
+            if not ai_res.get('buy_signal'):
+                continue
+            c_now = float(df['c'].iloc[-1])
+            sig_p = c_now
+            if not (c_now == c_now) or sig_p <= 0:
+                continue
+            m = meta_by_sym.get(sym)
+            cur = m['last'] if m else c_now
+            atr_val = ai_res.get('atr')
+            low_val = float(df['l'].iloc[-1])
+            # SL = low - ATR * multiplier (from detector.py logic)
+            mult = float(cfg.get('atr_sl_multiplier', 1.5))
+            sl = low_val - atr_val * mult if atr_val else low_val * 0.95
+            R = abs(cur - sl) if sl and sl > 0 else None
+            rr = float(cfg.get('rr_ratio', 2.0))
+            pp = prec.get(sym, 8)
+            tp1 = _round_price(cur + R * 1.5, pp) if R else None
+            tp2 = _round_price(cur + R * 2.5, pp) if R else None
+            tp3 = _round_price(cur + R * rr, pp) if R else None
+            sl = _round_price(sl, pp) if sl else None
+            sig_p = _round_price(sig_p, pp)
+            cur = _round_price(cur, pp)
+            bull_prob = ai_res.get('ai_bull_prob', 0.5)
+            # Determine indicator type (ai only, since ST is handled separately)
+            indicator = 'ai'
+            signals.append({
+                'symbol': sym,
+                'pair': sym.replace('USDT', '/USDT'),
+                'signal_at': df['t'].iloc[-1].isoformat(),
+                'bars_held': 1,
+                'price_at_signal': sig_p,
+                'current_price': cur,
+                'change_pct': round((cur - sig_p) / sig_p * 100, 2) if sig_p else 0,
+                'indicator': indicator,
+                'confidence': round(bull_prob, 4),
+                'ema_trend': 'bullish' if ai_res.get('ema_bull') else 'bearish',
+                'volume_ok': bool(ai_res.get('vol_ok')),
+                'ema_fast': ai_res.get('ema_fast'),
+                'ema_slow': ai_res.get('ema_slow'),
+                'stop_loss': sl,
+                'tp1': tp1, 'tp2': tp2, 'tp3': tp3,
+                'rr_tp1': round((tp1 - cur) / R, 2) if R and tp1 else None,
+                'rr_tp2': round((tp2 - cur) / R, 2) if R and tp2 else None,
+            })
+        except Exception:
+            continue
+    signals.sort(key=lambda s: s.get('signal_at', ''), reverse=True)
     return {
         'updated_at': now_iso,
         'timeframe': timeframe,

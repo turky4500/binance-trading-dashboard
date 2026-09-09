@@ -77,15 +77,30 @@
     "max_signal_fresh_hours": 24,
     "max_st_signal_age_bars": 2,
     "notify": {
-    "new_st_signal": true,
-    "new_opportunity": true
-   }
+     "new_st_signal": true,
+     "new_ai_signal": true,
+     "new_opportunity": true
+    }
   },
-  "supertrend": {
-   "period": 10,
-   "multiplier": 3.0,
-   "max_signal_age_days": 30
-  },
+   "supertrend": {
+    "period": 10,
+    "multiplier": 3.0,
+    "max_signal_age_days": 30
+   },
+   "ai_reader": {
+    "neighbors_count": 8,
+    "max_window": 300,
+    "min_ai_score": 0.60,
+    "use_distance_weight": true,
+    "use_ema_filter": true,
+    "ema_fast_len": 21,
+    "ema_slow_len": 50,
+    "use_vol_filter": true,
+    "vol_threshold": 1.0,
+    "atr_sl_multiplier": 1.5,
+    "rr_ratio": 2.0,
+    "max_signal_age_days": 30
+   },
  "strategy": {
   "allow_shorts": false,
   "disabled_setups": [
