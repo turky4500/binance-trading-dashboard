@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-09T12:20:47Z",
- "source_data_timestamp": "2026-09-09T12:20:47Z",
+ "scan_timestamp": "2026-09-09T12:25:51Z",
+ "source_data_timestamp": "2026-09-09T12:25:51Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -13,8 +13,8 @@
   "1h",
   "4h"
  ],
- "symbols_scanned": 60,
- "total_scanned": 180,
+ "symbols_scanned": 62,
+ "total_scanned": 186,
  "opportunities_found": 1,
  "opportunities_by_timeframe": {
   "15m": 1,
@@ -23,7 +23,7 @@
  },
  "signals": [
   {
-   "opportunity_id": "FILUSDT_LONG_SUPERTREND_15M_2026-09-09T1220",
+   "opportunity_id": "FILUSDT_LONG_SUPERTREND_15M_2026-09-09T1225",
    "symbol": "FILUSDT",
    "pair": "FIL/USDT",
    "direction": "LONG",
@@ -33,23 +33,23 @@
    "decision": "FAVORABLE",
    "score": 98,
    "grade": "EXCELLENT",
-   "current_price": 0.8417,
-   "entry_mid": 0.8417,
+   "current_price": 0.8423,
+   "entry_mid": 0.8423,
    "entry_zone": [
-    0.84043745,
-    0.84296255
+    0.84103655,
+    0.84356345
    ],
    "stop_loss": 0.84007557,
-   "tp1": 0.8518004,
-   "tp2": 0.8591,
-   "tp3": 0.877,
-   "rr_tp1": 6.22,
-   "rr_tp2": 10.71,
-   "rr_tp3": 21.73,
-   "sl_distance_pct": 0.19,
+   "tp1": 0.8524076,
+   "tp2": 0.86125175,
+   "tp3": 0.8786,
+   "rr_tp1": 4.54,
+   "rr_tp2": 8.52,
+   "rr_tp3": 16.32,
+   "sl_distance_pct": 0.26,
    "profit_pct_tp1": 1.2,
-   "profit_pct_tp2": 2.07,
-   "profit_pct_tp3": 4.19,
+   "profit_pct_tp2": 2.25,
+   "profit_pct_tp3": 4.31,
    "primary_timeframe": "15m",
    "confirmation_timeframes": [
     "1h",
@@ -129,8 +129,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 0.496,
-    "live_chase_atr": -0.591,
+    "ema200_distance_pct": 0.568,
+    "live_chase_atr": -0.477,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +140,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "BREAKOUT_HOLD"
    },
-   "change_24h": -0.343,
-   "quote_volume_24h": 7708360.55,
-   "spread_pct": 0.01188,
-   "data_timestamp": "2026-09-09T12:20:47Z"
+   "change_24h": -0.201,
+   "quote_volume_24h": 7711196.29,
+   "spread_pct": 0.01187,
+   "data_timestamp": "2026-09-09T12:25:51Z"
   }
  ],
  "rejections": [
@@ -771,10 +771,10 @@
   {
    "symbol": "FORMUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -850,6 +850,33 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "FFUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "FFUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "FFUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "INJUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
@@ -869,6 +896,33 @@
   },
   {
    "symbol": "INJUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "ASTERUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "ASTERUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "ASTERUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -901,33 +955,6 @@
    ],
    "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
    "reason_en": "Candle or indicator data is incomplete.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "ASTERUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "ASTERUSDT",
-   "codes": [
-    "SUPERTREND_BEARISH"
-   ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "ASTERUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "4h"
   },
   {
@@ -987,10 +1014,10 @@
   {
    "symbol": "XPLUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "LIVE_PRICE_CHASE"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
+   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
    "primary_timeframe": "15m"
   },
   {
@@ -1090,6 +1117,33 @@
    ],
    "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
    "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "ATOMUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "ATOMUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "ATOMUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "4h"
   },
   {
@@ -1257,10 +1311,10 @@
   {
    "symbol": "ZENUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -1651,7 +1705,7 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "MUBUSDT",
+   "symbol": "AEROUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -1660,7 +1714,7 @@
    "primary_timeframe": "15m"
   },
   {
-   "symbol": "MUBUSDT",
+   "symbol": "AEROUSDT",
    "codes": [
     "MISSING_DATA"
    ],
@@ -1669,7 +1723,7 @@
    "primary_timeframe": "1h"
   },
   {
-   "symbol": "MUBUSDT",
+   "symbol": "AEROUSDT",
    "codes": [
     "MISSING_DATA"
    ],
@@ -1678,7 +1732,7 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "AEROUSDT",
+   "symbol": "MUBUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -1687,7 +1741,7 @@
    "primary_timeframe": "15m"
   },
   {
-   "symbol": "AEROUSDT",
+   "symbol": "MUBUSDT",
    "codes": [
     "MISSING_DATA"
    ],
@@ -1696,7 +1750,7 @@
    "primary_timeframe": "1h"
   },
   {
-   "symbol": "AEROUSDT",
+   "symbol": "MUBUSDT",
    "codes": [
     "MISSING_DATA"
    ],
