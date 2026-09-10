@@ -6,20 +6,21 @@ from datetime import datetime, timezone, timedelta
 from .storage import load_json, save_json, data_path
 
 
+TRACKING_FILE = "signal_tracking.json"
 RESULTS_FILE = "results.json"
 
 
-def _load_results():
-    return load_json(data_path(RESULTS_FILE), {"st": [], "ai": []})
+def _load_tracking():
+    return load_json(data_path(TRACKING_FILE), {"st": [], "ai": []})
 
 
-def _save_results(data):
-    save_json(data_path(RESULTS_FILE), data)
+def _save_tracking(data):
+    save_json(data_path(TRACKING_FILE), data)
 
 
 def record_signal(sig, indicator):
     """Record a new signal for tracking. indicator = 'st' or 'ai'."""
-    data = _load_results()
+    data = _load_tracking()
     key = indicator
     if key not in data:
         data[key] = []
@@ -36,13 +37,13 @@ def record_signal(sig, indicator):
         "recorded_at": datetime.now(timezone.utc).isoformat(),
     }
     data[key].append(entry)
-    _save_results(data)
+    _save_tracking(data)
     return entry
 
 
 def check_signals(frames):
     """Check all pending signals against current price data. Updates status."""
-    data = _load_results()
+    data = _load_tracking()
     changed = False
     for key in ("st", "ai"):
         for rec in data.get(key, []):
@@ -83,7 +84,7 @@ def check_signals(frames):
                 rec["result_price"] = float(sl)
                 changed = True
     if changed:
-        _save_results(data)
+        _save_tracking(data)
     return data
 
 
