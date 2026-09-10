@@ -43,7 +43,7 @@ async function loadAll() {
   // embedded snapshot unless there is no data at all.
   const hadMeta = !!state.meta;
   const prevOpps = window.__dashDataSeeded ? state.opps.slice() : null;
-  const [m, mk, o, qa, p, h, bt, bh, ul, syms, ecfg, stb, fg, ah, aiSigs] = await Promise.allSettled([
+  const [m, mk, o, qa, p, h, bt, bh, ul, syms, ecfg, stb, fg, ah, aiSigs, resData] = await Promise.allSettled([
     fetchJSON('data/meta.json'),
     fetchJSON('data/market.json'),
     fetchJSON('data/opportunities.json'),
@@ -59,6 +59,7 @@ async function loadAll() {
     fetchJSON('data/fear_greed.json'),
     fetchJSON('data/agent_history.json'),
     fetchJSON('data/ai_signals.json'),
+    fetchJSON('data/results.json'),
   ]);
   if (m.status === 'fulfilled') {
     state.meta = m.value;
@@ -91,6 +92,7 @@ async function loadAll() {
   if (fg.status === 'fulfilled' && fg.value) state.fg = fg.value;
   if (ah.status === 'fulfilled' && ah.value) state.ah = ah.value;
   if (aiSigs.status === 'fulfilled' && aiSigs.value) state.ai = aiSigs.value;
+  if (resData.status === 'fulfilled' && resData.value) state.results = resData.value;
   // lifecycle alerts: diff vs previously displayed data (skipped on first seed)
   if (window.Alerts && prevOpps && prevOpps.length && o.status === 'fulfilled') {
     window.Alerts.diffEvents(prevOpps, state.opps).forEach(ev => window.Alerts.emit(ev));
@@ -1438,6 +1440,78 @@ function renderAiTab() {
   }).join('');
 }
 
+function renderResultsTab() {
+  const grid = document.getElementById('results-grid');
+  const body = document.getElementById('results-body');
+  const empty = document.getElementById('results-empty');
+  const upd = document.getElementById('results-updated');
+  if (!grid) return;
+  const data = state.results;
+  if (upd) upd.textContent = (data && data.updated_at) ? locTime(data.updated_at) : '—';
+
+  const stData = data && data.st ? data.st : {};
+  const aiData = data && data.ai ? data.ai : {};
+  const comb = data && data.combined ? data.combined : {};
+
+  function card(title, emoji, stats) {
+    const wr = stats.win_rate != null ? stats.win_rate + '%' : '—';
+    const wrCls = stats.win_rate != null ? (stats.win_rate >= 50 ? 'pos' : 'neg') : '';
+    return `<div class="result-card">
+      <div class="result-card-head">${emoji} ${title}</div>
+      <div class="result-stats">
+        <div class="stat"><span class="stat-label">الإشارات</span><span class="stat-val">${stats.total || 0}</span></div>
+        <div class="stat"><span class="stat-label">قيد الانتظار</span><span class="stat-val">${stats.pending || 0}</span></div>
+        <div class="stat"><span class="stat-label">TP1</span><span class="stat-val pos">${stats.tp1 || 0}</span></div>
+        <div class="stat"><span class="stat-label">TP2</span><span class="stat-val pos">${stats.tp2 || 0}</span></div>
+        <div class="stat"><span class="stat-label">TP3</span><span class="stat-val pos">${stats.tp3 || 0}</span></div>
+        <div class="stat"><span class="stat-label">SL</span><span class="stat-val neg">${stats.sl || 0}</span></div>
+        <div class="stat big"><span class="stat-label">نسبة النجاح</span><span class="stat-val ${wrCls}">${wr}</span></div>
+      </div>
+    </div>`;
+  }
+
+  grid.innerHTML =
+    card('SuperTrend', '📈', stData) +
+    card('AI Market Reader', '🤖', aiData) +
+    card('المجموع', '📊', comb);
+
+  // Signal history table
+  const allSigs = [];
+  if (data && data.st) allSigs.push(...(data.st_records || []));
+  if (data && data.ai) allSigs.push(...(data.ai_records || []));
+
+  // We need the raw records from results.json — use a separate fetch or embed them
+  // For now, show summary only
+  if (body) {
+    if (!allSigs.length) {
+      body.innerHTML = '';
+      if (empty) empty.classList.remove('hidden');
+    } else {
+      if (empty) empty.classList.add('hidden');
+      body.innerHTML = allSigs.map(s => {
+        const statusCls = s.status === 'pending' ? '' :
+          s.status.startsWith('TP') ? 'pos' : 'neg';
+        const statusTxt = s.status === 'pending' ? '⏳ قيد الانتظار' :
+          s.status === 'TP1' ? '✅ TP1' :
+          s.status === 'TP2' ? '✅✅ TP2' :
+          s.status === 'TP3' ? '✅✅✅ TP3' :
+          s.status === 'SL' ? '🛑 SL' : s.status;
+        return `<tr>
+          <td>${s.indicator === 'st' ? '📈 ST' : '🤖 AI'}</td>
+          <td><b>${esc(s.symbol)}</b></td>
+          <td>${locTime(s.signal_at)}</td>
+          <td>${fmtPrice(s.entry)}</td>
+          <td class="neg">${s.sl ? fmtPrice(s.sl) : '—'}</td>
+          <td class="pos">${s.tp1 ? fmtPrice(s.tp1) : '—'}</td>
+          <td class="pos">${s.tp2 ? fmtPrice(s.tp2) : '—'}</td>
+          <td class="pos">${s.tp3 ? fmtPrice(s.tp3) : '—'}</td>
+          <td class="${statusCls}">${statusTxt}</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+}
+
 /* ---------------- render all ---------------- */
 window.renderAll = function () {
   renderHeader();
@@ -1445,6 +1519,7 @@ window.renderAll = function () {
   renderQuantAgent();
   renderStTab();
   renderAiTab();
+  renderResultsTab();
   renderWatchBar();
   renderMarketTab();
   renderPerformance();

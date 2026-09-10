@@ -439,6 +439,25 @@ def scan(cfg, now_iso=None, verbose=True):
         print(f"[AI] AI Market Reader BUY signals: {ai_board['count']}")
     save_json(data_path('ai_signals.json'), ai_board)
 
+    # Results tracking — record new signals and check pending ones
+    from . import results
+    # Record new ST signals
+    st_dedup = load_json(data_path('st_sent.json'), [])
+    for s in st_board.get('signals', []):
+        key = "{}|{}".format(s['symbol'], s.get('signal_at', ''))
+        if key not in st_dedup and s.get('bars_held', 99) <= 4:
+            results.record_signal(s, 'st')
+    # Record new AI signals
+    ai_dedup = load_json(data_path('ai_sent.json'), [])
+    for s in ai_board.get('signals', []):
+        key = "{}|{}".format(s['symbol'], s.get('signal_at', ''))
+        if key not in ai_dedup:
+            results.record_signal(s, 'ai')
+    # Check all pending signals against price data
+    results_data = results.check_signals(st_hourly)
+    results_stats = results.compute_results(results_data)
+    save_json(data_path('results.json'), results_stats)
+
     save_json(data_path('fear_greed.json'), _fetch_fear_greed(now_iso))
     save_json(data_path('performance.json'), performance_stats(hist))
     # engine config for the in-browser Coin Analyzer (JS mirror must match)

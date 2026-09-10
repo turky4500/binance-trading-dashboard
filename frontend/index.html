@@ -101,6 +101,7 @@ class="tab-count" id="ai-count">0</span></button>
   <button class="tab" data-tab="analyzer"><span data-i18n="tab_analyzer">Analyzer</span></button>
   <button class="tab" data-tab="market"><span data-i18n="tab_market">Market</span></button>
   <button class="tab" data-tab="performance"><span data-i18n="tab_perf">Performance</span></button>
+  <button class="tab" data-tab="results"><span>النتائج</span></button>
   <button class="tab" data-tab="about"><span data-i18n="tab_about">About</span></button>
 </div>
 
@@ -289,6 +290,38 @@ class="tab-count" id="ai-count">0</span></button>
 
     <!-- historical backtest + score calibration (seeded daily by GitHub Actions) -->
     <div id="bt-section" style="margin-top:34px"></div>
+  </section>
+
+  <section id="tab-results" class="tab-panel">
+    <div class="mcell">
+      <div class="mcell-head"><span>📊 نتائج الإشارات — نسبة النجاح</span><b id="results-updated">—</b></div>
+      <p class="alert-note">تتبع نتائج إشارات SuperTrend و AI Market Reader — TP1/TP2/TP3/SL</p>
+      <div class="results-grid" id="results-grid"></div>
+    </div>
+    <div class="mcell" style="margin-top:16px">
+      <div class="mcell-head"><span>📋 سجل الإشارات</span></div>
+      <div class="table-wrap">
+        <table id="results-table">
+          <thead><tr>
+            <th>المؤشر</th>
+            <th>العملة</th>
+            <th>وقت الإشارة</th>
+            <th>سعر الدخول</th>
+            <th>وقف الخسارة</th>
+            <th>TP1</th>
+            <th>TP2</th>
+            <th>TP3</th>
+            <th>الحالة</th>
+          </tr></thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+      <div id="results-empty" class="empty hidden">
+        <div class="empty-icon">📊</div>
+        <h2>لا توجد نتائج بعد</h2>
+        <p>تبدأ النتائج بالظهور بعد تسجيل أول إشارة ومعرفة نتيجتها (TP أو SL).</p>
+      </div>
+    </div>
   </section>
 
   <section id="tab-about" class="tab-panel">
