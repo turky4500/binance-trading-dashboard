@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-11T09:10:42Z",
- "source_data_timestamp": "2026-09-11T09:10:42Z",
+ "scan_timestamp": "2026-09-11T09:15:46Z",
+ "source_data_timestamp": "2026-09-11T09:15:46Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -13,8 +13,8 @@
   "1h",
   "4h"
  ],
- "symbols_scanned": 54,
- "total_scanned": 162,
+ "symbols_scanned": 53,
+ "total_scanned": 159,
  "opportunities_found": 1,
  "opportunities_by_timeframe": {
   "15m": 1,
@@ -23,7 +23,7 @@
  },
  "signals": [
   {
-   "opportunity_id": "EIGENUSDT_LONG_SUPERTREND_15M_2026-09-11T0910",
+   "opportunity_id": "EIGENUSDT_LONG_SUPERTREND_15M_2026-09-11T0915",
    "symbol": "EIGENUSDT",
    "pair": "EIGEN/USDT",
    "direction": "LONG",
@@ -33,23 +33,23 @@
    "decision": "FAVORABLE",
    "score": 85,
    "grade": "STRONG",
-   "current_price": 0.2146,
-   "entry_mid": 0.2146,
+   "current_price": 0.2147,
+   "entry_mid": 0.2147,
    "entry_zone": [
-    0.2142781,
-    0.2149219
+    0.21437795,
+    0.21502205
    ],
-   "stop_loss": 0.2133021,
-   "tp1": 0.2171752,
+   "stop_loss": 0.21330623,
+   "tp1": 0.2172764,
    "tp2": 0.2194,
    "tp3": 0.2239,
-   "rr_tp1": 1.98,
-   "rr_tp2": 3.7,
-   "rr_tp3": 7.17,
-   "sl_distance_pct": 0.6,
+   "rr_tp1": 1.85,
+   "rr_tp2": 3.37,
+   "rr_tp3": 6.6,
+   "sl_distance_pct": 0.65,
    "profit_pct_tp1": 1.2,
-   "profit_pct_tp2": 2.24,
-   "profit_pct_tp3": 4.33,
+   "profit_pct_tp2": 2.19,
+   "profit_pct_tp3": 4.29,
    "primary_timeframe": "15m",
    "confirmation_timeframes": [
     "1h",
@@ -110,10 +110,10 @@
      "The score is not a guaranteed probability of profit."
     ]
    },
-   "invalidation_level": 0.2133021,
+   "invalidation_level": 0.21330623,
    "invalidation_reason": {
-    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 0.2133021.",
-    "en": "The idea is invalidated by a 15m close below 0.2133021."
+    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 0.21330623.",
+    "en": "The idea is invalidated by a 15m close below 0.21330623."
    },
    "confirmation": {
     "ar": "شروط إطار 15 دقيقة وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
@@ -129,8 +129,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 1.229,
-    "live_chase_atr": 0.051,
+    "ema200_distance_pct": 1.261,
+    "live_chase_atr": 0.052,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +140,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": 7.139,
-   "quote_volume_24h": 6048745.26,
-   "spread_pct": 0.0466,
-   "data_timestamp": "2026-09-11T09:10:42Z"
+   "change_24h": 7.082,
+   "quote_volume_24h": 6051263.71,
+   "spread_pct": 0.04658,
+   "data_timestamp": "2026-09-11T09:15:46Z"
   }
  ],
  "rejections": [
@@ -609,10 +609,10 @@
   {
    "symbol": "ETHFIUSDT",
    "codes": [
-    "RR_BELOW_MINIMUM"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "العائد إلى المخاطرة للهدف الأول أقل من الحد الأدنى.",
-   "reason_en": "TP1 risk/reward is below the configured minimum.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -780,10 +780,10 @@
   {
    "symbol": "LTCUSDT",
    "codes": [
-    "EMA200_NOT_CONFIRMED"
+    "HTF_TREND_CONFLICT"
    ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
    "primary_timeframe": "1h"
   },
   {
@@ -1382,6 +1382,24 @@
   },
   {
    "symbol": "PENGUUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "EIGENUSDT",
+   "codes": [
+    "HTF_TREND_CONFLICT"
+   ],
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "EIGENUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -1417,24 +1435,6 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "EIGENUSDT",
-   "codes": [
-    "HTF_TREND_CONFLICT"
-   ],
-   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
-   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "EIGENUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "4h"
-  },
-  {
    "symbol": "FILUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
@@ -1508,33 +1508,6 @@
   },
   {
    "symbol": "ZENUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "EGLDUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "EGLDUSDT",
-   "codes": [
-    "SUPERTREND_BEARISH"
-   ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "EGLDUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
