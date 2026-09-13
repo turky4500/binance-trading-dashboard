@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-13T12:11:17Z",
- "source_data_timestamp": "2026-09-13T12:11:17Z",
+ "scan_timestamp": "2026-09-13T12:15:47Z",
+ "source_data_timestamp": "2026-09-13T12:15:47Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -23,7 +23,7 @@
  },
  "signals": [
   {
-   "opportunity_id": "TRXUSDT_LONG_SUPERTREND_15M_2026-09-13T1211",
+   "opportunity_id": "TRXUSDT_LONG_SUPERTREND_15M_2026-09-13T1215",
    "symbol": "TRXUSDT",
    "pair": "TRX/USDT",
    "direction": "LONG",
@@ -31,22 +31,22 @@
    "setup_label": "SuperTrend opportunity (15m)",
    "status": "READY",
    "decision": "FAVORABLE",
-   "score": 99,
+   "score": 97,
    "grade": "EXCELLENT",
-   "current_price": 0.3409,
-   "entry_mid": 0.3409,
+   "current_price": 0.341,
+   "entry_mid": 0.341,
    "entry_zone": [
-    0.34038865,
-    0.34141135
+    0.3404885,
+    0.3415115
    ],
-   "stop_loss": 0.34017202,
-   "tp1": 0.3449908,
-   "tp2": 0.34857025,
-   "tp3": 0.35538825,
-   "rr_tp1": 5.62,
-   "rr_tp2": 10.54,
-   "rr_tp3": 19.9,
-   "sl_distance_pct": 0.21,
+   "stop_loss": 0.34067187,
+   "tp1": 0.345092,
+   "tp2": 0.3486725,
+   "tp3": 0.3554925,
+   "rr_tp1": 12.47,
+   "rr_tp2": 23.38,
+   "rr_tp3": 44.17,
+   "sl_distance_pct": 0.1,
    "profit_pct_tp1": 1.2,
    "profit_pct_tp2": 2.25,
    "profit_pct_tp3": 4.25,
@@ -76,7 +76,7 @@
     "entry_quality": 15,
     "risk_reward": 15,
     "momentum": 10.0,
-    "volume": 10,
+    "volume": 8,
     "liquidity": 4
    },
    "score_breakdown_labels": {
@@ -110,10 +110,10 @@
      "The score is not a guaranteed probability of profit."
     ]
    },
-   "invalidation_level": 0.34017202,
+   "invalidation_level": 0.34067187,
    "invalidation_reason": {
-    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 0.34017202.",
-    "en": "The idea is invalidated by a 15m close below 0.34017202."
+    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 0.34067187.",
+    "en": "The idea is invalidated by a 15m close below 0.34067187."
    },
    "confirmation": {
     "ar": "شروط إطار 15 دقيقة وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
@@ -129,8 +129,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 0.365,
-    "live_chase_atr": 0.357,
+    "ema200_distance_pct": 0.389,
+    "live_chase_atr": 0.356,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -141,9 +141,9 @@
     "entry_trigger": "BREAKOUT_HOLD"
    },
    "change_24h": 0.0,
-   "quote_volume_24h": 15305805.78,
+   "quote_volume_24h": 15349805.36,
    "spread_pct": 0.02933,
-   "data_timestamp": "2026-09-13T12:11:17Z"
+   "data_timestamp": "2026-09-13T12:15:47Z"
   }
  ],
  "rejections": [
@@ -573,10 +573,10 @@
   {
    "symbol": "WLFIUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -1084,6 +1084,33 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "KAVAUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "KAVAUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "KAVAUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "METUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
@@ -1103,33 +1130,6 @@
   },
   {
    "symbol": "METUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "KAVAUSDT",
-   "codes": [
-    "LIVE_PRICE_CHASE"
-   ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "KAVAUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "KAVAUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
