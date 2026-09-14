@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-14T20:05:43Z",
- "source_data_timestamp": "2026-09-14T20:05:43Z",
+ "scan_timestamp": "2026-09-14T20:10:47Z",
+ "source_data_timestamp": "2026-09-14T20:10:47Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -23,7 +23,7 @@
  },
  "signals": [
   {
-   "opportunity_id": "BTCUSDT_LONG_SUPERTREND_1H_2026-09-14T2005",
+   "opportunity_id": "BTCUSDT_LONG_SUPERTREND_1H_2026-09-14T2010",
    "symbol": "BTCUSDT",
    "pair": "BTC/USDT",
    "direction": "LONG",
@@ -33,23 +33,23 @@
    "decision": "FAVORABLE",
    "score": 96,
    "grade": "EXCELLENT",
-   "current_price": 79050.0,
-   "entry_mid": 79050.0,
+   "current_price": 79036.15,
+   "entry_mid": 79036.15,
    "entry_zone": [
-    78931.43,
-    79168.58
+    78917.6,
+    79154.7
    ],
    "stop_loss": 78658.31,
-   "tp1": 79998.6,
-   "tp2": 80828.62,
+   "tp1": 79984.58,
+   "tp2": 80814.46,
    "tp3": 82300.0,
-   "rr_tp1": 2.42,
-   "rr_tp2": 4.54,
-   "rr_tp3": 8.3,
-   "sl_distance_pct": 0.5,
+   "rr_tp1": 2.51,
+   "rr_tp2": 4.71,
+   "rr_tp3": 8.64,
+   "sl_distance_pct": 0.48,
    "profit_pct_tp1": 1.2,
    "profit_pct_tp2": 2.25,
-   "profit_pct_tp3": 4.11,
+   "profit_pct_tp3": 4.13,
    "primary_timeframe": "1h",
    "confirmation_timeframes": [
     "4h",
@@ -129,8 +129,8 @@
      "4h",
      "1d"
     ],
-    "ema200_distance_pct": 1.4,
-    "live_chase_atr": 0.17,
+    "ema200_distance_pct": 1.382,
+    "live_chase_atr": 0.135,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +140,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "BREAKOUT_HOLD"
    },
-   "change_24h": 2.295,
-   "quote_volume_24h": 1146662234.06,
+   "change_24h": 2.272,
+   "quote_volume_24h": 1147386864.7,
    "spread_pct": 1e-05,
-   "data_timestamp": "2026-09-14T20:05:43Z"
+   "data_timestamp": "2026-09-14T20:10:47Z"
   }
  ],
  "rejections": [
@@ -285,10 +285,10 @@
   {
    "symbol": "BNBUSDT",
    "codes": [
-    "EMA200_NOT_CONFIRMED"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "1h"
   },
   {
@@ -1437,10 +1437,10 @@
   {
    "symbol": "WLFIUSDT",
    "codes": [
-    "BREAKOUT_NOT_HOLDING"
+    "LIVE_PRICE_CHASE"
    ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
+   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
+   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
    "primary_timeframe": "15m"
   },
   {
