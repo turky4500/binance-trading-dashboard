@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-14T21:55:43Z",
- "source_data_timestamp": "2026-09-14T21:55:43Z",
+ "scan_timestamp": "2026-09-14T22:00:59Z",
+ "source_data_timestamp": "2026-09-14T22:00:59Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -13,8 +13,8 @@
   "1h",
   "4h"
  ],
- "symbols_scanned": 57,
- "total_scanned": 171,
+ "symbols_scanned": 56,
+ "total_scanned": 168,
  "opportunities_found": 1,
  "opportunities_by_timeframe": {
   "15m": 1,
@@ -23,33 +23,33 @@
  },
  "signals": [
   {
-   "opportunity_id": "ETHUSDT_LONG_SUPERTREND_15M_2026-09-14T2155",
-   "symbol": "ETHUSDT",
-   "pair": "ETH/USDT",
+   "opportunity_id": "NEARUSDT_LONG_SUPERTREND_15M_2026-09-14T2200",
+   "symbol": "NEARUSDT",
+   "pair": "NEAR/USDT",
    "direction": "LONG",
    "setup_type": "SCALP_SUPERTREND",
    "setup_label": "SuperTrend opportunity (15m)",
    "status": "READY",
    "decision": "FAVORABLE",
-   "score": 90,
-   "grade": "EXCELLENT",
-   "current_price": 2548.31,
-   "entry_mid": 2548.31,
+   "score": 82,
+   "grade": "STRONG",
+   "current_price": 2.502,
+   "entry_mid": 2.502,
    "entry_zone": [
-    2544.49,
-    2552.13
+    2.49825,
+    2.50575
    ],
-   "stop_loss": 2546.69,
-   "tp1": 2578.89,
-   "tp2": 2605.65,
-   "tp3": 2665.99,
-   "rr_tp1": 18.88,
-   "rr_tp2": 35.4,
-   "rr_tp3": 72.65,
-   "sl_distance_pct": 0.06,
+   "stop_loss": 2.48724,
+   "tp1": 2.53202,
+   "tp2": 2.55829,
+   "tp3": 2.597,
+   "rr_tp1": 2.03,
+   "rr_tp2": 3.81,
+   "rr_tp3": 6.43,
+   "sl_distance_pct": 0.59,
    "profit_pct_tp1": 1.2,
    "profit_pct_tp2": 2.25,
-   "profit_pct_tp3": 4.62,
+   "profit_pct_tp3": 3.8,
    "primary_timeframe": "15m",
    "confirmation_timeframes": [
     "1h",
@@ -73,11 +73,11 @@
    "score_breakdown": {
     "trend_alignment": 25,
     "price_action": 18,
-    "entry_quality": 15,
+    "entry_quality": 8,
     "risk_reward": 15,
-    "momentum": 5.5,
-    "volume": 6,
-    "liquidity": 5
+    "momentum": 8.5,
+    "volume": 3,
+    "liquidity": 4
    },
    "score_breakdown_labels": {
     "trend_alignment": "Trend & SuperTrend Alignment",
@@ -110,10 +110,10 @@
      "The score is not a guaranteed probability of profit."
     ]
    },
-   "invalidation_level": 2546.69,
+   "invalidation_level": 2.48724,
    "invalidation_reason": {
-    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 2546.69.",
-    "en": "The idea is invalidated by a 15m close below 2546.69."
+    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 2.48724.",
+    "en": "The idea is invalidated by a 15m close below 2.48724."
    },
    "confirmation": {
     "ar": "شروط إطار 15 دقيقة وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
@@ -129,8 +129,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 1.315,
-    "live_chase_atr": 0.049,
+    "ema200_distance_pct": 3.833,
+    "live_chase_atr": 0.0,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +140,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": 1.544,
-   "quote_volume_24h": 905182289.79,
-   "spread_pct": 0.00039,
-   "data_timestamp": "2026-09-14T21:55:43Z"
+   "change_24h": 7.428,
+   "quote_volume_24h": 47203577.89,
+   "spread_pct": 0.03997,
+   "data_timestamp": "2026-09-14T22:00:59Z"
   }
  ],
  "rejections": [
@@ -177,6 +177,15 @@
   {
    "symbol": "ETHUSDT",
    "codes": [
+    "SUPERTREND_BEARISH"
+   ],
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "ETHUSDT",
+   "codes": [
     "UPPER_WICK_REJECTION"
    ],
    "reason_ar": "ظهر ذيل علوي طويل قرب مقاومة.",
@@ -276,10 +285,10 @@
   {
    "symbol": "BNBUSDT",
    "codes": [
-    "HTF_TREND_CONFLICT"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
-   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -353,16 +362,6 @@
    "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
    "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "NEARUSDT",
-   "codes": [
-    "SCORE_BELOW_MINIMUM"
-   ],
-   "reason_ar": "درجة الجودة أقل من حد النشر.",
-   "reason_en": "The deterministic quality score is below the publication threshold.",
-   "primary_timeframe": "15m",
-   "score": 80
   },
   {
    "symbol": "NEARUSDT",
@@ -475,10 +474,10 @@
   {
    "symbol": "ADAUSDT",
    "codes": [
-    "HTF_TREND_CONFLICT"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
-   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "1h"
   },
   {
@@ -547,10 +546,10 @@
   {
    "symbol": "LINKUSDT",
    "codes": [
-    "HTF_TREND_CONFLICT"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
-   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -1114,10 +1113,10 @@
   {
    "symbol": "XPLUSDT",
    "codes": [
-    "EMA200_NOT_CONFIRMED"
+    "HTF_TREND_CONFLICT"
    ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
    "primary_timeframe": "15m"
   },
   {
@@ -1276,10 +1275,10 @@
   {
    "symbol": "OPUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -1401,33 +1400,6 @@
   },
   {
    "symbol": "HBARUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "SENTUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "SENTUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "SENTUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -1571,7 +1543,7 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "ASTERUSDT",
+   "symbol": "APTUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -1580,7 +1552,7 @@
    "primary_timeframe": "15m"
   },
   {
-   "symbol": "ASTERUSDT",
+   "symbol": "APTUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -1589,7 +1561,7 @@
    "primary_timeframe": "1h"
   },
   {
-   "symbol": "ASTERUSDT",
+   "symbol": "APTUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -1598,7 +1570,7 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "APTUSDT",
+   "symbol": "ASTERUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -1607,7 +1579,7 @@
    "primary_timeframe": "15m"
   },
   {
-   "symbol": "APTUSDT",
+   "symbol": "ASTERUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -1616,7 +1588,7 @@
    "primary_timeframe": "1h"
   },
   {
-   "symbol": "APTUSDT",
+   "symbol": "ASTERUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
