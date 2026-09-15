@@ -1,11 +1,11 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-15T02:45:40Z",
- "source_data_timestamp": "2026-09-15T02:45:40Z",
+ "scan_timestamp": "2026-09-15T02:50:44Z",
+ "source_data_timestamp": "2026-09-15T02:50:44Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
-  "breadth_pct_above_ema50": 82.8,
+  "breadth_pct_above_ema50": 86.2,
   "new_setups_gated": false
  },
  "timeframes_scanned": [
@@ -13,17 +13,140 @@
   "1h",
   "4h"
  ],
- "symbols_scanned": 58,
- "total_scanned": 174,
- "opportunities_found": 2,
+ "symbols_scanned": 57,
+ "total_scanned": 171,
+ "opportunities_found": 3,
  "opportunities_by_timeframe": {
   "15m": 0,
-  "1h": 2,
+  "1h": 3,
   "4h": 0
  },
  "signals": [
   {
-   "opportunity_id": "ETHUSDT_LONG_SUPERTREND_1H_2026-09-15T0245",
+   "opportunity_id": "AAVEUSDT_LONG_SUPERTREND_1H_2026-09-15T0250",
+   "symbol": "AAVEUSDT",
+   "pair": "AAVE/USDT",
+   "direction": "LONG",
+   "setup_type": "SCALP_SUPERTREND",
+   "setup_label": "SuperTrend opportunity (1h)",
+   "status": "READY",
+   "decision": "FAVORABLE",
+   "score": 91,
+   "grade": "EXCELLENT",
+   "current_price": 127.69,
+   "entry_mid": 127.69,
+   "entry_zone": [
+    127.498,
+    127.882
+   ],
+   "stop_loss": 127.663,
+   "tp1": 129.222,
+   "tp2": 130.563,
+   "tp3": 133.117,
+   "rr_tp1": 57.13,
+   "rr_tp2": 107.12,
+   "rr_tp3": 202.35,
+   "sl_distance_pct": 0.02,
+   "profit_pct_tp1": 1.2,
+   "profit_pct_tp2": 2.25,
+   "profit_pct_tp3": 4.25,
+   "primary_timeframe": "1h",
+   "confirmation_timeframes": [
+    "4h",
+    "1d"
+   ],
+   "timeframes": [
+    "1h",
+    "4h",
+    "1d"
+   ],
+   "supertrend_status": {
+    "1h": "UP",
+    "4h": "UP",
+    "1d": "UP"
+   },
+   "ema200_status": {
+    "1h": "ABOVE",
+    "4h": "ABOVE",
+    "1d": "ABOVE"
+   },
+   "score_breakdown": {
+    "trend_alignment": 25,
+    "price_action": 18,
+    "entry_quality": 15,
+    "risk_reward": 15,
+    "momentum": 10.0,
+    "volume": 3,
+    "liquidity": 5
+   },
+   "score_breakdown_labels": {
+    "trend_alignment": "Trend & SuperTrend Alignment",
+    "price_action": "Price Action Quality",
+    "entry_quality": "EMA200 Extension / Entry Quality",
+    "risk_reward": "Risk / Reward",
+    "momentum": "Momentum",
+    "volume": "Volume",
+    "liquidity": "Liquidity"
+   },
+   "reason": {
+    "ar": "فرصة على إطار ساعة: SuperTrend صاعد على ساعة و4 ساعات ويومي، والسعر فوق EMA200 مع ارتداد مؤكد من خط SuperTrend دون مطاردة سعرية.",
+    "en": "1h opportunity: SuperTrend is bullish on 1h, 4h, 1d; price is above EMA200 with a confirmed SuperTrend bounce and no excessive extension."
+   },
+   "sl_reason": {
+    "ar": "الوقف أسفل أقرب دعم صالح على إطار ساعة من خط SuperTrend وقيعان آخر شمعتين صاعدتين مع هامش ATR صغير.",
+    "en": "The stop sits below the nearest valid 1h SuperTrend/two-bullish-candle support with a small ATR buffer."
+   },
+   "tp_reason": {
+    "ar": "الأهداف ضمن نطاقات الاستراتيجية، مع تفضيل مقاومة هيكلية عندما تقع داخل النطاق المحدد.",
+    "en": "Targets use the configured bands, preferring a structural resistance when it falls inside the band."
+   },
+   "risk_notes": {
+    "ar": [
+     "إشارة على إطار ساعة؛ ألغِ الفكرة عند كسر الوقف.",
+     "الدرجة ليست احتمالًا مضمونًا للربح."
+    ],
+    "en": [
+     "1h signal; invalidate it if the stop breaks.",
+     "The score is not a guaranteed probability of profit."
+    ]
+   },
+   "invalidation_level": 127.663,
+   "invalidation_reason": {
+    "ar": "تُلغى الفكرة عند إغلاق شمعة ساعة أسفل 127.663.",
+    "en": "The idea is invalidated by a 1h close below 127.663."
+   },
+   "confirmation": {
+    "ar": "شروط إطار ساعة وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
+    "en": "The 1h conditions and higher-frame confirmations pass; price is inside the entry zone at scan time."
+   },
+   "execution_note": {
+    "ar": "الفرصة مستوفية للشروط حاليًا؛ التزم بالوقف ولا تطارد السعر إذا غادر منطقة الدخول.",
+    "en": "Conditions currently pass; respect the stop and do not chase price outside the entry zone."
+   },
+   "diagnostics": {
+    "primary_timeframe": "1h",
+    "confirmation_timeframes": [
+     "4h",
+     "1d"
+    ],
+    "ema200_distance_pct": 0.503,
+    "live_chase_atr": -0.577,
+    "supertrend_last_3": [
+     "UP",
+     "UP",
+     "UP"
+    ],
+    "upper_wick_rejection": false,
+    "lower_highs_detected": false,
+    "entry_trigger": "SUPERTREND_BOUNCE"
+   },
+   "change_24h": 0.909,
+   "quote_volume_24h": 11499533.11,
+   "spread_pct": 0.00783,
+   "data_timestamp": "2026-09-15T02:50:44Z"
+  },
+  {
+   "opportunity_id": "ETHUSDT_LONG_SUPERTREND_1H_2026-09-15T0250",
    "symbol": "ETHUSDT",
    "pair": "ETH/USDT",
    "direction": "LONG",
@@ -33,20 +156,20 @@
    "decision": "FAVORABLE",
    "score": 90,
    "grade": "EXCELLENT",
-   "current_price": 2513.01,
-   "entry_mid": 2513.01,
+   "current_price": 2511.16,
+   "entry_mid": 2511.16,
    "entry_zone": [
-    2509.24,
-    2516.78
+    2507.39,
+    2514.93
    ],
    "stop_loss": 2504.98,
-   "tp1": 2543.17,
-   "tp2": 2569.55,
-   "tp3": 2619.81,
-   "rr_tp1": 3.75,
-   "rr_tp2": 7.04,
-   "rr_tp3": 13.29,
-   "sl_distance_pct": 0.32,
+   "tp1": 2541.29,
+   "tp2": 2567.66,
+   "tp3": 2617.88,
+   "rr_tp1": 4.87,
+   "rr_tp2": 9.14,
+   "rr_tp3": 17.26,
+   "sl_distance_pct": 0.25,
    "profit_pct_tp1": 1.2,
    "profit_pct_tp2": 2.25,
    "profit_pct_tp3": 4.25,
@@ -129,8 +252,8 @@
      "4h",
      "1d"
     ],
-    "ema200_distance_pct": 0.589,
-    "live_chase_atr": -0.114,
+    "ema200_distance_pct": 0.515,
+    "live_chase_atr": -0.203,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,13 +263,13 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": 0.257,
-   "quote_volume_24h": 903170660.12,
+   "change_24h": 0.061,
+   "quote_volume_24h": 901886208.01,
    "spread_pct": 0.0004,
-   "data_timestamp": "2026-09-15T02:45:40Z"
+   "data_timestamp": "2026-09-15T02:50:44Z"
   },
   {
-   "opportunity_id": "XRPUSDT_LONG_SUPERTREND_1H_2026-09-15T0245",
+   "opportunity_id": "XRPUSDT_LONG_SUPERTREND_1H_2026-09-15T0250",
    "symbol": "XRPUSDT",
    "pair": "XRP/USDT",
    "direction": "LONG",
@@ -156,23 +279,23 @@
    "decision": "FAVORABLE",
    "score": 82,
    "grade": "STRONG",
-   "current_price": 1.4273,
-   "entry_mid": 1.4273,
+   "current_price": 1.4271,
+   "entry_mid": 1.4271,
    "entry_zone": [
-    1.42516,
-    1.42944
+    1.42496,
+    1.42924
    ],
    "stop_loss": 1.41605,
-   "tp1": 1.44443,
-   "tp2": 1.45941,
+   "tp1": 1.44423,
+   "tp2": 1.45921,
    "tp3": 1.4835,
-   "rr_tp1": 1.52,
-   "rr_tp2": 2.85,
-   "rr_tp3": 4.99,
-   "sl_distance_pct": 0.79,
+   "rr_tp1": 1.55,
+   "rr_tp2": 2.91,
+   "rr_tp3": 5.1,
+   "sl_distance_pct": 0.77,
    "profit_pct_tp1": 1.2,
    "profit_pct_tp2": 2.25,
-   "profit_pct_tp3": 3.94,
+   "profit_pct_tp3": 3.95,
    "primary_timeframe": "1h",
    "confirmation_timeframes": [
     "4h",
@@ -252,8 +375,8 @@
      "4h",
      "1d"
     ],
-    "ema200_distance_pct": 3.106,
-    "live_chase_atr": 0.286,
+    "ema200_distance_pct": 3.092,
+    "live_chase_atr": 0.275,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -263,10 +386,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": 4.756,
-   "quote_volume_24h": 335720856.19,
+   "change_24h": 4.588,
+   "quote_volume_24h": 336453289.57,
    "spread_pct": 0.00701,
-   "data_timestamp": "2026-09-15T02:45:40Z"
+   "data_timestamp": "2026-09-15T02:50:44Z"
   }
  ],
  "rejections": [
@@ -552,10 +675,10 @@
   {
    "symbol": "XLMUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -712,7 +835,7 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "TAOUSDT",
+   "symbol": "SNDKBUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -721,25 +844,25 @@
    "primary_timeframe": "15m"
   },
   {
-   "symbol": "TAOUSDT",
+   "symbol": "SNDKBUSDT",
    "codes": [
-    "EMA200_NOT_CONFIRMED"
+    "MISSING_DATA"
    ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
+   "reason_en": "Candle or indicator data is incomplete.",
    "primary_timeframe": "1h"
   },
   {
-   "symbol": "TAOUSDT",
+   "symbol": "SNDKBUSDT",
    "codes": [
-    "EMA200_NOT_CONFIRMED"
+    "MISSING_DATA"
    ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
+   "reason_en": "Candle or indicator data is incomplete.",
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "SNDKBUSDT",
+   "symbol": "TAOUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
    ],
@@ -748,21 +871,21 @@
    "primary_timeframe": "15m"
   },
   {
-   "symbol": "SNDKBUSDT",
+   "symbol": "TAOUSDT",
    "codes": [
-    "MISSING_DATA"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
-   "reason_en": "Candle or indicator data is incomplete.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "1h"
   },
   {
-   "symbol": "SNDKBUSDT",
+   "symbol": "TAOUSDT",
    "codes": [
-    "MISSING_DATA"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
-   "reason_en": "Candle or indicator data is incomplete.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "4h"
   },
   {
@@ -928,33 +1051,6 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "BNCBUSDT",
-   "codes": [
-    "MISSING_DATA"
-   ],
-   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
-   "reason_en": "Candle or indicator data is incomplete.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "BNCBUSDT",
-   "codes": [
-    "MISSING_DATA"
-   ],
-   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
-   "reason_en": "Candle or indicator data is incomplete.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "BNCBUSDT",
-   "codes": [
-    "MISSING_DATA"
-   ],
-   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
-   "reason_en": "Candle or indicator data is incomplete.",
-   "primary_timeframe": "4h"
-  },
-  {
    "symbol": "ARKUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
@@ -1070,15 +1166,6 @@
    "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
    "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "AAVEUSDT",
-   "codes": [
-    "SUPERTREND_BEARISH"
-   ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
-   "primary_timeframe": "1h"
   },
   {
    "symbol": "AAVEUSDT",
