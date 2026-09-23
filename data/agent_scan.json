@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-23T04:25:45Z",
- "source_data_timestamp": "2026-09-23T04:25:45Z",
+ "scan_timestamp": "2026-09-23T04:30:48Z",
+ "source_data_timestamp": "2026-09-23T04:30:48Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -13,8 +13,8 @@
   "1h",
   "4h"
  ],
- "symbols_scanned": 77,
- "total_scanned": 231,
+ "symbols_scanned": 79,
+ "total_scanned": 237,
  "opportunities_found": 1,
  "opportunities_by_timeframe": {
   "15m": 1,
@@ -23,33 +23,33 @@
  },
  "signals": [
   {
-   "opportunity_id": "LINKUSDT_LONG_SUPERTREND_15M_2026-09-23T0425",
-   "symbol": "LINKUSDT",
-   "pair": "LINK/USDT",
+   "opportunity_id": "CRCLBUSDT_LONG_SUPERTREND_15M_2026-09-23T0430",
+   "symbol": "CRCLBUSDT",
+   "pair": "CRCLB/USDT",
    "direction": "LONG",
    "setup_type": "SCALP_SUPERTREND",
    "setup_label": "SuperTrend opportunity (15m)",
    "status": "READY",
    "decision": "FAVORABLE",
-   "score": 93,
-   "grade": "EXCELLENT",
-   "current_price": 13.188,
-   "entry_mid": 13.188,
+   "score": 84,
+   "grade": "STRONG",
+   "current_price": 95.66,
+   "entry_mid": 95.66,
    "entry_zone": [
-    13.16822,
-    13.20778
+    95.51651,
+    95.80349
    ],
-   "stop_loss": 13.0956,
-   "tp1": 13.34626,
-   "tp2": 13.48473,
-   "tp3": 13.74849,
-   "rr_tp1": 1.71,
-   "rr_tp2": 3.21,
-   "rr_tp3": 6.07,
-   "sl_distance_pct": 0.7,
+   "stop_loss": 94.97248,
+   "tp1": 96.80792,
+   "tp2": 97.81235,
+   "tp3": 99.85,
+   "rr_tp1": 1.67,
+   "rr_tp2": 3.13,
+   "rr_tp3": 6.09,
+   "sl_distance_pct": 0.72,
    "profit_pct_tp1": 1.2,
    "profit_pct_tp2": 2.25,
-   "profit_pct_tp3": 4.25,
+   "profit_pct_tp3": 4.38,
    "primary_timeframe": "15m",
    "confirmation_timeframes": [
     "1h",
@@ -75,8 +75,8 @@
     "price_action": 20,
     "entry_quality": 12,
     "risk_reward": 11,
-    "momentum": 10.0,
-    "volume": 10,
+    "momentum": 8.5,
+    "volume": 3,
     "liquidity": 5
    },
    "score_breakdown_labels": {
@@ -110,10 +110,10 @@
      "The score is not a guaranteed probability of profit."
     ]
    },
-   "invalidation_level": 13.0956,
+   "invalidation_level": 94.97248,
    "invalidation_reason": {
-    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 13.0956.",
-    "en": "The idea is invalidated by a 15m close below 13.0956."
+    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 94.97248.",
+    "en": "The idea is invalidated by a 15m close below 94.97248."
    },
    "confirmation": {
     "ar": "شروط إطار 15 دقيقة وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
@@ -129,8 +129,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 2.292,
-    "live_chase_atr": 0.662,
+    "ema200_distance_pct": 2.186,
+    "live_chase_atr": 0.16,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,20 +140,20 @@
     "lower_highs_detected": false,
     "entry_trigger": "BREAKOUT_HOLD"
    },
-   "change_24h": 1.587,
-   "quote_volume_24h": 41040711.04,
-   "spread_pct": 0.00758,
-   "data_timestamp": "2026-09-23T04:25:45Z"
+   "change_24h": 4.035,
+   "quote_volume_24h": 32184792.11,
+   "spread_pct": 0.02091,
+   "data_timestamp": "2026-09-23T04:30:48Z"
   }
  ],
  "rejections": [
   {
    "symbol": "BTCUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -177,10 +177,10 @@
   {
    "symbol": "ETHUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "UPPER_WICK_REJECTION"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "ظهر ذيل علوي طويل قرب مقاومة.",
+   "reason_en": "A long upper rejection wick appeared near resistance.",
    "primary_timeframe": "15m"
   },
   {
@@ -258,10 +258,10 @@
   {
    "symbol": "SOLUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "UPPER_WICK_REJECTION"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "ظهر ذيل علوي طويل قرب مقاومة.",
+   "reason_en": "A long upper rejection wick appeared near resistance.",
    "primary_timeframe": "15m"
   },
   {
@@ -285,10 +285,10 @@
   {
    "symbol": "NEARUSDT",
    "codes": [
-    "LOWER_HIGHS"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "آخر القمم الهيكلية هابطة.",
-   "reason_en": "Recent structural highs are descending.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -339,10 +339,10 @@
   {
    "symbol": "BNBUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -383,6 +383,33 @@
   },
   {
    "symbol": "SUIUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "PEPEUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "PEPEUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "PEPEUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -420,10 +447,10 @@
   {
    "symbol": "TAOUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -528,10 +555,10 @@
   {
    "symbol": "LTCUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -551,6 +578,15 @@
    "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
    "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "LINKUSDT",
+   "codes": [
+    "UPPER_WICK_REJECTION"
+   ],
+   "reason_ar": "ظهر ذيل علوي طويل قرب مقاومة.",
+   "reason_en": "A long upper rejection wick appeared near resistance.",
+   "primary_timeframe": "15m"
   },
   {
    "symbol": "LINKUSDT",
@@ -681,10 +717,10 @@
   {
    "symbol": "WLDUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -731,15 +767,6 @@
    "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
    "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "CRCLBUSDT",
-   "codes": [
-    "LIVE_PRICE_CHASE"
-   ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
-   "primary_timeframe": "15m"
   },
   {
    "symbol": "CRCLBUSDT",
@@ -816,10 +843,10 @@
   {
    "symbol": "ONDOUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -1086,10 +1113,10 @@
   {
    "symbol": "XPLUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -1248,10 +1275,10 @@
   {
    "symbol": "SPCXBUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "UPPER_WICK_REJECTION"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "ظهر ذيل علوي طويل قرب مقاومة.",
+   "reason_en": "A long upper rejection wick appeared near resistance.",
    "primary_timeframe": "15m"
   },
   {
@@ -1356,10 +1383,10 @@
   {
    "symbol": "MSTRBUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -1705,33 +1732,6 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "COTIUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "COTIUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "COTIUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "4h"
-  },
-  {
    "symbol": "RAYUSDT",
    "codes": [
     "BREAKOUT_NOT_HOLDING"
@@ -1759,12 +1759,39 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "COTIUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "COTIUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "COTIUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "ETHFIUSDT",
    "codes": [
-    "UPPER_WICK_REJECTION"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "ظهر ذيل علوي طويل قرب مقاومة.",
-   "reason_en": "A long upper rejection wick appeared near resistance.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -1886,6 +1913,33 @@
   },
   {
    "symbol": "RENDERUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "TSTUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "TSTUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "TSTUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -1975,6 +2029,33 @@
    "primary_timeframe": "4h"
   },
   {
+   "symbol": "KITEUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "KITEUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "KITEUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
+   "primary_timeframe": "4h"
+  },
+  {
    "symbol": "KERNELUSDT",
    "codes": [
     "SUPERTREND_BEARISH"
@@ -1994,33 +2075,6 @@
   },
   {
    "symbol": "KERNELUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "KITEUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "KITEUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "KITEUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -2031,10 +2085,10 @@
   {
    "symbol": "LDOUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "UPPER_WICK_REJECTION"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "ظهر ذيل علوي طويل قرب مقاومة.",
+   "reason_en": "A long upper rejection wick appeared near resistance.",
    "primary_timeframe": "15m"
   },
   {
