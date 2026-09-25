@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-25T04:10:45Z",
- "source_data_timestamp": "2026-09-25T04:10:45Z",
+ "scan_timestamp": "2026-09-25T04:15:44Z",
+ "source_data_timestamp": "2026-09-25T04:15:44Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -23,33 +23,33 @@
  },
  "signals": [
   {
-   "opportunity_id": "ADAUSDT_LONG_SUPERTREND_15M_2026-09-25T0410",
-   "symbol": "ADAUSDT",
-   "pair": "ADA/USDT",
+   "opportunity_id": "LDOUSDT_LONG_SUPERTREND_15M_2026-09-25T0415",
+   "symbol": "LDOUSDT",
+   "pair": "LDO/USDT",
    "direction": "LONG",
    "setup_type": "SCALP_SUPERTREND",
    "setup_label": "SuperTrend opportunity (15m)",
    "status": "READY",
    "decision": "FAVORABLE",
-   "score": 86,
+   "score": 82,
    "grade": "STRONG",
-   "current_price": 0.2482,
-   "entry_mid": 0.2482,
+   "current_price": 0.4304,
+   "entry_mid": 0.4304,
    "entry_zone": [
-    0.2478277,
-    0.2485723
+    0.4297544,
+    0.4310456
    ],
-   "stop_loss": 0.24665289,
-   "tp1": 0.2511784,
-   "tp2": 0.2533,
-   "tp3": 0.2578,
-   "rr_tp1": 1.93,
-   "rr_tp2": 3.3,
-   "rr_tp3": 6.21,
-   "sl_distance_pct": 0.62,
+   "stop_loss": 0.42879014,
+   "tp1": 0.4355648,
+   "tp2": 0.44,
+   "tp3": 0.4489,
+   "rr_tp1": 3.21,
+   "rr_tp2": 5.96,
+   "rr_tp3": 11.49,
+   "sl_distance_pct": 0.37,
    "profit_pct_tp1": 1.2,
-   "profit_pct_tp2": 2.05,
-   "profit_pct_tp3": 3.87,
+   "profit_pct_tp2": 2.23,
+   "profit_pct_tp3": 4.3,
    "primary_timeframe": "15m",
    "confirmation_timeframes": [
     "1h",
@@ -73,9 +73,9 @@
    "score_breakdown": {
     "trend_alignment": 25,
     "price_action": 18,
-    "entry_quality": 15,
-    "risk_reward": 13,
-    "momentum": 8.5,
+    "entry_quality": 12,
+    "risk_reward": 15,
+    "momentum": 4.5,
     "volume": 3,
     "liquidity": 4
    },
@@ -110,10 +110,10 @@
      "The score is not a guaranteed probability of profit."
     ]
    },
-   "invalidation_level": 0.24665289,
+   "invalidation_level": 0.42879014,
    "invalidation_reason": {
-    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 0.24665289.",
-    "en": "The idea is invalidated by a 15m close below 0.24665289."
+    "ar": "تُلغى الفكرة عند إغلاق شمعة 15 دقيقة أسفل 0.42879014.",
+    "en": "The idea is invalidated by a 15m close below 0.42879014."
    },
    "confirmation": {
     "ar": "شروط إطار 15 دقيقة وتأكيداته الأعلى مكتملة والسعر داخل منطقة الدخول وقت المسح.",
@@ -129,8 +129,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 1.372,
-    "live_chase_atr": 0.286,
+    "ema200_distance_pct": 3.363,
+    "live_chase_atr": -0.023,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,10 +140,10 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": 3.98,
-   "quote_volume_24h": 43523816.29,
-   "spread_pct": 0.04029,
-   "data_timestamp": "2026-09-25T04:10:45Z"
+   "change_24h": 10.246,
+   "quote_volume_24h": 8025978.33,
+   "spread_pct": 0.04647,
+   "data_timestamp": "2026-09-25T04:15:44Z"
   }
  ],
  "rejections": [
@@ -285,10 +285,10 @@
   {
    "symbol": "NEARUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -312,19 +312,19 @@
   {
    "symbol": "PROVEUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
    "symbol": "PROVEUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "HTF_TREND_CONFLICT"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
    "primary_timeframe": "1h"
   },
   {
@@ -339,10 +339,10 @@
   {
    "symbol": "LTCUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -456,10 +456,10 @@
   {
    "symbol": "UNIUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "1h"
   },
   {
@@ -528,10 +528,10 @@
   {
    "symbol": "TAOUSDT",
    "codes": [
-    "BREAKOUT_NOT_HOLDING"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -551,6 +551,15 @@
    "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
    "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "ADAUSDT",
+   "codes": [
+    "MISSING_DATA"
+   ],
+   "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
+   "reason_en": "Candle or indicator data is incomplete.",
+   "primary_timeframe": "15m"
   },
   {
    "symbol": "ADAUSDT",
@@ -573,10 +582,10 @@
   {
    "symbol": "WLDUSDT",
    "codes": [
-    "HTF_TREND_CONFLICT"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
-   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -789,10 +798,10 @@
   {
    "symbol": "CRCLBUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -870,10 +879,10 @@
   {
    "symbol": "INJUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -1081,6 +1090,33 @@
    ],
    "reason_ar": "بيانات الشموع أو المؤشرات غير مكتملة.",
    "reason_en": "Candle or indicator data is incomplete.",
+   "primary_timeframe": "4h"
+  },
+  {
+   "symbol": "ONEUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "15m"
+  },
+  {
+   "symbol": "ONEUSDT",
+   "codes": [
+    "EMA200_NOT_CONFIRMED"
+   ],
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "primary_timeframe": "1h"
+  },
+  {
+   "symbol": "ONEUSDT",
+   "codes": [
+    "EMA200_OVEREXTENDED"
+   ],
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "4h"
   },
   {
@@ -1122,10 +1158,10 @@
   {
    "symbol": "ICPUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "1h"
   },
   {
@@ -1246,33 +1282,6 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "MUBARAKUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "15m"
-  },
-  {
-   "symbol": "MUBARAKUSDT",
-   "codes": [
-    "EMA200_NOT_CONFIRMED"
-   ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
-   "primary_timeframe": "1h"
-  },
-  {
-   "symbol": "MUBARAKUSDT",
-   "codes": [
-    "EMA200_OVEREXTENDED"
-   ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
-   "primary_timeframe": "4h"
-  },
-  {
    "symbol": "HBARUSDT",
    "codes": [
     "EMA200_NOT_CONFIRMED"
@@ -1284,10 +1293,10 @@
   {
    "symbol": "HBARUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "1h"
   },
   {
@@ -1356,10 +1365,10 @@
   {
    "symbol": "VTHOUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "BREAKOUT_NOT_HOLDING"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
+   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
    "primary_timeframe": "15m"
   },
   {
@@ -1649,16 +1658,6 @@
    "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
    "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "4h"
-  },
-  {
-   "symbol": "LDOUSDT",
-   "codes": [
-    "SCORE_BELOW_MINIMUM"
-   ],
-   "reason_ar": "درجة الجودة أقل من حد النشر.",
-   "reason_en": "The deterministic quality score is below the publication threshold.",
-   "primary_timeframe": "15m",
-   "score": 74
   },
   {
    "symbol": "LDOUSDT",
@@ -1870,10 +1869,10 @@
   {
    "symbol": "TSTUSDT",
    "codes": [
-    "LIVE_PRICE_CHASE"
+    "LOWER_HIGHS"
    ],
-   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
-   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
+   "reason_ar": "آخر القمم الهيكلية هابطة.",
+   "reason_en": "Recent structural highs are descending.",
    "primary_timeframe": "15m"
   },
   {
@@ -2086,12 +2085,11 @@
   {
    "symbol": "DYMUSDT",
    "codes": [
-    "SCORE_BELOW_MINIMUM"
+    "RR_BELOW_MINIMUM"
    ],
-   "reason_ar": "درجة الجودة أقل من حد النشر.",
-   "reason_en": "The deterministic quality score is below the publication threshold.",
-   "primary_timeframe": "15m",
-   "score": 80
+   "reason_ar": "العائد إلى المخاطرة للهدف الأول أقل من الحد الأدنى.",
+   "reason_en": "TP1 risk/reward is below the configured minimum.",
+   "primary_timeframe": "15m"
   },
   {
    "symbol": "DYMUSDT",
