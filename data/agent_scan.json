@@ -1,7 +1,7 @@
 {
  "schema_version": "scalp-supertrend-1.1",
- "scan_timestamp": "2026-09-25T12:50:46Z",
- "source_data_timestamp": "2026-09-25T12:50:46Z",
+ "scan_timestamp": "2026-09-25T12:55:37Z",
+ "source_data_timestamp": "2026-09-25T12:55:37Z",
  "status": "ok",
  "market": {
   "status": "BULLISH",
@@ -23,7 +23,7 @@
  },
  "signals": [
   {
-   "opportunity_id": "RAYUSDT_LONG_SUPERTREND_15M_2026-09-25T1250",
+   "opportunity_id": "RAYUSDT_LONG_SUPERTREND_15M_2026-09-25T1255",
    "symbol": "RAYUSDT",
    "pair": "RAY/USDT",
    "direction": "LONG",
@@ -33,22 +33,22 @@
    "decision": "FAVORABLE",
    "score": 86,
    "grade": "STRONG",
-   "current_price": 2.0999,
-   "entry_mid": 2.0999,
+   "current_price": 2.1008,
+   "entry_mid": 2.1008,
    "entry_zone": [
-    2.09675,
-    2.10305
+    2.09765,
+    2.10395
    ],
    "stop_loss": 2.08671,
-   "tp1": 2.1251,
+   "tp1": 2.12601,
    "tp2": 2.1515,
-   "tp3": 2.18915,
-   "rr_tp1": 1.91,
-   "rr_tp2": 3.91,
-   "rr_tp3": 6.77,
-   "sl_distance_pct": 0.63,
+   "tp3": 2.19008,
+   "rr_tp1": 1.79,
+   "rr_tp2": 3.6,
+   "rr_tp3": 6.34,
+   "sl_distance_pct": 0.67,
    "profit_pct_tp1": 1.2,
-   "profit_pct_tp2": 2.46,
+   "profit_pct_tp2": 2.41,
    "profit_pct_tp3": 4.25,
    "primary_timeframe": "15m",
    "confirmation_timeframes": [
@@ -129,8 +129,8 @@
      "1h",
      "4h"
     ],
-    "ema200_distance_pct": 3.749,
-    "live_chase_atr": -0.291,
+    "ema200_distance_pct": 3.793,
+    "live_chase_atr": -0.262,
     "supertrend_last_3": [
      "UP",
      "UP",
@@ -140,20 +140,20 @@
     "lower_highs_detected": false,
     "entry_trigger": "SUPERTREND_BOUNCE"
    },
-   "change_24h": 5.169,
-   "quote_volume_24h": 12718697.18,
-   "spread_pct": 0.04762,
-   "data_timestamp": "2026-09-25T12:50:46Z"
+   "change_24h": 4.836,
+   "quote_volume_24h": 12712438.83,
+   "spread_pct": 0.07616,
+   "data_timestamp": "2026-09-25T12:55:37Z"
   }
  ],
  "rejections": [
   {
    "symbol": "BTCUSDT",
    "codes": [
-    "EMA200_NOT_CONFIRMED"
+    "HTF_TREND_CONFLICT"
    ],
-   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
-   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
+   "reason_ar": "اتجاه الإطار الأعلى يتعارض مع صفقة LONG.",
+   "reason_en": "The higher-timeframe trend conflicts with a LONG setup.",
    "primary_timeframe": "15m"
   },
   {
@@ -258,10 +258,10 @@
   {
    "symbol": "ZECUSDT",
    "codes": [
-    "BREAKOUT_NOT_HOLDING"
+    "LIVE_PRICE_CHASE"
    ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
+   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
+   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
    "primary_timeframe": "15m"
   },
   {
@@ -1408,16 +1408,16 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "ZROUSDT",
+   "symbol": "POLUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "EMA200_OVEREXTENDED"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
+   "reason_en": "Price is overextended from EMA200.",
    "primary_timeframe": "15m"
   },
   {
-   "symbol": "ZROUSDT",
+   "symbol": "POLUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -1426,7 +1426,7 @@
    "primary_timeframe": "1h"
   },
   {
-   "symbol": "ZROUSDT",
+   "symbol": "POLUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -1435,16 +1435,16 @@
    "primary_timeframe": "4h"
   },
   {
-   "symbol": "POLUSDT",
+   "symbol": "ZROUSDT",
    "codes": [
-    "EMA200_OVEREXTENDED"
+    "LIVE_PRICE_CHASE"
    ],
-   "reason_ar": "السعر مبتعد أكثر من المسموح عن EMA200.",
-   "reason_en": "Price is overextended from EMA200.",
+   "reason_ar": "السعر اللحظي اندفع بعيدًا عن آخر شمعة مغلقة؛ لا تطارد الحركة.",
+   "reason_en": "Live price ran too far beyond the last closed candle; do not chase it.",
    "primary_timeframe": "15m"
   },
   {
-   "symbol": "POLUSDT",
+   "symbol": "ZROUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -1453,7 +1453,7 @@
    "primary_timeframe": "1h"
   },
   {
-   "symbol": "POLUSDT",
+   "symbol": "ZROUSDT",
    "codes": [
     "EMA200_OVEREXTENDED"
    ],
@@ -1518,10 +1518,10 @@
   {
    "symbol": "NOMUSDT",
    "codes": [
-    "SUPERTREND_BEARISH"
+    "EMA200_NOT_CONFIRMED"
    ],
-   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
-   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
+   "reason_ar": "السعر غير ثابت فوق EMA200 على إطار التنفيذ وإطار التأكيد.",
+   "reason_en": "Price is not confirmed above EMA200 on the execution and confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
@@ -1950,10 +1950,10 @@
   {
    "symbol": "MUBUSDT",
    "codes": [
-    "BREAKOUT_NOT_HOLDING"
+    "SUPERTREND_BEARISH"
    ],
-   "reason_ar": "لا يوجد ثبات اختراق أو ارتداد مؤكد من SuperTrend.",
-   "reason_en": "There is no held breakout or confirmed SuperTrend bounce.",
+   "reason_ar": "SuperTrend ليس صاعدًا على إطار التنفيذ وأطر التأكيد المطلوبة.",
+   "reason_en": "SuperTrend is not bullish on the execution and required confirmation frames.",
    "primary_timeframe": "15m"
   },
   {
